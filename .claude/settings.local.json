@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "Bash(npx vite *)",
+      "Bash(pkill -f \"vite --port 5173\")",
+      "Bash(node -e ' *)",
+      "WebFetch(domain:unsplash.com)",
+      "Bash(sed -i '' 's/OMR {\\(item\\\\.price \\\\* item\\\\.quantity\\)\\\\.toFixed\\(3\\)}/{format\\(item.price * item.quantity\\)}/g' /Applications/XAMPP/xamppfiles/htdocs/artisan_leather/frontend/src/pages/CartPage.jsx)",
+      "Bash(sed -i '' 's/OMR {item\\\\.price\\\\.toFixed\\(3\\)} each/{format\\(item.price\\)} each/g' /Applications/XAMPP/xamppfiles/htdocs/artisan_leather/frontend/src/pages/CartPage.jsx)",
+      "Bash(sed -i '' 's/OMR {subtotal\\\\.toFixed\\(3\\)}/{format\\(subtotal\\)}/g' /Applications/XAMPP/xamppfiles/htdocs/artisan_leather/frontend/src/pages/CartPage.jsx)",
+      "Bash(sed -i '' 's/OMR {total\\\\.toFixed\\(3\\)}/{format\\(total\\)}/g' /Applications/XAMPP/xamppfiles/htdocs/artisan_leather/frontend/src/pages/CartPage.jsx)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/cart)",
+      "Bash(composer --version)",
+      "Bash(php --version)",
+      "Bash(mysql --version)",
+      "Bash(/Applications/XAMPP/xamppfiles/bin/mysql --version)",
+      "Bash(/Applications/XAMPP/xamppfiles/bin/mysql -u root -e \"SELECT VERSION\\(\\);\")",
+      "Bash(/Applications/XAMPP/xamppfiles/bin/mysql -u root -e \"CREATE DATABASE IF NOT EXISTS artisan_leather CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; SHOW DATABASES LIKE 'artisan_leather';\")",
+      "Bash(composer create-project *)",
+      "Bash(php artisan *)",
+      "Bash(composer show *)"
+    ]
+  }
+}

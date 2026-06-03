@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Mail;
+
+use App\Models\Order;
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+class OrderInvoice extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    public function __construct(public Order $order) {}
+
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            subject: "Your Invoice – {$this->order->order_number} | Artisan Leather",
+        );
+    }
+
+    public function content(): Content
+    {
+        $this->order->loadMissing('items');
+        return new Content(
+            view: 'invoice.show',
+            with: ['order' => $this->order],
+        );
+    }
+}

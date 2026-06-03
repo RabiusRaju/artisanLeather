@@ -1,0 +1,5 @@
+{
+    "require": {
+        "intervention/image-laravel": "^4.0"
+    }
+}

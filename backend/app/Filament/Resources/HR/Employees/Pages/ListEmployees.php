@@ -1,0 +1,8 @@
+<?php
+namespace App\Filament\Resources\HR\Employees\Pages;
+use App\Filament\Resources\HR\Employees\EmployeeResource;
+use Filament\Resources\Pages\ListRecords;
+class ListEmployees extends ListRecords {
+    protected static string $resource = EmployeeResource::class;
+    protected function getHeaderActions(): array { return [\Filament\Actions\CreateAction::make()->label('New Employee')]; }
+}

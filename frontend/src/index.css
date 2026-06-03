@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&family=Tajawal:wght@300;400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--theme-bg, #120D05);
+    color: #F5EDD8;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+
+  /* Light mode: body text becomes dark brown */
+  .theme-light body {
+    color: #1A1208;
+  }
+
+  /* Arabic font for RTL */
+  [dir="rtl"] body,
+  [dir="rtl"] p,
+  [dir="rtl"] span,
+  [dir="rtl"] a,
+  [dir="rtl"] button,
+  [dir="rtl"] input,
+  [dir="rtl"] textarea,
+  [dir="rtl"] select,
+  [dir="rtl"] label {
+    font-family: 'Tajawal', system-ui, sans-serif;
+  }
+
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] h4 {
+    font-family: 'Tajawal', serif;
+    font-weight: 500;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  #root {
+    width: 100%;
+    max-width: 100%;
+    text-align: left;
+    border: none;
+    min-height: 100svh;
+    display: block;
+  }
+
+  [dir="rtl"] #root {
+    text-align: right;
+  }
+
+  /* Warm scrollbar */
+  ::-webkit-scrollbar        { width: 6px; }
+  ::-webkit-scrollbar-track  { background: var(--theme-bg, #120D05); }
+  ::-webkit-scrollbar-thumb  { background: #3A2A12; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #C9A84C; }
+
+  /* Selection colour */
+  ::selection {
+    background: rgba(201, 168, 76, 0.25);
+    color: #F5EDD8;
+  }
+  .theme-light ::selection {
+    background: rgba(201, 168, 76, 0.20);
+    color: #1A1208;
+  }
+}
+
+/* ── Light mode global overrides ────────────────────────────────────────────
+   .theme-light is added to <html> by ThemeContext when isLight === true.
+   .dark-section (used on Footer) is EXCLUDED from these flips so the
+   footer stays dark regardless of theme.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* 1. Flip white text → dark leather brown */
+.theme-light *:not(.dark-section):not(.dark-section *) [class*="text-white"],
+.theme-light [class*="text-white"]:not(.dark-section):not(.dark-section *) {
+  color: rgb(26 18 8 / var(--tw-text-opacity, 1));
+}
+
+/* 2. Flip white borders → dark leather border */
+.theme-light [class*="border-white"]:not(.dark-section):not(.dark-section *) {
+  border-color: rgb(26 18 8 / var(--tw-border-opacity, 0.12));
+}
+
+/* 3. Inputs: light background + dark text */
+.theme-light input:not(.dark-section input),
+.theme-light textarea:not(.dark-section textarea),
+.theme-light select:not(.dark-section select) {
+  background-color: #FFFFFF !important;
+  color: #1A1208 !important;
+  border-color: rgba(26, 18, 8, 0.15) !important;
+}
+.theme-light input::placeholder,
+.theme-light textarea::placeholder {
+  color: rgba(26, 18, 8, 0.30) !important;
+}
+
+/* 4. bg-dark-100 inside cards/panels → light in light mode */
+.theme-light [class*="bg-dark"]:not(.dark-section):not(.dark-section *) {
+  background-color: var(--theme-bg-secondary, #F0EAE0);
+}
+
+/* 5. Navbar glass background override for light mode */
+.theme-light .navbar-scrolled-bg {
+  background-color: rgba(250, 247, 242, 0.95) !important;
+  border-bottom-color: rgba(201, 168, 76, 0.15) !important;
+}
+
+/* 6. Keep dark-section (footer, WhatsApp button, etc.) always dark */
+.dark-section,
+.dark-section * {
+  /* Explicitly restore dark colours — unaffected by theme-light overrides */
+}
+.dark-section [class*="text-white"] {
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1)) !important;
+}
+.dark-section [class*="border-white"] {
+  border-color: rgb(255 255 255 / var(--tw-border-opacity, 0.1)) !important;
+}
+.dark-section [class*="bg-dark"],
+.dark-section {
+  background-color: #120D05;
+}
+
+/* ── Utilities ──────────────────────────────────────────────────────────── */
+@layer utilities {
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #E8C96A 0%, #C9A84C 45%, #A67C33 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-ivory       { color: #F5EDD8; }
+  .text-ivory-dim   { color: #E8DCC4; }
+  .text-ivory-faint { color: #C8BAA0; }
+
+  .bg-leather-deep   { background-color: #1C1208; }
+  .bg-leather-medium { background-color: #231608; }
+  .bg-leather-light  { background-color: #2C1E0A; }
+
+  .border-warm { border-color: rgba(201, 168, 76, 0.12); }
+}
