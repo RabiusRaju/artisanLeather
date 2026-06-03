@@ -28,10 +28,11 @@ export default function Navbar() {
   const isAr = i18n.language === 'ar'
 
   const navLinks = [
-    { label: t('nav.collections'),               to: '/collections' },
-    { label: t('nav.story'),                     to: '/about' },
-    { label: isAr ? 'تتبع الطلب' : 'Track Order', to: '/track' },
-    { label: t('nav.contact'),                   to: '/contact' },
+    { label: t('nav.collections'),                   to: '/collections' },
+    { label: isAr ? 'المجلة الجلدية' : 'Journal',    to: '/blog' },
+    { label: t('nav.story'),                          to: '/about' },
+    { label: isAr ? 'تتبع الطلب' : 'Track Order',    to: '/track' },
+    { label: t('nav.contact'),                        to: '/contact' },
   ]
 
   // Scroll handler

@@ -1,3 +1,4 @@
+import SEO from '../components/SEO'
 import { useLocation, Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { HiCheckCircle } from 'react-icons/hi'
@@ -24,6 +25,8 @@ export default function OrderConfirmation() {
 
   return (
     <div className="min-h-screen bg-dark flex flex-col items-center justify-start pt-32 pb-24 px-6">
+
+      <SEO title="Order Confirmed — Thank You!" description="Your Artisan Leather order has been confirmed." url="/order-confirmation" noIndex />
 
       {/* Success icon + heading */}
       <motion.div

@@ -1,3 +1,4 @@
+import SEO from '../components/SEO'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -37,6 +38,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-dark flex items-center justify-center px-6 py-16">
+      <SEO title="Create Account" description="Join Artisan Leather and enjoy exclusive access to our handcrafted leather collections." url="/register" noIndex />
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md">
         <div className="text-center mb-10">

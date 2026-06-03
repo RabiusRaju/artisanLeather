@@ -1,3 +1,4 @@
+import SEO from '../components/SEO'
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -65,6 +66,7 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-dark pt-32 pb-24 px-6 lg:px-12">
+      <SEO title="My Account" description="Manage your Artisan Leather account and view your orders." url="/account" noIndex />
       <div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
 

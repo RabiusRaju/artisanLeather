@@ -14,7 +14,7 @@ class ProductController extends Controller
         $locale = str_starts_with($request->header('Accept-Language', 'en'), 'ar') ? 'ar' : 'en';
         app()->setLocale($locale);
 
-        $query = Product::with(['category', 'brand', 'images', 'colors', 'details'])
+        $query = Product::with(['category', 'brand', 'images', 'colors', 'details', 'stock'])
             ->where('is_active', true);
 
         if ($request->filled('category')) {
@@ -44,7 +44,7 @@ class ProductController extends Controller
         $locale = str_starts_with($request->header('Accept-Language', 'en'), 'ar') ? 'ar' : 'en';
         app()->setLocale($locale);
 
-        $query = Product::with(['category', 'brand', 'images', 'colors', 'details'])
+        $query = Product::with(['category', 'brand', 'images', 'colors', 'details', 'stock'])
             ->where('is_active', true);
 
         is_numeric($identifier)

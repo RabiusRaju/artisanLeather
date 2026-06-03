@@ -127,6 +127,27 @@ class BrandResource extends Resource
                     ])->columns(2),
                 ]),
 
+                // ── SEO Tab ──────────────────────────────────────────────
+                Tab::make('SEO')->icon('heroicon-o-magnifying-glass')->schema([
+                    Section::make('Collection Page SEO')
+                        ->description('Optimise how this collection appears in Google search. Leave blank to use smart defaults.')
+                        ->schema([
+                            TextInput::make('meta_title')
+                                ->label('SEO Title')
+                                ->placeholder('e.g. Heritage Collection — Handcrafted Leather Wallets & Bags | Artisan Leather Oman')
+                                ->maxLength(70)
+                                ->helperText('Max 60 characters. Leave blank to auto-generate from collection name.')
+                                ->columnSpanFull(),
+                            Textarea::make('meta_description')
+                                ->label('SEO Description')
+                                ->placeholder('e.g. Explore the Heritage Collection by Artisan Leather — full-grain wallets, bags and accessories handcrafted in Muscat, Oman. Free delivery across the GCC.')
+                                ->maxLength(170)
+                                ->rows(3)
+                                ->helperText('Max 160 characters. Describe the collection with keywords.')
+                                ->columnSpanFull(),
+                        ]),
+                ]),
+
             ])->columnSpanFull()->persistTabInQueryString(),
         ]);
     }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import SEO from '../components/SEO'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '../context/CurrencyContext'
@@ -38,7 +39,7 @@ function ProductCard({ product, index }) {
       transition={{ duration: 0.6, delay: (index % 6) * 0.08 }}
       className="group"
     >
-      <Link to={`/product/${product.id}`}>
+      <Link to={`/product/${product.slug}`}>
         {/* Image */}
         <div
           className="relative overflow-hidden bg-dark-100"
@@ -129,8 +130,20 @@ export default function CollectionsPage() {
     ? category.charAt(0).toUpperCase() + category.slice(1)
     : t('collections.allPieces')
 
+  const seoTitle = category
+    ? `${categoryLabel} — Handcrafted Leather ${categoryLabel} | Artisan Leather Oman`
+    : 'All Collections — Handcrafted Leather Goods | Artisan Leather Oman'
+  const seoDesc = category
+    ? `Browse our handcrafted leather ${category} collection. Premium quality, made by artisans in Muscat, Oman. Free delivery across Oman and GCC.`
+    : 'Explore the full Artisan Leather collection — wallets, bags, belts and accessories. All handcrafted in Muscat, Oman. Free delivery across Oman and GCC.'
+
   return (
     <div className="min-h-screen bg-dark">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        url={category ? `/collections/${category}` : '/collections'}
+      />
       {/* Page Hero */}
       <section className="relative pt-40 pb-20 px-6 lg:px-12 border-b border-gold/10 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-dark-100 to-dark" />

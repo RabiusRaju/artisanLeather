@@ -287,6 +287,12 @@ export default function About() {
   return (
     <div className="min-h-screen bg-dark">
 
+      <SEO
+        title="Our Story — Handcrafted Leather Artisans in Muscat, Oman"
+        description="Learn about Artisan Leather's heritage, craftsmanship philosophy, and the skilled artisans behind every handcrafted leather piece made in Muscat, Oman."
+        url="/about"
+      />
+
       {/* HERO */}
       <section className="relative h-[70vh] min-h-[520px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, #150F06, #120D05)' }} />

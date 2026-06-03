@@ -23,6 +23,8 @@ import LoginPage            from './pages/LoginPage'
 import RegisterPage         from './pages/RegisterPage'
 import AccountPage          from './pages/AccountPage'
 import TrackOrderPage       from './pages/TrackOrderPage'
+import BlogPage             from './pages/BlogPage'
+import BlogPostPage         from './pages/BlogPostPage'
 
 function RTLSyncer() {
   const { i18n } = useTranslation()
@@ -45,7 +47,9 @@ function Layout() {
         <Route path="/"                      element={<Home />} />
         <Route path="/collections"           element={<CollectionsPage />} />
         <Route path="/collections/:category" element={<CollectionsPage />} />
-        <Route path="/product/:id"           element={<ProductPage />} />
+        <Route path="/product/:slug"         element={<ProductPage />} />
+        <Route path="/blog"                  element={<BlogPage />} />
+        <Route path="/blog/:slug"            element={<BlogPostPage />} />
         <Route path="/about"                 element={<About />} />
         <Route path="/contact"               element={<Contact />} />
         <Route path="/cart"                  element={<CartPage />} />

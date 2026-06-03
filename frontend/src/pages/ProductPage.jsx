@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
+import SEO from '../components/SEO'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { FaWhatsapp } from 'react-icons/fa'
@@ -56,7 +58,7 @@ function RelatedCard({ product, index }) {
       transition={{ duration: 0.6, delay: index * 0.1 }}
       className="group"
     >
-      <Link to={`/product/${product.id}`}>
+      <Link to={`/product/${product.slug}`}>
         <div className="aspect-square relative overflow-hidden bg-dark-100" style={{ background: 'linear-gradient(160deg, #2A1A08, #1A1008)' }}>
           {product.images?.[0]?.url && (
             <img src={product.images[0].url} alt={product.name}
@@ -110,8 +112,8 @@ function ProductSkeleton() {
 
 // ── Main page ──────────────────────────────────────────────────────────────
 export default function ProductPage() {
-  const { id } = useParams()
-  const { product, loading, error } = useProduct(id)
+  const { slug } = useParams()
+  const { product, loading, error } = useProduct(slug)
 
   const [activeImage, setActiveImage]   = useState(0)
   const [activeColor, setActiveColor]   = useState(0)
@@ -148,6 +150,7 @@ export default function ProductPage() {
     const color = product.colors?.[activeColor]
     addItem({
       id:        product.id,
+      slug:      product.slug,
       name:      product.name,
       name_ar:   product.name_ar,
       price:     parseFloat(product.price),
@@ -165,8 +168,55 @@ export default function ProductPage() {
     `Hello Artisan Leather, I'm interested in purchasing "${product.name}" (OMR ${product.price}). Could you please provide more details?`
   )
 
+  const productImage = product.images?.[0]?.url || 'https://artisanleatherom.com/og-image.jpg'
+  const seoDesc = product.meta_description
+    || `${product.name} — ${product.tagline || 'Premium handcrafted leather from Artisan Leather, Muscat Oman'}. Price: OMR ${product.price}. Free delivery across Oman and GCC.`
+  const seoTitle = product.meta_title
+    || `${product.name} — Handcrafted Leather | Artisan Leather Oman`
+
+  // JSON-LD Product Schema
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.tagline || seoDesc,
+    image: productImage,
+    brand: { '@type': 'Brand', name: product.brand?.name || 'Artisan Leather' },
+    offers: {
+      '@type': 'Offer',
+      price: product.price,
+      priceCurrency: 'OMR',
+      availability: 'https://schema.org/InStock',
+      seller: { '@type': 'Organization', name: 'Artisan Leather' },
+    },
+    ...(categoryLabel && { category: categoryLabel }),
+  }
+
   return (
     <div className="min-h-screen bg-dark pb-24">
+
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        image={productImage}
+        url={`/product/${product.slug}`}
+        type="product"
+      />
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
+        {/* Breadcrumb schema */}
+        <script type="application/ld+json">{JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home',        item: 'https://artisanleatherom.com' },
+            { '@type': 'ListItem', position: 2, name: 'Collections', item: 'https://artisanleatherom.com/collections' },
+            ...(categoryLabel ? [{ '@type': 'ListItem', position: 3, name: categoryLabel, item: `https://artisanleatherom.com/collections/${categorySlug}` }] : []),
+            { '@type': 'ListItem', position: categoryLabel ? 4 : 3, name: product.name },
+          ],
+        })}</script>
+      </Helmet>
+
       {/* Add-to-cart toast */}
       <AnimatePresence>
         {toastVisible && (

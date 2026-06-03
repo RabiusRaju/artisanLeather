@@ -10,7 +10,12 @@ import Testimonials from '../components/Testimonials'
 export default function Home() {
   return (
     <main>
-      <SEO url="/" />
+      <SEO
+        url="/"
+        title="Luxury Handcrafted Leather Goods — Wallets, Bags & Accessories"
+        description="Discover premium handcrafted leather wallets, bags, belts and accessories from Artisan Leather, Muscat Oman. Free delivery across Oman and GCC. Shop now."
+        type="website"
+      />
       <Hero />
       <Collections />
       <Story />

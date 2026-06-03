@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Private pages — no indexing
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /login
+Disallow: /register
+Disallow: /order-confirmation
+
+# Sitemap
+Sitemap: https://artisanleatherom.com/sitemap.xml

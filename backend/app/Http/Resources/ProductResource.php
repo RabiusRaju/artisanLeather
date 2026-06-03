@@ -27,6 +27,11 @@ class ProductResource extends JsonResource
             'price'       => (float) $this->price,
             'badge'       => $this->badge,
             'is_featured' => $this->is_featured,
+            'in_stock'    => $this->in_stock,
+
+            // SEO fields — custom if set, otherwise null (frontend falls back gracefully)
+            'meta_title'       => $this->meta_title ?: null,
+            'meta_description' => $this->meta_description ?: null,
             'category'    => [
                 'id'   => $this->category->id,
                 'name' => $locale === 'ar' && $this->category->name_ar ? $this->category->name_ar : $this->category->name,
@@ -46,6 +51,8 @@ class ProductResource extends JsonResource
                 'id'         => $img->id,
                 'url'        => $img->url,
                 'label'      => $img->label,
+                'alt_text'   => $img->alt_text
+                    ?: ($this->name . ($img->label ? ' — ' . $img->label : '') . ' | Artisan Leather Oman'),
                 'sort_order' => $img->sort_order,
             ]),
             'colors' => $this->colors->map(fn($c) => [

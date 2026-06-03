@@ -1,3 +1,4 @@
+import SEO from '../components/SEO'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -134,6 +135,8 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-dark">
+
+      <SEO title="Secure Checkout" description="Complete your Artisan Leather order securely." url="/checkout" noIndex />
 
       {/* Header */}
       <section className="pt-36 pb-10 px-6 lg:px-12 border-b border-gold/10 bg-dark-100">

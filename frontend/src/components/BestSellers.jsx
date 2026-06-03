@@ -19,7 +19,7 @@ function ProductCard({ product, index }) {
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, delay: index * 0.1 }}
       className="group cursor-pointer">
-      <Link to={`/product/${product.id}`}>
+      <Link to={`/product/${product.slug}`}>
         <div className="aspect-square relative overflow-hidden bg-dark-100">
           {firstImage && (
             <img src={firstImage} alt={name}

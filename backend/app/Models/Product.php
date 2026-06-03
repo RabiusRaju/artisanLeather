@@ -37,6 +37,7 @@ class Product extends Model
         'description', 'description_ar', 'material', 'material_ar',
         'origin', 'origin_ar', 'care', 'care_ar', 'shipping', 'shipping_ar',
         'price', 'badge', 'is_active', 'is_featured', 'sort_order',
+        'meta_title', 'meta_description',
     ];
 
     protected $casts = [
@@ -53,6 +54,16 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function stock(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\App\Models\ProductStock::class);
+    }
+
+    public function getInStockAttribute(): bool
+    {
+        return ($this->stock?->quantity ?? 0) > 0;
     }
 
     public function images(): HasMany

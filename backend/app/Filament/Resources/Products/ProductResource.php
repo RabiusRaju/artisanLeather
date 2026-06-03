@@ -323,6 +323,13 @@ class ProductResource extends Resource
                                                 ->default(0)
                                                 ->helperText('1 = main image')
                                                 ->columnSpan(1),
+
+                                            TextInput::make('alt_text')
+                                                ->label('Alt Text (SEO)')
+                                                ->placeholder('e.g. Heritage Bifold Wallet open view showing 8 card slots — Artisan Leather Oman')
+                                                ->helperText('Describe the image for Google Image Search and accessibility. Auto-generated if left blank.')
+                                                ->maxLength(125)
+                                                ->columnSpanFull(),
                                         ])
                                         ->columns(2)
                                         ->maxItems(6)
@@ -406,6 +413,62 @@ class ProductResource extends Resource
                                         ->reorderableWithDragAndDrop()
                                         ->maxItems(10),
                                 ]),
+                        ]),
+
+                    // ── Tab 7: SEO ───────────────────────────────────────
+                    Tab::make('SEO')
+                        ->icon('heroicon-o-magnifying-glass')
+                        ->schema([
+
+                            Section::make('Search Engine Optimisation')
+                                ->description('Custom SEO fields for this product. Leave blank to use smart defaults (product name + tagline).')
+                                ->schema([
+
+                                    TextInput::make('meta_title')
+                                        ->label('SEO Title')
+                                        ->placeholder('e.g. Heritage Bifold Wallet — Handcrafted Leather | Artisan Leather Oman')
+                                        ->maxLength(70)
+                                        ->helperText(fn ($state) => sprintf(
+                                            'Max 60 chars · %d chars used %s · Leave blank to auto-generate from product name.',
+                                            mb_strlen($state ?? ''),
+                                            mb_strlen($state ?? '') > 60 ? '⚠️ TOO LONG' : '✅'
+                                        ))
+                                        ->columnSpanFull()
+                                        ->live(onBlur: true),
+
+                                    Textarea::make('meta_description')
+                                        ->label('SEO Description')
+                                        ->placeholder('e.g. Handcrafted Heritage Bifold Wallet in full-grain leather. 8 card slots, 2 bill compartments. Free delivery across Oman. Shop now at Artisan Leather Muscat.')
+                                        ->maxLength(170)
+                                        ->rows(3)
+                                        ->helperText('Max 160 characters. Describe the product with keywords. Leave blank to use the tagline.')
+                                        ->columnSpanFull(),
+
+                                ])->columns(1),
+
+                            Section::make('Preview — How Google Sees It')
+                                ->description('Live preview of how this product will appear in Google search results.')
+                                ->schema([
+                                    Placeholder::make('google_preview')
+                                        ->label('')
+                                        ->content(function ($get, $record) {
+                                            $name  = $get('name') ?: ($record?->name ?? 'Product Name');
+                                            $title = $get('meta_title') ?: ($name . ' — Handcrafted Leather | Artisan Leather Oman');
+                                            $desc  = $get('meta_description') ?: ($get('tagline') ?: 'Premium handcrafted leather goods from Artisan Leather, Muscat Oman.');
+                                            $slug  = $get('slug') ?: 'product-slug';
+
+                                            return new \Illuminate\Support\HtmlString('
+                                                <div style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+                                                    <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com › product › ' . e($slug) . '</div>
+                                                    <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;font-weight:normal;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
+                                                    <div style="font-size:13px;color:#545454;line-height:1.5;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
+                                                    <div style="margin-top:8px;font-size:11px;color:' . (mb_strlen($title) > 60 ? '#dc2626' : '#059669') . ';">Title: ' . mb_strlen($title) . ' chars ' . (mb_strlen($title) > 60 ? '⚠️ too long' : '✅') . ' &nbsp;|&nbsp; Description: ' . mb_strlen($desc) . ' chars ' . (mb_strlen($desc) > 160 ? '⚠️ too long' : '✅') . '</div>
+                                                </div>
+                                            ');
+                                        })
+                                        ->columnSpanFull(),
+                                ]),
+
                         ]),
 
                 ])

@@ -1,3 +1,4 @@
+import SEO from '../components/SEO'
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -31,6 +32,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-dark flex items-center justify-center px-6">
+      <SEO title="Sign In" description="Sign in to your Artisan Leather account." url="/login" noIndex />
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md">
         {/* Logo */}

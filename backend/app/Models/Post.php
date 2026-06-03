@@ -1,0 +1,42 @@
+<?php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+
+class Post extends Model
+{
+    protected $fillable = [
+        'title', 'title_ar', 'slug', 'excerpt', 'excerpt_ar',
+        'content', 'content_ar', 'featured_image', 'category', 'tags',
+        'author', 'meta_title', 'meta_description',
+        'is_published', 'published_at', 'read_time',
+    ];
+
+    protected $casts = [
+        'tags'         => 'array',
+        'is_published' => 'boolean',
+        'published_at' => 'datetime',
+    ];
+
+    // Scope: only published posts for the public API
+    public function scopePublished($query)
+    {
+        return $query->where('is_published', true)
+            ->where('published_at', '<=', now());
+    }
+
+    // Auto-calculate read time when content changes
+    protected static function booted(): void
+    {
+        static::saving(function (Post $post) {
+            if ($post->isDirty('content')) {
+                $words = str_word_count(strip_tags($post->content));
+                $post->read_time = max(1, (int) ceil($words / 200));
+            }
+            if (empty($post->slug) && $post->title) {
+                $post->slug = Str::slug($post->title);
+            }
+        });
+    }
+}

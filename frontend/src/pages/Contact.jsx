@@ -254,6 +254,12 @@ export default function Contact() {
   return (
     <div className="min-h-screen bg-dark">
 
+      <SEO
+        title="Contact Us — Get in Touch with Artisan Leather, Muscat"
+        description="Contact Artisan Leather via WhatsApp, email or our online form. We're based in Muscat, Oman and deliver across the GCC. Custom orders and enquiries welcome."
+        url="/contact"
+      />
+
       {/* HERO */}
       <section className="relative pt-44 pb-24 px-6 overflow-hidden border-b border-gold/10">
         <div className="absolute inset-0 bg-gradient-to-b from-dark-100 to-dark" />

@@ -10,6 +10,7 @@ class Brand extends Model
         'name','name_ar','slug','tagline','tagline_ar',
         'description','description_ar','logo','banner','website',
         'is_active','is_featured','sort_order',
+        'meta_title','meta_description',
     ];
     protected $casts = ['is_active' => 'boolean', 'is_featured' => 'boolean'];
 

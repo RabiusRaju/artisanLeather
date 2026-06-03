@@ -1,3 +1,4 @@
+import SEO from '../components/SEO'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -24,7 +25,7 @@ function CartItem({ item }) {
       className="flex gap-5 py-6 border-b border-white/7 group"
     >
       {/* Thumbnail */}
-      <Link to={`/product/${item.id}`} className="flex-shrink-0">
+      <Link to={`/product/${item.slug}`} className="flex-shrink-0">
         <div className="w-20 h-20 md:w-24 md:h-24 relative overflow-hidden" style={{ background: item.gradient }}>
           <div className="absolute top-1.5 left-1.5 w-3 h-3 border-t border-l border-gold/30" />
           <div className="absolute bottom-1.5 right-1.5 w-3 h-3 border-b border-r border-gold/30" />
@@ -39,7 +40,7 @@ function CartItem({ item }) {
               {item.category}
             </p>
             <Link
-              to={`/product/${item.id}`}
+              to={`/product/${item.slug}`}
               className="font-serif text-lg text-white hover:text-gold transition-colors duration-300 leading-tight block"
             >
               {item.name}
@@ -138,6 +139,8 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-dark">
+
+      <SEO title="Your Cart" description="Review your Artisan Leather cart." url="/cart" noIndex />
 
       {/* Header */}
       <section className="pt-36 pb-12 px-6 lg:px-12 border-b border-gold/10 bg-dark-100">
