@@ -1,6 +1,6 @@
 // Artisan Leather Admin — Service Worker
-const CACHE_NAME  = 'al-admin-v1';
-const STATIC_CACHE = 'al-static-v1';
+const CACHE_NAME  = 'al-admin-v3';
+const STATIC_CACHE = 'al-static-v3';
 
 // Assets to cache on install
 const PRECACHE_URLS = [

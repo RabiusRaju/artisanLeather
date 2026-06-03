@@ -3,16 +3,20 @@
 namespace App\Filament\Resources\Orders;
 
 use App\Filament\Resources\Orders\Pages;
+use App\Models\Customer;
 use App\Models\Order;
-use App\Models\OrderItem;
+use App\Models\Product;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\ImageEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -39,18 +43,283 @@ class OrderResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
+        $omaniGovernorates = [
+            'Muscat'             => 'Muscat (مسقط)',
+            'Dhofar'             => 'Dhofar (ظفار)',
+            'Musandam'           => 'Musandam (مسندم)',
+            'Al Buraimi'         => 'Al Buraimi (البريمي)',
+            'Al Dakhiliyah'      => 'Al Dakhiliyah (الداخلية)',
+            'Al Batinah North'   => 'Al Batinah North (الباطنة شمال)',
+            'Al Batinah South'   => 'Al Batinah South (الباطنة جنوب)',
+            'Al Sharqiyah North' => 'Al Sharqiyah North (الشرقية شمال)',
+            'Al Sharqiyah South' => 'Al Sharqiyah South (الشرقية جنوب)',
+            'Al Dhahirah'        => 'Al Dhahirah (الظاهرة)',
+            'Al Wusta'           => 'Al Wusta (الوسطى)',
+        ];
+
         return $schema->schema([
-            Select::make('status')
-                ->options([
-                    'pending'    => 'Pending',
-                    'confirmed'  => 'Confirmed',
-                    'processing' => 'Processing',
-                    'shipped'    => 'Shipped',
-                    'delivered'  => 'Delivered',
-                    'cancelled'  => 'Cancelled',
-                ])
-                ->required(),
-            Textarea::make('admin_notes')->rows(3)->label('Internal Notes')->columnSpanFull(),
+
+            Hidden::make('order_number'),
+            Hidden::make('total_omr')->default(0),
+            Hidden::make('currency_rate')->default(1.0),
+
+            Tabs::make()->tabs([
+
+                // ── TAB 1: Order Info (Customer) ──────────────────────
+                Tab::make('Order Info')
+                    ->icon('heroicon-o-user')
+                    ->schema([
+
+                        Section::make('Customer Details')
+                            ->description('Search an existing customer to auto-fill, or enter manually.')
+                            ->columns(2)
+                            ->schema([
+
+                                Select::make('_customer_id')
+                                    ->label('Auto-fill from existing customer')
+                                    ->placeholder('Search by name or email…')
+                                    ->options(
+                                        Customer::orderBy('name')
+                                            ->get()
+                                            ->mapWithKeys(fn($c) => [$c->id => $c->name . ' — ' . $c->email])
+                                    )
+                                    ->searchable()
+                                    ->live()
+                                    ->afterStateUpdated(function ($state, $set) {
+                                        $c = Customer::find($state);
+                                        if (!$c) return;
+                                        [$first, $last] = array_pad(explode(' ', $c->name, 2), 2, '');
+                                        $set('first_name',  $first);
+                                        $set('last_name',   $last);
+                                        $set('email',       $c->email);
+                                        $set('phone',       $c->phone);
+                                        $set('governorate', $c->governorate);
+                                        $set('city',        $c->city);
+                                        $set('address',     $c->address);
+                                    })
+                                    ->columnSpanFull()
+                                    ->dehydrated(false),
+
+                                TextInput::make('first_name')
+                                    ->label('First Name')
+                                    ->required()
+                                    ->placeholder('Ahmad'),
+
+                                TextInput::make('last_name')
+                                    ->label('Last Name')
+                                    ->required()
+                                    ->placeholder('Al Rashdi'),
+
+                                TextInput::make('email')
+                                    ->label('Email Address')
+                                    ->email()
+                                    ->required()
+                                    ->placeholder('ahmad@example.com'),
+
+                                TextInput::make('phone')
+                                    ->label('Phone Number')
+                                    ->tel()
+                                    ->required()
+                                    ->placeholder('+968 9X XXX XXX'),
+
+                                Select::make('governorate')
+                                    ->label('Governorate')
+                                    ->options($omaniGovernorates)
+                                    ->searchable()
+                                    ->required(),
+
+                                TextInput::make('city')
+                                    ->label('City / Area')
+                                    ->required()
+                                    ->placeholder('e.g. Al Khuwair'),
+
+                                Textarea::make('address')
+                                    ->label('Delivery Address')
+                                    ->required()
+                                    ->rows(3)
+                                    ->placeholder('Building, Street, Wilayat…')
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Section::make('Customer Notes')
+                            ->description('Special delivery instructions or customer requests')
+                            ->schema([
+                                Textarea::make('notes')
+                                    ->label('')
+                                    ->rows(3)
+                                    ->placeholder('e.g. Please call before delivery, leave at reception…'),
+                            ])
+                            ->collapsible()
+                            ->collapsed(),
+
+                    ]),
+
+                // ── TAB 2: Items ──────────────────────────────────────
+                Tab::make('Items')
+                    ->icon('heroicon-o-shopping-bag')
+                    ->schema([
+
+                        Section::make('Order Products')
+                            ->description('Add products. Select a product and the price fills automatically.')
+                            ->schema([
+
+                                Repeater::make('items')
+                                    ->relationship()
+                                    ->label('')
+                                    ->schema([
+
+                                        Select::make('product_id')
+                                            ->label('Product')
+                                            ->options(
+                                                Product::orderBy('name')
+                                                    ->get()
+                                                    ->mapWithKeys(fn($p) => [
+                                                        $p->id => $p->name . '  —  OMR ' . number_format((float)$p->price, 3),
+                                                    ])
+                                            )
+                                            ->searchable()
+                                            ->required()
+                                            ->placeholder('Search and select a product…')
+                                            ->live()
+                                            ->afterStateUpdated(function ($state, $set, $get) {
+                                                $product = Product::find($state);
+                                                if (!$product) return;
+                                                $set('product_name',    $product->name);
+                                                $set('product_name_ar', $product->name_ar ?? '');
+                                                $set('unit_price_omr',  round((float)$product->price, 3));
+                                                $set('color_name', null);
+                                                $set('color_hex',  null);
+                                                $qty = (int)($get('quantity') ?: 1);
+                                                $set('total_price_omr', round((float)$product->price * $qty, 3));
+                                            })
+                                            ->columnSpanFull(),
+
+                                        Select::make('color_name')
+                                            ->label('Colour / Variant')
+                                            ->options(fn($get) =>
+                                                Product::find($get('product_id'))
+                                                    ?->colors->pluck('name', 'name')->toArray() ?? []
+                                            )
+                                            ->searchable()
+                                            ->placeholder('Select colour…')
+                                            ->live()
+                                            ->columnSpan(['default' => 'full', 'md' => 2]),
+
+                                        TextInput::make('quantity')
+                                            ->label('Quantity')
+                                            ->numeric()
+                                            ->default(1)
+                                            ->minValue(1)
+                                            ->required()
+                                            ->live()
+                                            ->afterStateUpdated(fn($state, $get, $set) =>
+                                                $set('total_price_omr',
+                                                    round((float)($get('unit_price_omr') ?: 0) * (int)($state ?: 1), 3))
+                                            )
+                                            ->columnSpan(['default' => 1, 'md' => 1]),
+
+                                        TextInput::make('unit_price_omr')
+                                            ->label('Unit Price (OMR)')
+                                            ->numeric()
+                                            ->prefix('OMR')
+                                            ->step(0.001)
+                                            ->required()
+                                            ->live()
+                                            ->afterStateUpdated(fn($state, $get, $set) =>
+                                                $set('total_price_omr',
+                                                    round((float)($state ?: 0) * (int)($get('quantity') ?: 1), 3))
+                                            )
+                                            ->columnSpan(['default' => 1, 'md' => 1]),
+
+                                        TextInput::make('total_price_omr')
+                                            ->label('Line Total (OMR)')
+                                            ->numeric()
+                                            ->prefix('OMR')
+                                            ->readOnly()
+                                            ->extraInputAttributes(['style' => 'font-weight:700;color:#d97706'])
+                                            ->columnSpan(['default' => 1, 'md' => 1]),
+
+                                        Hidden::make('product_name'),
+                                        Hidden::make('product_name_ar'),
+                                        Hidden::make('color_hex'),
+                                    ])
+                                    ->columns(['default' => 2, 'md' => 5])
+                                    ->addActionLabel('＋  Add Another Product')
+                                    ->reorderable()
+                                    ->reorderableWithDragAndDrop()
+                                    ->collapsible()
+                                    ->cloneable()
+                                    ->itemLabel(fn($state) =>
+                                        ($state['product_name'] ?? 'New item') .
+                                        (isset($state['quantity'])        ? '  ×' . $state['quantity']                                          : '') .
+                                        (isset($state['total_price_omr']) ? '  =  OMR ' . number_format((float)$state['total_price_omr'], 3) : '')
+                                    ),
+
+                            ]),
+
+                    ]),
+
+                // ── TAB 3: Payment ────────────────────────────────────
+                Tab::make('Payment')
+                    ->icon('heroicon-o-banknotes')
+                    ->schema([
+
+                        Section::make('Payment Method')
+                            ->description('How is the customer paying?')
+                            ->columns(2)
+                            ->schema([
+                                Select::make('payment_method')
+                                    ->label('Payment Method')
+                                    ->options([
+                                        'cod'      => '💵 Cash on Delivery',
+                                        'bank'     => '🏦 Bank Transfer',
+                                        'whatsapp' => '📱 WhatsApp Order',
+                                    ])
+                                    ->default('cod')
+                                    ->required(),
+
+                                TextInput::make('currency_code')
+                                    ->label('Currency')
+                                    ->default('OMR')
+                                    ->required(),
+
+                                Select::make('status')
+                                    ->label('Order Status')
+                                    ->options([
+                                        'pending'    => '⏳ Pending',
+                                        'confirmed'  => '✅ Confirmed',
+                                        'processing' => '🔨 Processing',
+                                        'shipped'    => '🚚 Shipped',
+                                        'delivered'  => '🎉 Delivered',
+                                        'cancelled'  => '❌ Cancelled',
+                                    ])
+                                    ->default('pending')
+                                    ->required(),
+
+                                TextInput::make('subtotal_omr')
+                                    ->label('Order Total (OMR)')
+                                    ->numeric()
+                                    ->prefix('OMR')
+                                    ->readOnly()
+                                    ->default(0)
+                                    ->helperText('Auto-calculated from items when saved'),
+                            ]),
+
+                        Section::make('Internal Notes')
+                            ->description('Notes visible only to admin staff')
+                            ->schema([
+                                Textarea::make('admin_notes')
+                                    ->label('')
+                                    ->placeholder('e.g. Called customer — will pay via bank transfer Thursday')
+                                    ->rows(4),
+                            ])
+                            ->collapsible()
+                            ->collapsed(),
+
+                    ]),
+
+            ])->columnSpanFull(),
+
         ]);
     }
 
@@ -254,6 +523,7 @@ class OrderResource extends Resource
     {
         return [
             'index'  => Pages\ListOrders::route('/'),
+            'create' => Pages\CreateOrder::route('/create'),
             'view'   => Pages\ViewOrder::route('/{record}'),
             'edit'   => Pages\EditOrder::route('/{record}/edit'),
         ];

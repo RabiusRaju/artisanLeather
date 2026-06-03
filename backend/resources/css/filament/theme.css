@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+/* Scan all Filament vendor blade files */
+@source '../../../../vendor/filament/**/*.blade.php';
+
+/* Scan all our custom admin blade files */
+@source '../../../views/**/*.blade.php';
+
+/* Scan all Filament PHP classes (for dynamic class generation) */
+@source '../../../app/Filament/**/*.php';

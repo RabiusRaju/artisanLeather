@@ -1,9 +1,9 @@
 <?php
 namespace App\Filament\Pages\Analytics;
 
-use App\Models\Brand;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\DB;
+
 
 class SalesByBrand extends Page
 {
@@ -15,6 +15,8 @@ class SalesByBrand extends Page
 
     public function getData(): array
     {
+        $now = now();
+
         $brands = DB::table('brands')
             ->leftJoin('products','brands.id','=','products.brand_id')
             ->leftJoin('order_items','products.id','=','order_items.product_id')
@@ -32,7 +34,34 @@ class SalesByBrand extends Page
             ->orderByDesc('total_revenue')
             ->get();
 
-        $total = $brands->sum('total_revenue');
+        $total        = $brands->sum('total_revenue');
+        $totalOrders  = $brands->sum('order_count');
+        $totalUnits   = $brands->sum('units_sold');
+        $activeBrands = $brands->where('total_revenue','>',0)->count();
+
+        // 6-month monthly revenue per brand
+        $monthLabels = [];
+        $brandMonthly = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $m = $now->copy()->subMonths($i);
+            $monthLabels[] = $m->format('M y');
+        }
+        foreach ($brands as $brand) {
+            $series = [];
+            for ($i = 5; $i >= 0; $i--) {
+                $m = $now->copy()->subMonths($i);
+                $rev = (float) DB::table('order_items')
+                    ->join('orders','order_items.order_id','=','orders.id')
+                    ->join('products','order_items.product_id','=','products.id')
+                    ->where('products.brand_id', $brand->id)
+                    ->whereNotIn('orders.status',['cancelled'])
+                    ->whereMonth('orders.created_at',$m->month)
+                    ->whereYear('orders.created_at',$m->year)
+                    ->sum('order_items.total_price_omr');
+                $series[] = round($rev, 3);
+            }
+            $brandMonthly[$brand->id] = $series;
+        }
 
         // Top product per brand
         $topPerBrand = [];
@@ -48,6 +77,7 @@ class SalesByBrand extends Page
             $topPerBrand[$brand->id] = $top?->product_name ?? '—';
         }
 
-        return compact('brands','total','topPerBrand');
+        return compact('brands','total','totalOrders','totalUnits','activeBrands',
+                       'monthLabels','brandMonthly','topPerBrand');
     }
 }

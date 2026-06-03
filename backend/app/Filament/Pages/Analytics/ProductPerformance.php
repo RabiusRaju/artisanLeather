@@ -14,6 +14,7 @@ class ProductPerformance extends Page
 
     public function getData(): array
     {
+        // All-time product performance
         $products = DB::table('order_items')
             ->join('orders','order_items.order_id','=','orders.id')
             ->leftJoin('products','order_items.product_id','=','products.id')
@@ -31,13 +32,48 @@ class ProductPerformance extends Page
             ->orderByDesc('total_revenue')
             ->get();
 
-        $totalRevenue = $products->sum('total_revenue');
-        $totalUnits   = $products->sum('units_sold');
+        $totalRevenue  = $products->sum('total_revenue');
+        $totalUnits    = $products->sum('units_sold');
+        $totalOrders   = $products->sum('order_count');
+        $avgRevPerProd = $products->count() > 0 ? round($totalRevenue / $products->count(), 3) : 0;
 
-        // Best & slowest
-        $best    = $products->take(5);
-        $slowest = $products->sortBy('total_revenue')->take(5)->values();
+        // Top 8 for bar chart
+        $top8 = $products->take(8);
 
-        return compact('products','totalRevenue','totalUnits','best','slowest');
+        // Revenue by category
+        $byCategory = $products->whereNotNull('category_name')
+            ->groupBy('category_name')
+            ->map(fn($g) => ['name' => $g->first()->category_name, 'revenue' => round($g->sum('total_revenue'), 3), 'units' => $g->sum('units_sold')])
+            ->values();
+
+        // Monthly units sold — last 6 months per top product
+        $now = now();
+        $monthlyTrend = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $m = $now->copy()->subMonths($i);
+            $rev = (float) DB::table('order_items')
+                ->join('orders','order_items.order_id','=','orders.id')
+                ->whereNotIn('orders.status',['cancelled'])
+                ->whereMonth('orders.created_at',$m->month)
+                ->whereYear('orders.created_at',$m->year)
+                ->sum('order_items.total_price_omr');
+            $units = (int) DB::table('order_items')
+                ->join('orders','order_items.order_id','=','orders.id')
+                ->whereNotIn('orders.status',['cancelled'])
+                ->whereMonth('orders.created_at',$m->month)
+                ->whereYear('orders.created_at',$m->year)
+                ->sum('order_items.quantity');
+            $monthlyTrend[] = ['month' => $m->format('M y'), 'revenue' => round($rev,3), 'units' => $units];
+        }
+
+        // Stock levels for all products
+        $stockLevels = DB::table('products')
+            ->leftJoin('product_stock','products.id','=','product_stock.product_id')
+            ->select('products.name','product_stock.quantity','product_stock.minimum_alert')
+            ->orderBy('product_stock.quantity')
+            ->get();
+
+        return compact('products','totalRevenue','totalUnits','totalOrders','avgRevPerProd',
+                       'top8','byCategory','monthlyTrend','stockLevels');
     }
 }

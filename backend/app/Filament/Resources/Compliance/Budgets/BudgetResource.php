@@ -46,7 +46,7 @@ class BudgetResource extends Resource
                 TextColumn::make('expense_budget')->prefix('OMR ')->label('Expense Budget'),
                 TextColumn::make('purchase_budget')->prefix('OMR ')->label('Purchase Budget'),
             ])
-            ->modifyQueryUsing(fn($q) => $q->orderByDesc('year')->orderByDesc('month'))
+            ->defaultSort('year', 'desc')
             ->recordActions([EditAction::make()])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);
     }

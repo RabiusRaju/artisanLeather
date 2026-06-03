@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Orders\Pages;
 
 use App\Filament\Resources\Orders\OrderResource;
-use Filament\Actions\CreateAction;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
 
 class ListOrders extends ListRecords
@@ -13,7 +13,11 @@ class ListOrders extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            Action::make('new_order')
+                ->label('New Order')
+                ->icon('heroicon-o-plus')
+                ->color('warning')
+                ->url(OrderResource::getUrl('create')),
         ];
     }
 }

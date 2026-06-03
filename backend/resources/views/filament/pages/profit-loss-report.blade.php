@@ -1,335 +1,271 @@
 <x-filament-panels::page>
-
-{{-- Chart.js from CDN --}}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
+<script src="/js/chart.umd.min.js"></script>
 @php $d = $this->getReportData(); @endphp
 
-{{-- ── Period Selector ─────────────────────────────────────────────────── --}}
-<div class="mb-6 space-y-3">
-    <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
-        @foreach(['this_month'=>'This Month','last_month'=>'Last Month','this_quarter'=>'Quarter','this_year'=>'This Year','last_year'=>'Last Year'] as $val=>$label)
-            <button wire:click="$set('period','{{ $val }}')"
-                class="flex-shrink-0 px-4 py-2 text-xs font-semibold tracking-wider uppercase rounded-md transition-all whitespace-nowrap
-                    {{ $period===$val ? 'bg-amber-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-amber-100 dark:hover:bg-gray-700' }}">
-                {{ $label }}
-            </button>
+{{-- Period Selector --}}
+<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:20px">
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+        @foreach(['this_month'=>'This Month','last_month'=>'Last Month','this_quarter'=>'This Quarter','this_year'=>'This Year','last_year'=>'Last Year'] as $val=>$label)
+        <button wire:click="$set('period','{{ $val }}')"
+            style="padding:7px 18px;font-size:12px;font-weight:700;border-radius:8px;border:none;cursor:pointer;white-space:nowrap;
+                   background:{{ $period===$val?'#f59e0b':'#f3f4f6' }};color:{{ $period===$val?'#fff':'#6b7280' }}">
+            {{ $label }}
+        </button>
         @endforeach
     </div>
-    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-        <span class="text-xs text-gray-500 font-medium whitespace-nowrap">Custom range:</span>
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-            <input type="date" wire:model.live="dateFrom" class="flex-1 sm:w-36 text-xs border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-amber-400 outline-none">
-            <span class="text-gray-400">→</span>
-            <input type="date" wire:model.live="dateTo" class="flex-1 sm:w-36 text-xs border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-amber-400 outline-none">
-        </div>
-        <span class="text-xs text-gray-400 hidden sm:inline">
-            {{ \Carbon\Carbon::parse($d['from'])->format('d M Y') }} – {{ \Carbon\Carbon::parse($d['to'])->format('d M Y') }}
-        </span>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:12px;color:#9ca3af;font-weight:500">Custom range:</span>
+        <input type="date" wire:model.live="dateFrom"
+            style="font-size:12px;border:1px solid #d1d5db;border-radius:8px;padding:6px 10px;background:#fff;color:#374151;outline:none">
+        <span style="color:#9ca3af">→</span>
+        <input type="date" wire:model.live="dateTo"
+            style="font-size:12px;border:1px solid #d1d5db;border-radius:8px;padding:6px 10px;background:#fff;color:#374151;outline:none">
+        <span style="font-size:11px;color:#9ca3af;margin-left:4px">{{ \Carbon\Carbon::parse($d['from'])->format('d M Y') }} – {{ \Carbon\Carbon::parse($d['to'])->format('d M Y') }}</span>
     </div>
 </div>
 
-{{-- ── KPI Cards: 2 cols → 4 cols ─────────────────────────────────────── --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-    @php
-    $kpis = [
-        ['label'=>'Revenue',       'value'=>number_format($d['totalRevenue'],3), 'icon'=>'💰', 'color'=>'text-green-600 dark:text-green-400',  'bg'=>'from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/10',  'border'=>'border-green-200 dark:border-green-800'],
-        ['label'=>'Purchases',     'value'=>number_format($d['purchaseCost'],3), 'icon'=>'📦', 'color'=>'text-yellow-600 dark:text-yellow-400','bg'=>'from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-900/10','border'=>'border-yellow-200 dark:border-yellow-800'],
-        ['label'=>'Expenses',      'value'=>number_format($d['totalExpenses'],3),'icon'=>'💸', 'color'=>'text-red-600 dark:text-red-400',      'bg'=>'from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/10',          'border'=>'border-red-200 dark:border-red-800'],
-        ['label'=>'Net Profit',    'value'=>number_format($d['netProfit'],3),    'icon'=>$d['netProfit']>=0?'✅':'⚠️',
-         'color'=>$d['netProfit']>=0?'text-emerald-700 dark:text-emerald-400':'text-red-600',
-         'bg'   =>$d['netProfit']>=0?'from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-900/10':'from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/10',
-         'border'=>$d['netProfit']>=0?'border-emerald-200 dark:border-emerald-800':'border-red-200 dark:border-red-800'],
-    ];
-    @endphp
-    @foreach($kpis as $kpi)
-    <div class="rounded-xl border {{ $kpi['border'] }} bg-gradient-to-br {{ $kpi['bg'] }} p-4 shadow-sm">
-        <div class="flex items-center justify-between mb-2">
-            <span class="text-[10px] uppercase tracking-widest font-semibold text-gray-500 dark:text-gray-400">{{ $kpi['label'] }}</span>
-            <span class="text-lg leading-none">{{ $kpi['icon'] }}</span>
+{{-- KPI Cards --}}
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+
+    <div style="border-radius:14px;border:1px solid #a7f3d0;background:linear-gradient(135deg,#ecfdf5,#fff);padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b7280">Total Revenue</span>
+            <span style="font-size:18px">💰</span>
         </div>
-        <p class="text-lg sm:text-2xl font-bold {{ $kpi['color'] }} tabular-nums leading-tight break-all">OMR {{ $kpi['value'] }}</p>
+        <div style="font-size:22px;font-weight:900;color:#059669;font-variant-numeric:tabular-nums">OMR {{ number_format($d['totalRevenue'],3) }}</div>
+        <div style="height:3px;background:#a7f3d0;border-radius:99px;margin-top:10px"></div>
     </div>
-    @endforeach
+
+    <div style="border-radius:14px;border:1px solid #fde68a;background:linear-gradient(135deg,#fffbeb,#fff);padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b7280">Purchases (COGS)</span>
+            <span style="font-size:18px">📦</span>
+        </div>
+        <div style="font-size:22px;font-weight:900;color:#d97706;font-variant-numeric:tabular-nums">OMR {{ number_format($d['purchaseCost'],3) }}</div>
+        <div style="height:3px;background:#fde68a;border-radius:99px;margin-top:10px"></div>
+    </div>
+
+    <div style="border-radius:14px;border:1px solid #fecaca;background:linear-gradient(135deg,#fef2f2,#fff);padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b7280">Total Expenses</span>
+            <span style="font-size:18px">💸</span>
+        </div>
+        <div style="font-size:22px;font-weight:900;color:#dc2626;font-variant-numeric:tabular-nums">OMR {{ number_format($d['totalExpenses'],3) }}</div>
+        <div style="height:3px;background:#fecaca;border-radius:99px;margin-top:10px"></div>
+    </div>
+
+    <div style="border-radius:14px;border:2px solid {{ $d['netProfit']>=0?'#22c55e':'#ef4444' }};background:linear-gradient(135deg,{{ $d['netProfit']>=0?'#ecfdf5':'#fef2f2' }},#fff);padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b7280">Net Profit</span>
+            <span style="font-size:18px">{{ $d['netProfit']>=0?'✅':'⚠️' }}</span>
+        </div>
+        <div style="font-size:22px;font-weight:900;color:{{ $d['netProfit']>=0?'#059669':'#dc2626' }};font-variant-numeric:tabular-nums">OMR {{ number_format($d['netProfit'],3) }}</div>
+        <div style="font-size:11px;color:{{ $d['netProfit']>=0?'#059669':'#dc2626' }};margin-top:8px;font-weight:600">{{ $d['netMargin'] }}% net margin</div>
+    </div>
+
 </div>
 
-{{-- ── Charts Row ────────────────────────────────────────────────────────── --}}
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+{{-- Charts Row --}}
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px">
 
-    {{-- Bar Chart: Revenue vs Costs vs Profit --}}
-    <div class="md:col-span-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white text-sm">Financial Overview</h3>
-                <p class="text-xs text-gray-400 mt-0.5">Revenue · Purchases · Expenses · Net Profit</p>
-            </div>
-        </div>
-        <div style="position:relative;height:220px;">
-            <canvas id="overviewChart"></canvas>
-        </div>
+    {{-- Overview Bar Chart --}}
+    <div style="border-radius:14px;border:1px solid #e5e7eb;background:#fff;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+        <div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:4px">📊 Financial Overview</div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:16px">Revenue · Purchases · Expenses · Net Profit</div>
+        <div x-data="{}"
+             x-init="$nextTick(() => {
+                const el = $el.querySelector('canvas');
+                if (!el || !window.Chart) return;
+                if (el._ci) { el._ci.destroy(); el._ci = null; }
+                el._ci = new Chart(el, {
+                    type:'bar',
+                    data:{
+                        labels:['Revenue','Purchases (COGS)','Expenses','Net Profit'],
+                        datasets:[{
+                            data:[{{ $d['totalRevenue'] }},{{ $d['purchaseCost'] }},{{ $d['totalExpenses'] }},{{ abs($d['netProfit']) }}],
+                            backgroundColor:['rgba(34,197,94,.8)','rgba(234,179,8,.8)','rgba(239,68,68,.8)','{{ $d['netProfit']>=0?'rgba(16,185,129,.85)':'rgba(239,68,68,.85)' }}'],
+                            borderColor:['#22c55e','#eab308','#ef4444','{{ $d['netProfit']>=0?'#10b981':'#ef4444' }}'],
+                            borderWidth:2,borderRadius:8
+                        }]
+                    },
+                    options:{
+                        responsive:true,maintainAspectRatio:false,
+                        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'OMR '+c.parsed.y.toFixed(3)}}},
+                        scales:{x:{grid:{display:false},ticks:{font:{size:11,weight:'600'}}},y:{beginAtZero:true,ticks:{callback:v=>'OMR '+v.toFixed(0)},grid:{color:'rgba(0,0,0,.05)'}}}
+                    }
+                });
+             })"
+             style="position:relative;height:220px"><canvas></canvas></div>
     </div>
 
-    {{-- Donut Chart: Expense Breakdown --}}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
-        <div class="mb-4">
-            <h3 class="font-semibold text-gray-900 dark:text-white text-sm">Expense Breakdown</h3>
-            <p class="text-xs text-gray-400 mt-0.5">By category</p>
-        </div>
+    {{-- Expense Donut --}}
+    <div style="border-radius:14px;border:1px solid #e5e7eb;background:#fff;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+        <div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:4px">💸 Expense Breakdown</div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:12px">By category</div>
         @if($d['expensesByCategory']->count() > 0)
-        <div style="position:relative;height:180px;">
-            <canvas id="expenseDonut"></canvas>
-        </div>
-        <div class="mt-3 space-y-1 max-h-24 overflow-y-auto">
+        @php $expPalette = ['#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#10b981']; @endphp
+        <div x-data="{}"
+             x-init="$nextTick(() => {
+                const el = $el.querySelector('canvas');
+                if (!el || !window.Chart) return;
+                if (el._ci) { el._ci.destroy(); el._ci = null; }
+                el._ci = new Chart(el, {
+                    type:'doughnut',
+                    data:{
+                        labels:{{ $d['expensesByCategory']->keys()->toJson() }},
+                        datasets:[{data:{{ $d['expensesByCategory']->values()->toJson() }},backgroundColor:{{ json_encode($expPalette) }},borderWidth:0,hoverOffset:6}]
+                    },
+                    options:{responsive:true,maintainAspectRatio:false,cutout:'70%',
+                        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': OMR '+c.parsed.toFixed(3)}}}}
+                });
+             })"
+             style="position:relative;height:140px"><canvas></canvas></div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px">
             @foreach($d['expensesByCategory'] as $cat => $amt)
-            <div class="flex justify-between text-xs">
-                <span class="text-gray-500 dark:text-gray-400 truncate mr-2">{{ $cat }}</span>
-                <span class="font-medium text-gray-700 dark:text-gray-300 tabular-nums flex-shrink-0">OMR {{ number_format($amt,3) }}</span>
+            @php $ci = $loop->index; @endphp
+            <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
+                    <div style="width:8px;height:8px;border-radius:50%;background:{{ $expPalette[$ci%count($expPalette)] }};flex-shrink:0"></div>
+                    <span style="font-size:11px;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $cat }}</span>
+                </div>
+                <span style="font-size:11px;font-weight:700;color:#dc2626;margin-left:8px;white-space:nowrap">OMR {{ number_format($amt,3) }}</span>
             </div>
             @endforeach
         </div>
         @else
-        <div class="flex flex-col items-center justify-center h-40 text-gray-400">
-            <span class="text-3xl mb-2">📊</span>
-            <p class="text-xs">No expenses in this period</p>
+        <div style="display:flex;flex-direction:column;align-items:center;padding:40px 0;color:#9ca3af">
+            <span style="font-size:28px;margin-bottom:8px">📊</span>
+            <span style="font-size:12px">No expenses in this period</span>
         </div>
         @endif
     </div>
 
 </div>
 
-{{-- ── Revenue Waterfall Chart ─────────────────────────────────────────── --}}
-<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm mb-6">
-    <div class="flex items-center justify-between mb-4">
-        <div>
-            <h3 class="font-semibold text-gray-900 dark:text-white text-sm">Revenue Sources</h3>
-            <p class="text-xs text-gray-400 mt-0.5">Website vs Custom vs Other</p>
-        </div>
-    </div>
-    <div style="position:relative;height:160px;">
-        <canvas id="revenueChart"></canvas>
-    </div>
+{{-- Revenue Sources Horizontal Bar --}}
+<div style="border-radius:14px;border:1px solid #e5e7eb;background:#fff;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px">
+    <div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:4px">💰 Revenue Sources</div>
+    <div style="font-size:11px;color:#9ca3af;margin-bottom:16px">Website orders vs Custom orders vs Other income</div>
+    <div x-data="{}"
+         x-init="$nextTick(() => {
+            const el = $el.querySelector('canvas');
+            if (!el || !window.Chart) return;
+            if (el._ci) { el._ci.destroy(); el._ci = null; }
+            el._ci = new Chart(el, {
+                type:'bar',
+                data:{
+                    labels:['Website Orders','Custom Orders','Other Income'],
+                    datasets:[{
+                        data:[{{ $d['websiteRevenue'] }},{{ $d['customRevenue'] }},{{ $d['otherRevenue'] }}],
+                        backgroundColor:['rgba(34,197,94,.75)','rgba(16,185,129,.75)','rgba(59,130,246,.75)'],
+                        borderColor:['#22c55e','#10b981','#3b82f6'],
+                        borderWidth:2,borderRadius:{topRight:6,bottomRight:6},borderSkipped:'left'
+                    }]
+                },
+                options:{
+                    indexAxis:'y',responsive:true,maintainAspectRatio:false,
+                    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'OMR '+c.parsed.x.toFixed(3)}}},
+                    scales:{
+                        x:{beginAtZero:true,ticks:{callback:v=>'OMR '+v.toFixed(0)},grid:{color:'rgba(0,0,0,.05)'}},
+                        y:{grid:{display:false},ticks:{font:{size:12,weight:'600'}}}
+                    }
+                }
+            });
+         })"
+         style="position:relative;height:130px"><canvas></canvas></div>
 </div>
 
-{{-- ── P&L Statement Table ─────────────────────────────────────────────── --}}
-<div class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm mb-6">
-    <div class="px-5 py-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+{{-- P&L Statement --}}
+<div style="border-radius:14px;border:1px solid #e5e7eb;background:#fff;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+
+    {{-- Header --}}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:#f9fafb;border-bottom:1px solid #e5e7eb">
         <div>
-            <h3 class="font-semibold text-gray-900 dark:text-white text-sm">Profit & Loss Statement</h3>
-            <p class="text-xs text-gray-400 mt-0.5">{{ \Carbon\Carbon::parse($d['from'])->format('d M Y') }} – {{ \Carbon\Carbon::parse($d['to'])->format('d M Y') }}</p>
+            <div style="font-size:16px;font-weight:800;color:#111827">Profit & Loss Statement</div>
+            <div style="font-size:12px;color:#9ca3af;margin-top:2px">{{ \Carbon\Carbon::parse($d['from'])->format('d M Y') }} – {{ \Carbon\Carbon::parse($d['to'])->format('d M Y') }}</div>
         </div>
-        <span class="text-xs px-3 py-1 rounded-full font-semibold {{ $d['netProfit']>=0?'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400':'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' }}">
-            {{ $d['netProfit']>=0?'Profitable':'Loss' }}
+        <span style="font-size:13px;font-weight:700;padding:6px 16px;border-radius:99px;background:{{ $d['netProfit']>=0?'#d1fae5':'#fee2e2' }};color:{{ $d['netProfit']>=0?'#065f46':'#991b1b' }}">
+            {{ $d['netProfit']>=0?'✅ Profitable':'⚠️ Loss Period' }}
         </span>
     </div>
 
-    <table class="w-full text-sm">
-        {{-- Revenue section --}}
-        <thead>
-            <tr class="bg-green-50 dark:bg-green-900/20">
-                <th colspan="2" class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-green-700 dark:text-green-400">Income / Revenue</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-            @foreach(['Website Orders'=>$d['websiteRevenue'],'Custom / Bespoke Orders'=>$d['customRevenue'],'Other Income (Wholesale etc.)'=>$d['otherRevenue']] as $label=>$val)
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                <td class="px-5 py-3 text-gray-600 dark:text-gray-400 pl-8">{{ $label }}</td>
-                <td class="px-5 py-3 text-right font-medium text-green-600 dark:text-green-400 tabular-nums">OMR {{ number_format($val,3) }}</td>
-            </tr>
-            @endforeach
-            <tr class="bg-green-50 dark:bg-green-900/20 font-semibold">
-                <td class="px-5 py-3 text-green-800 dark:text-green-300">Total Revenue</td>
-                <td class="px-5 py-3 text-right text-green-700 dark:text-green-300 tabular-nums text-base">OMR {{ number_format($d['totalRevenue'],3) }}</td>
-            </tr>
-        </tbody>
+    {{-- REVENUE --}}
+    <div style="padding:4px 0;background:#f0fdf4;border-bottom:1px solid #e5e7eb">
+        <div style="padding:10px 24px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#15803d">💰 Revenue</div>
+    </div>
+    @foreach(['Website Orders'=>$d['websiteRevenue'],'Custom / Bespoke Orders'=>$d['customRevenue'],'Other Income (Wholesale etc.)'=>$d['otherRevenue']] as $label=>$val)
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 24px 13px 40px;border-bottom:1px solid #f3f4f6" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='transparent'">
+        <span style="font-size:13px;color:#374151">{{ $label }}</span>
+        <span style="font-size:13px;font-weight:600;color:#059669;font-variant-numeric:tabular-nums">OMR {{ number_format($val,3) }}</span>
+    </div>
+    @endforeach
+    <div style="display:flex;align-items:baseline;justify-content:space-between;padding:14px 24px;background:#ecfdf5;border-bottom:2px solid #22c55e">
+        <span style="font-size:14px;font-weight:800;color:#065f46">TOTAL REVENUE</span>
+        <span style="font-size:18px;font-weight:900;color:#059669;font-variant-numeric:tabular-nums">OMR {{ number_format($d['totalRevenue'],3) }}</span>
+    </div>
 
-        {{-- COGS section --}}
-        <thead>
-            <tr class="bg-yellow-50 dark:bg-yellow-900/20">
-                <th colspan="2" class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-yellow-700 dark:text-yellow-400">Cost of Goods Sold</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                <td class="px-5 py-3 text-gray-600 dark:text-gray-400 pl-8">Purchases received in period</td>
-                <td class="px-5 py-3 text-right font-medium text-yellow-600 dark:text-yellow-400 tabular-nums">OMR {{ number_format($d['purchaseCost'],3) }}</td>
-            </tr>
-            <tr class="font-semibold {{ $d['grossProfit']>=0?'bg-emerald-50 dark:bg-emerald-900/20':'bg-red-50 dark:bg-red-900/20' }}">
-                <td class="px-5 py-3 {{ $d['grossProfit']>=0?'text-emerald-800 dark:text-emerald-300':'text-red-700' }}">
-                    Gross Profit
-                    <span class="ml-2 text-xs font-normal opacity-70">({{ $d['grossMargin'] }}% margin)</span>
-                </td>
-                <td class="px-5 py-3 text-right tabular-nums text-base {{ $d['grossProfit']>=0?'text-emerald-700 dark:text-emerald-300':'text-red-600' }}">
-                    OMR {{ number_format($d['grossProfit'],3) }}
-                </td>
-            </tr>
-        </tbody>
+    {{-- COGS --}}
+    <div style="padding:4px 0;background:#fffbeb;border-bottom:1px solid #e5e7eb">
+        <div style="padding:10px 24px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#92400e">📦 Cost of Goods Sold</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 24px 13px 40px;border-bottom:1px solid #f3f4f6" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='transparent'">
+        <span style="font-size:13px;color:#374151">Purchases received in period</span>
+        <span style="font-size:13px;font-weight:600;color:#d97706;font-variant-numeric:tabular-nums">OMR {{ number_format($d['purchaseCost'],3) }}</span>
+    </div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;padding:14px 24px;background:{{ $d['grossProfit']>=0?'#ecfdf5':'#fef2f2' }};border-bottom:2px solid {{ $d['grossProfit']>=0?'#22c55e':'#ef4444' }}">
+        <div>
+            <span style="font-size:14px;font-weight:800;color:{{ $d['grossProfit']>=0?'#065f46':'#991b1b' }}">GROSS PROFIT</span>
+            <span style="font-size:12px;color:#9ca3af;margin-left:8px">{{ $d['grossMargin'] }}% margin</span>
+        </div>
+        <span style="font-size:18px;font-weight:900;color:{{ $d['grossProfit']>=0?'#059669':'#dc2626' }};font-variant-numeric:tabular-nums">OMR {{ number_format($d['grossProfit'],3) }}</span>
+    </div>
 
-        {{-- Expenses section --}}
-        <thead>
-            <tr class="bg-red-50 dark:bg-red-900/20">
-                <th colspan="2" class="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-red-700 dark:text-red-400">Operating Expenses</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-            @forelse($d['expensesByCategory'] as $catName => $amount)
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                <td class="px-5 py-3 text-gray-600 dark:text-gray-400 pl-8">{{ $catName }}</td>
-                <td class="px-5 py-3 text-right font-medium text-red-500 tabular-nums">OMR {{ number_format($amount,3) }}</td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="2" class="px-5 py-4 text-center text-gray-400 text-xs italic pl-8">No expenses recorded in this period</td>
-            </tr>
-            @endforelse
-            <tr class="bg-red-50 dark:bg-red-900/20 font-semibold">
-                <td class="px-5 py-3 text-red-800 dark:text-red-300">Total Expenses</td>
-                <td class="px-5 py-3 text-right text-red-700 dark:text-red-300 tabular-nums text-base">OMR {{ number_format($d['totalExpenses'],3) }}</td>
-            </tr>
-        </tbody>
+    {{-- EXPENSES --}}
+    <div style="padding:4px 0;background:#fef2f2;border-bottom:1px solid #e5e7eb">
+        <div style="padding:10px 24px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#991b1b">💸 Operating Expenses</div>
+    </div>
+    @forelse($d['expensesByCategory'] as $catName => $amount)
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 24px 13px 40px;border-bottom:1px solid #f3f4f6" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='transparent'">
+        <span style="font-size:13px;color:#374151">{{ $catName }}</span>
+        <span style="font-size:13px;font-weight:600;color:#dc2626;font-variant-numeric:tabular-nums">OMR {{ number_format($amount,3) }}</span>
+    </div>
+    @empty
+    <div style="padding:16px 40px;font-size:12px;color:#9ca3af;font-style:italic;border-bottom:1px solid #f3f4f6">No expenses recorded in this period</div>
+    @endforelse
+    <div style="display:flex;align-items:baseline;justify-content:space-between;padding:14px 24px;background:#fef2f2;border-bottom:2px solid #ef4444">
+        <span style="font-size:14px;font-weight:800;color:#991b1b">TOTAL EXPENSES</span>
+        <span style="font-size:18px;font-weight:900;color:#dc2626;font-variant-numeric:tabular-nums">OMR {{ number_format($d['totalExpenses'],3) }}</span>
+    </div>
 
-        {{-- NET PROFIT footer --}}
-        <tfoot>
-            <tr class="border-t-4 {{ $d['netProfit']>=0?'border-emerald-400 dark:border-emerald-600 bg-emerald-50 dark:bg-emerald-900/30':'border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/30' }}">
-                <td class="px-5 py-4 font-bold text-lg {{ $d['netProfit']>=0?'text-emerald-800 dark:text-emerald-300':'text-red-800 dark:text-red-300' }}">
-                    NET PROFIT / (LOSS)
-                    <span class="block text-xs font-normal opacity-70 mt-0.5">Net margin: {{ $d['netMargin'] }}%</span>
-                </td>
-                <td class="px-5 py-4 text-right font-bold text-2xl tabular-nums {{ $d['netProfit']>=0?'text-emerald-700 dark:text-emerald-300':'text-red-700 dark:text-red-400' }}">
-                    OMR {{ number_format($d['netProfit'],3) }}
-                </td>
-            </tr>
-        </tfoot>
-    </table>
+    {{-- NET PROFIT --}}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:22px 24px;background:{{ $d['netProfit']>=0?'linear-gradient(135deg,#ecfdf5,#d1fae5)':'linear-gradient(135deg,#fef2f2,#fee2e2)' }};border-top:3px solid {{ $d['netProfit']>=0?'#22c55e':'#ef4444' }}">
+        <div>
+            <div style="font-size:16px;font-weight:900;color:{{ $d['netProfit']>=0?'#065f46':'#991b1b' }};text-transform:uppercase;letter-spacing:.04em">NET PROFIT / (LOSS)</div>
+            <div style="font-size:12px;color:{{ $d['netProfit']>=0?'#059669':'#dc2626' }};margin-top:4px;font-weight:600">Net margin: {{ $d['netMargin'] }}%</div>
+        </div>
+        <div style="font-size:28px;font-weight:900;color:{{ $d['netProfit']>=0?'#059669':'#dc2626' }};font-variant-numeric:tabular-nums">
+            OMR {{ number_format($d['netProfit'],3) }}
+        </div>
+    </div>
+
 </div>
 
-{{-- Chart.js scripts --}}
 <script>
-document.addEventListener('livewire:navigated', initCharts);
-document.addEventListener('DOMContentLoaded', initCharts);
-
-function initCharts() {
-    const isDark = document.documentElement.classList.contains('dark');
-    const textColor  = isDark ? '#9ca3af' : '#6b7280';
-    const gridColor  = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-
-    // ── 1. Financial Overview Bar Chart ─────────────────────────────────
-    const overviewCtx = document.getElementById('overviewChart');
-    if (overviewCtx) {
-        if (overviewCtx._chartInstance) overviewCtx._chartInstance.destroy();
-        overviewCtx._chartInstance = new Chart(overviewCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Revenue', 'Purchases', 'Expenses', 'Net Profit'],
-                datasets: [{
-                    data: [
-                        {{ $d['totalRevenue'] }},
-                        {{ $d['purchaseCost'] }},
-                        {{ $d['totalExpenses'] }},
-                        {{ abs($d['netProfit']) }},
-                    ],
-                    backgroundColor: [
-                        'rgba(34,197,94,0.8)',
-                        'rgba(234,179,8,0.8)',
-                        'rgba(239,68,68,0.8)',
-                        '{{ $d['netProfit'] >= 0 ? "rgba(16,185,129,0.85)" : "rgba(239,68,68,0.85)" }}',
-                    ],
-                    borderColor: [
-                        'rgba(34,197,94,1)',
-                        'rgba(234,179,8,1)',
-                        'rgba(239,68,68,1)',
-                        '{{ $d['netProfit'] >= 0 ? "rgba(16,185,129,1)" : "rgba(239,68,68,1)" }}',
-                    ],
-                    borderWidth: 2,
-                    borderRadius: 6,
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => 'OMR ' + ctx.parsed.y.toFixed(3),
-                        }
-                    }
-                },
-                scales: {
-                    x: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } },
-                    y: {
-                        ticks: { color: textColor, font: { size: 10 }, callback: v => 'OMR ' + v.toFixed(0) },
-                        grid: { color: gridColor },
-                        beginAtZero: true,
-                    }
-                }
+// Re-init Alpine charts after Livewire updates period/date
+document.addEventListener('livewire:updated', () => {
+    document.querySelectorAll('[x-data]').forEach(el => {
+        if (el._x_dataStack) {
+            const canvas = el.querySelector('canvas');
+            if (canvas && canvas._ci) {
+                canvas._ci.destroy();
+                canvas._ci = null;
             }
-        });
+        }
+    });
+    if (window.Alpine) {
+        window.Alpine.initTree(document.body);
     }
-
-    // ── 2. Expense Donut ─────────────────────────────────────────────────
-    const donutCtx = document.getElementById('expenseDonut');
-    @if($d['expensesByCategory']->count() > 0)
-    if (donutCtx) {
-        if (donutCtx._chartInstance) donutCtx._chartInstance.destroy();
-        const palette = ['#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#10b981','#f97316','#6366f1','#14b8a6','#a855f7','#64748b','#84cc16'];
-        donutCtx._chartInstance = new Chart(donutCtx, {
-            type: 'doughnut',
-            data: {
-                labels: @json($d['expensesByCategory']->keys()),
-                datasets: [{
-                    data: @json($d['expensesByCategory']->values()),
-                    backgroundColor: palette.slice(0, {{ $d['expensesByCategory']->count() }}),
-                    borderWidth: 0,
-                    hoverOffset: 6,
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { callbacks: { label: ctx => ctx.label + ': OMR ' + ctx.parsed.toFixed(3) } }
-                }
-            }
-        });
-    }
-    @endif
-
-    // ── 3. Revenue Sources Horizontal Bar ───────────────────────────────
-    const revCtx = document.getElementById('revenueChart');
-    if (revCtx) {
-        if (revCtx._chartInstance) revCtx._chartInstance.destroy();
-        revCtx._chartInstance = new Chart(revCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Website Orders', 'Custom Orders', 'Other Income'],
-                datasets: [{
-                    data: [{{ $d['websiteRevenue'] }}, {{ $d['customRevenue'] }}, {{ $d['otherRevenue'] }}],
-                    backgroundColor: ['rgba(34,197,94,0.75)','rgba(16,185,129,0.75)','rgba(59,130,246,0.75)'],
-                    borderColor:     ['rgba(34,197,94,1)','rgba(16,185,129,1)','rgba(59,130,246,1)'],
-                    borderWidth: 2, borderRadius: 5,
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true, maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { callbacks: { label: ctx => 'OMR ' + ctx.parsed.x.toFixed(3) } }
-                },
-                scales: {
-                    x: {
-                        ticks: { color: textColor, font: { size: 10 }, callback: v => 'OMR '+v.toFixed(0) },
-                        grid: { color: gridColor }, beginAtZero: true,
-                    },
-                    y: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } }
-                }
-            }
-        });
-    }
-}
-
-// Re-init charts when Livewire updates the page
-document.addEventListener('livewire:updated', () => setTimeout(initCharts, 100));
+});
 </script>
 
 </x-filament-panels::page>
