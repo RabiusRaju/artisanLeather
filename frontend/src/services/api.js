@@ -21,3 +21,7 @@ export const fetchBrands    = ()            => api.get('/brands')
 export const trackOrder     = (orderNumber) => api.get(`/track/${orderNumber}`)
 export const fetchPosts     = (params = {}) => api.get('/posts', { params })
 export const fetchPost      = (slug)        => api.get(`/posts/${slug}`)
+export const fetchSurvey      = (slug)        => api.get(`/surveys/${slug}`)
+export const submitSurvey     = (slug, data, token) => api.post(`/surveys/${slug}/respond`, data, {
+  headers: token ? { 'X-Survey-Token': token } : {}
+})

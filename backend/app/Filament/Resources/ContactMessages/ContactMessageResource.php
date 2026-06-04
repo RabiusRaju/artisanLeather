@@ -5,6 +5,7 @@ use App\Filament\Resources\ContactMessages\Pages;
 use App\Models\ContactMessage;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkActionGroup;
@@ -21,7 +22,7 @@ class ContactMessageResource extends Resource
     protected static ?string $model = ContactMessage::class;
 
     public static function getNavigationIcon(): string { return 'heroicon-o-envelope'; }
-    public static function getNavigationGroup(): string { return 'Sales'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Sales->value; }
     public static function getNavigationSort(): int { return 2; }
     public static function getNavigationBadge(): ?string {
         return (string) ContactMessage::where('status', 'unread')->count() ?: null;

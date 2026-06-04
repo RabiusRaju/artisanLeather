@@ -13,6 +13,7 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -35,7 +36,7 @@ class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
     public static function getNavigationIcon(): string  { return 'heroicon-o-users'; }
-    public static function getNavigationGroup(): string { return 'Human Resources'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::HumanResources->value; }
     public static function getNavigationSort(): int     { return 2; }
     public static function getNavigationBadge(): ?string
     {

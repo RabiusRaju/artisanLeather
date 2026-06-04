@@ -4,6 +4,7 @@ namespace App\Filament\Pages\Analytics;
 use App\Models\Customer;
 use App\Models\CustomOrder;
 use App\Models\Order;
+use App\Enums\NavigationGroupEnum;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\DB;
 
@@ -12,7 +13,7 @@ class SalesDashboard extends Page
 {
     protected string $view = 'filament.pages.analytics.sales-dashboard';
     public static function getNavigationIcon(): string  { return 'heroicon-o-chart-pie'; }
-    public static function getNavigationGroup(): string { return 'Analytics'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Analytics->value; }
     public static function getNavigationSort(): int     { return 1; }
     public function getTitle(): string                  { return 'Sales Dashboard'; }
 

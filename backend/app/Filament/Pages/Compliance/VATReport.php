@@ -7,13 +7,14 @@ use App\Models\Order;
 use App\Models\PurchaseOrder;
 use App\Models\VatSetting;
 use Filament\Actions\Action;
+use App\Enums\NavigationGroupEnum;
 use Filament\Pages\Page;
 
 class VATReport extends Page
 {
     protected string $view = 'filament.pages.compliance.vat-report';
     public static function getNavigationIcon(): string  { return 'heroicon-o-receipt-percent'; }
-    public static function getNavigationGroup(): string { return 'Compliance'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Compliance->value; }
     public static function getNavigationSort(): int     { return 1; }
     public function getTitle(): string                  { return 'VAT Report'; }
 

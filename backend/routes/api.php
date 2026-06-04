@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\TrackOrderController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\SurveyController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -20,6 +21,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/brands',            [BrandController::class, 'index']);
     Route::get('/posts',             [PostController::class, 'index']);
     Route::get('/posts/{slug}',      [PostController::class, 'show']);
+    Route::get('/surveys/{slug}',     [SurveyController::class, 'show']);
+    Route::post('/surveys/{slug}/respond', [SurveyController::class, 'respond']);
     Route::get('/track/{orderNumber}', [TrackOrderController::class, 'show']);
     Route::post('/orders',           [OrderController::class, 'store']);
     Route::post('/contact',          [ContactController::class, 'store']);

@@ -7,6 +7,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -20,7 +21,7 @@ class OtherIncomeResource extends Resource
 {
     protected static ?string $model = OtherIncome::class;
     public static function getNavigationIcon(): string  { return 'heroicon-o-arrow-trending-up'; }
-    public static function getNavigationGroup(): string { return 'Finance'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Finance->value; }
     public static function getNavigationSort(): int     { return 5; }
 
     public static function form(Schema $schema): Schema

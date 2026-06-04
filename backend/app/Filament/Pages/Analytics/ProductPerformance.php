@@ -1,6 +1,7 @@
 <?php
 namespace App\Filament\Pages\Analytics;
 
+use App\Enums\NavigationGroupEnum;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\DB;
 
@@ -8,7 +9,7 @@ class ProductPerformance extends Page
 {
     protected string $view = 'filament.pages.analytics.product-performance';
     public static function getNavigationIcon(): string  { return 'heroicon-o-shopping-bag'; }
-    public static function getNavigationGroup(): string { return 'Analytics'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Analytics->value; }
     public static function getNavigationSort(): int     { return 2; }
     public function getTitle(): string                  { return 'Product Performance'; }
 

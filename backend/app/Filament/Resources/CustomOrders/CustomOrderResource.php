@@ -11,6 +11,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\DateTimePicker;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -31,8 +32,8 @@ class CustomOrderResource extends Resource
     protected static ?string $model = CustomOrder::class;
 
     public static function getNavigationIcon(): string { return 'heroicon-o-scissors'; }
-    public static function getNavigationGroup(): string { return 'Customers'; }
-    public static function getNavigationSort(): int { return 2; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Sales->value; }
+    public static function getNavigationSort(): int { return 3; }
     public static function getNavigationBadge(): ?string
     {
         return (string) CustomOrder::whereIn('status', ['inquiry','confirmed','in_production'])->count() ?: null;

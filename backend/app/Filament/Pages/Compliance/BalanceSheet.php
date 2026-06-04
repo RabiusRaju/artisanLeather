@@ -7,13 +7,14 @@ use App\Models\Order;
 use App\Models\ProductStock;
 use App\Models\PurchaseOrder;
 use App\Models\VatSetting;
+use App\Enums\NavigationGroupEnum;
 use Filament\Pages\Page;
 
 class BalanceSheet extends Page
 {
     protected string $view = 'filament.pages.compliance.balance-sheet';
     public static function getNavigationIcon(): string  { return 'heroicon-o-scale'; }
-    public static function getNavigationGroup(): string { return 'Compliance'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Compliance->value; }
     public static function getNavigationSort(): int     { return 2; }
     public function getTitle(): string                  { return 'Balance Sheet'; }
 

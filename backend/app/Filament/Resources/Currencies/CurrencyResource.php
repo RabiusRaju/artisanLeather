@@ -5,6 +5,7 @@ use App\Filament\Resources\Currencies\Pages;
 use App\Models\Currency;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkActionGroup;
@@ -19,7 +20,7 @@ class CurrencyResource extends Resource
     protected static ?string $model = Currency::class;
 
     public static function getNavigationIcon(): string { return 'heroicon-o-currency-dollar'; }
-    public static function getNavigationGroup(): string { return 'Settings'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Settings->value; }
     public static function getNavigationSort(): int { return 1; }
 
     public static function form(Schema $schema): Schema

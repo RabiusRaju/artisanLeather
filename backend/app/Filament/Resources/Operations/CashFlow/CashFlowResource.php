@@ -8,6 +8,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -24,7 +25,7 @@ class CashFlowResource extends Resource
 {
     protected static ?string $model = CashFlowEntry::class;
     public static function getNavigationIcon(): string  { return 'heroicon-o-banknotes'; }
-    public static function getNavigationGroup(): string { return 'Operations'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Operations->value; }
     public static function getNavigationSort(): int     { return 2; }
     public static function getNavigationLabel(): string { return 'Cash Flow'; }
 

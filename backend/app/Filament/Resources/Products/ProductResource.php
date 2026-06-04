@@ -14,6 +14,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
@@ -38,7 +39,7 @@ class ProductResource extends Resource
     protected static ?string $model = Product::class;
 
     public static function getNavigationIcon(): string { return 'heroicon-o-shopping-bag'; }
-    public static function getNavigationGroup(): string { return 'Catalogue'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Catalogue->value; }
     public static function getNavigationSort(): int { return 2; }
 
     public static function form(Schema $schema): Schema

@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OtherIncome;
 use App\Models\PurchaseOrder;
 use Filament\Actions\Action;
+use App\Enums\NavigationGroupEnum;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\InteractsWithForms;
 
@@ -18,8 +19,8 @@ class ProfitLossReport extends Page
     protected string $view = 'filament.pages.profit-loss-report';
 
     public static function getNavigationIcon(): string  { return 'heroicon-o-chart-bar'; }
-    public static function getNavigationGroup(): string { return 'Finance'; }
-    public static function getNavigationSort(): int     { return 10; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Compliance->value; }
+    public static function getNavigationSort(): int     { return 6; }
     public function getTitle(): string                  { return 'Profit & Loss Report'; }
 
     public string  $period   = 'this_month';

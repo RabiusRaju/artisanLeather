@@ -2,13 +2,14 @@
 namespace App\Filament\Pages\Compliance;
 
 use App\Models\CashFlowEntry;
+use App\Enums\NavigationGroupEnum;
 use Filament\Pages\Page;
 
 class BankReconciliation extends Page
 {
     protected string $view = 'filament.pages.compliance.bank-reconciliation';
     public static function getNavigationIcon(): string  { return 'heroicon-o-building-library'; }
-    public static function getNavigationGroup(): string { return 'Compliance'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Compliance->value; }
     public static function getNavigationSort(): int     { return 5; }
     public function getTitle(): string                  { return 'Bank Reconciliation'; }
 

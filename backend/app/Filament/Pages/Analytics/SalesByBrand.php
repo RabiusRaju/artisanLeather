@@ -1,6 +1,7 @@
 <?php
 namespace App\Filament\Pages\Analytics;
 
+use App\Enums\NavigationGroupEnum;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\DB;
 
@@ -9,7 +10,7 @@ class SalesByBrand extends Page
 {
     protected string $view = 'filament.pages.analytics.sales-by-brand';
     public static function getNavigationIcon(): string  { return 'heroicon-o-bookmark'; }
-    public static function getNavigationGroup(): string { return 'Analytics'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Analytics->value; }
     public static function getNavigationSort(): int     { return 4; }
     public function getTitle(): string                  { return 'Sales by Collection'; }
 

@@ -6,6 +6,7 @@ use App\Models\Budget;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -19,7 +20,7 @@ class BudgetResource extends Resource
 {
     protected static ?string $model = Budget::class;
     public static function getNavigationIcon(): string  { return 'heroicon-o-calculator'; }
-    public static function getNavigationGroup(): string { return 'Compliance'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Compliance->value; }
     public static function getNavigationSort(): int     { return 4; }
 
     public static function form(Schema $schema): Schema

@@ -8,6 +8,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -30,7 +31,7 @@ class BrandResource extends Resource
     protected static ?string $model = Brand::class;
 
     public static function getNavigationIcon(): string  { return 'heroicon-o-bookmark'; }
-    public static function getNavigationGroup(): string { return 'Catalogue'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Catalogue->value; }
     public static function getNavigationSort(): int     { return 3; }
 
     public static function form(Schema $schema): Schema

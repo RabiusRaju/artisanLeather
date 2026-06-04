@@ -2,8 +2,10 @@
 
 namespace App\Providers\Filament;
 
+use App\Enums\NavigationGroupEnum;
 use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\AuthenticateSession;
+use Filament\Navigation\NavigationBuilder;
+use Filament\Navigation\NavigationGroup;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
@@ -26,10 +28,54 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->profile(isSimple: false)
             ->colors([
                 'primary' => Color::Amber,
             ])
             ->brandName('Artisan Leather')
+
+            // ── Navigation order — guaranteed on every request type ─────────────
+            ->navigation(function (NavigationBuilder $nav): NavigationBuilder {
+                // bootCurrentPanel() is idempotent — safe to call on any request.
+                // Required because /livewire/update bypasses SetUpPanel middleware,
+                // leaving resources/pages undiscovered without this explicit boot.
+                filament()->bootCurrentPanel();
+
+                $order = array_flip([
+                    'Sales', 'Customers', 'Catalogue', 'Operations', 'Finance',
+                    'Analytics', 'Compliance', 'Human Resources', 'Content', 'Settings',
+                ]);
+
+                $items = collect();
+                foreach (filament()->getResources() as $resource) {
+                    $items = $items->merge($resource::getNavigationItems());
+                }
+                foreach (filament()->getPages() as $page) {
+                    $items = $items->merge($page::getNavigationItems());
+                }
+
+                $grouped = $items
+                    ->filter(fn($item) => $item->isVisible())
+                    ->sortBy(fn($item) => $item->getSort())
+                    ->groupBy(fn($item) => $item->getGroup() ?? '');
+
+                $groups = collect($order)
+                    ->map(fn($_, $groupName) =>
+                        NavigationGroup::make($groupName)
+                            ->items($grouped->get($groupName, collect())->all())
+                    )
+                    ->filter(fn($g) => filled($g->getItems()))
+                    ->values()
+                    ->all();
+
+                return $nav->groups($groups);
+            })
+
+            // ── Topbar notification icons ─────────────────────────────────────
+            ->renderHook(
+                'panels::topbar.end',
+                fn () => view('filament.topbar.notifications')
+            )
 
             // ── PWA: meta tags + SW ───────────────────────────────────────────
             ->renderHook(
@@ -75,7 +121,6 @@ class AdminPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
-                AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 PreventRequestForgery::class,
                 SubstituteBindings::class,

@@ -5,13 +5,14 @@ use App\Models\Budget;
 use App\Models\CustomOrder;
 use App\Models\Order;
 use App\Models\Expense;
+use App\Enums\NavigationGroupEnum;
 use Filament\Pages\Page;
 
 class BudgetForecast extends Page
 {
     protected string $view = 'filament.pages.compliance.budget-forecast';
     public static function getNavigationIcon(): string  { return 'heroicon-o-presentation-chart-line'; }
-    public static function getNavigationGroup(): string { return 'Compliance'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Compliance->value; }
     public static function getNavigationSort(): int     { return 3; }
     public function getTitle(): string                  { return 'Budget & Forecast'; }
 

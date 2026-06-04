@@ -3,13 +3,14 @@ namespace App\Filament\Pages\Analytics;
 
 use App\Models\CustomOrder;
 use App\Models\Order;
+use App\Enums\NavigationGroupEnum;
 use Filament\Pages\Page;
 
 class SeasonalReport extends Page
 {
     protected string $view = 'filament.pages.analytics.seasonal-report';
     public static function getNavigationIcon(): string  { return 'heroicon-o-calendar-days'; }
-    public static function getNavigationGroup(): string { return 'Analytics'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Analytics->value; }
     public static function getNavigationSort(): int     { return 5; }
     public function getTitle(): string                  { return 'Seasonal Report'; }
 

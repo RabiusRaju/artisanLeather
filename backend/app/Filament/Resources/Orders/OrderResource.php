@@ -12,6 +12,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
@@ -32,7 +33,7 @@ class OrderResource extends Resource
     protected static ?string $model = Order::class;
 
     public static function getNavigationIcon(): string { return 'heroicon-o-clipboard-document-list'; }
-    public static function getNavigationGroup(): string { return 'Sales'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Sales->value; }
     public static function getNavigationSort(): int { return 1; }
     public static function getNavigationBadge(): ?string
     {

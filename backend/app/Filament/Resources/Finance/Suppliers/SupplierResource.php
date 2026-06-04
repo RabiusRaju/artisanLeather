@@ -7,6 +7,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
@@ -25,7 +26,7 @@ class SupplierResource extends Resource
 {
     protected static ?string $model = Supplier::class;
     public static function getNavigationIcon(): string  { return 'heroicon-o-truck'; }
-    public static function getNavigationGroup(): string { return 'Finance'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Finance->value; }
     public static function getNavigationSort(): int     { return 1; }
 
     public static function form(Schema $schema): Schema

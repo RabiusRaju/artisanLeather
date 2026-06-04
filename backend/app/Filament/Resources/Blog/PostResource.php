@@ -12,12 +12,14 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
@@ -35,7 +37,7 @@ class PostResource extends Resource
 {
     protected static ?string $model = Post::class;
     public static function getNavigationIcon(): string  { return 'heroicon-o-pencil-square'; }
-    public static function getNavigationGroup(): string { return 'Content'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Content->value; }
     public static function getNavigationSort(): int     { return 1; }
     public static function getNavigationBadge(): ?string
     {
@@ -293,7 +295,42 @@ class PostResource extends Resource
                         'leather-knowledge' => 'Leather Knowledge', 'news' => 'News', 'general' => 'General',
                     ]),
             ])
-            ->recordActions([EditAction::make()])
+            ->recordActions([
+                EditAction::make(),
+
+                Action::make('share_whatsapp')
+                    ->label('WhatsApp')
+                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                    ->color('success')
+                    ->url(fn($record) =>
+                        'https://wa.me/?text=' . urlencode(
+                            "📖 New article from Artisan Leather:\n\n" .
+                            "*{$record->title}*\n" .
+                            ($record->excerpt ? "_{$record->excerpt}_\n\n" : "\n") .
+                            "👉 https://artisanleatherom.com/blog/{$record->slug}\n\n" .
+                            "#{$record->category} #ArtisanLeather #Oman"
+                        )
+                    )
+                    ->openUrlInNewTab()
+                    ->visible(fn($record) => $record->is_published),
+
+                Action::make('copy_link')
+                    ->label('Copy Link')
+                    ->icon('heroicon-o-link')
+                    ->color('gray')
+                    ->action(function ($record, $livewire) {
+                        $url = "https://artisanleatherom.com/blog/{$record->slug}";
+                        $livewire->dispatch('copy-to-clipboard', text: $url);
+                    })
+                    ->extraAttributes(fn($record) => [
+                        'x-data' => '{}',
+                        'x-on:copy-to-clipboard.window' => "
+                            navigator.clipboard.writeText(\$event.detail.text);
+                            \$el.textContent = '✓ Copied!';
+                            setTimeout(() => \$el.textContent = 'Copy Link', 2000);
+                        ",
+                    ]),
+            ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);
     }
 

@@ -11,6 +11,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -26,7 +27,7 @@ class ExpenseResource extends Resource
 {
     protected static ?string $model = Expense::class;
     public static function getNavigationIcon(): string  { return 'heroicon-o-arrow-trending-down'; }
-    public static function getNavigationGroup(): string { return 'Finance'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Finance->value; }
     public static function getNavigationSort(): int     { return 4; }
     public static function getNavigationBadge(): ?string
     {

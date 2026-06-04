@@ -1,0 +1,19 @@
+:8000 {
+    root * /Applications/XAMPP/xamppfiles/htdocs/artisan_leather/backend/public
+
+    # PHP via PHP-FPM 8.4
+    php_fastcgi 127.0.0.1:9000 {
+        env APP_ENV local
+    }
+
+    # Serve static files directly
+    file_server
+
+    # Encode responses
+    encode gzip
+
+    # Logs
+    log {
+        output file /tmp/caddy-artisan.log
+    }
+}

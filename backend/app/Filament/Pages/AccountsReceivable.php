@@ -2,13 +2,14 @@
 namespace App\Filament\Pages;
 
 use App\Models\CustomOrder;
+use App\Enums\NavigationGroupEnum;
 use Filament\Pages\Page;
 
 class AccountsReceivable extends Page
 {
     protected string $view = 'filament.pages.accounts-receivable';
     public static function getNavigationIcon(): string  { return 'heroicon-o-inbox-arrow-down'; }
-    public static function getNavigationGroup(): string { return 'Operations'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Operations->value; }
     public static function getNavigationSort(): int     { return 4; }
     public function getTitle(): string                  { return 'Accounts Receivable'; }
 

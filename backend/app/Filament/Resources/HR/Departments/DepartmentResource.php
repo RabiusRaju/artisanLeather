@@ -6,6 +6,7 @@ use App\Models\Department;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -20,7 +21,7 @@ class DepartmentResource extends Resource
 {
     protected static ?string $model = Department::class;
     public static function getNavigationIcon(): string  { return 'heroicon-o-building-office'; }
-    public static function getNavigationGroup(): string { return 'Human Resources'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::HumanResources->value; }
     public static function getNavigationSort(): int     { return 1; }
 
     public static function form(Schema $schema): Schema

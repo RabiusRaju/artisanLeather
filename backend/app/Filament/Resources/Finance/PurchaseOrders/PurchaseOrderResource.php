@@ -10,6 +10,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -29,7 +30,7 @@ class PurchaseOrderResource extends Resource
 {
     protected static ?string $model = PurchaseOrder::class;
     public static function getNavigationIcon(): string  { return 'heroicon-o-shopping-cart'; }
-    public static function getNavigationGroup(): string { return 'Finance'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Finance->value; }
     public static function getNavigationSort(): int     { return 2; }
     public static function getNavigationBadge(): ?string
     {

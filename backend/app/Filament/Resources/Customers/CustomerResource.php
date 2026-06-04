@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
@@ -28,7 +29,7 @@ class CustomerResource extends Resource
     protected static ?string $model = Customer::class;
 
     public static function getNavigationIcon(): string { return 'heroicon-o-users'; }
-    public static function getNavigationGroup(): string { return 'Customers'; }
+    public static function getNavigationGroup(): string { return NavigationGroupEnum::Customers->value; }
     public static function getNavigationSort(): int { return 1; }
     public static function getNavigationBadge(): ?string
     {
