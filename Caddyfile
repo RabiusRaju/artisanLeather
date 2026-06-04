@@ -1,19 +1,38 @@
 :8000 {
     root * /Applications/XAMPP/xamppfiles/htdocs/artisan_leather/backend/public
 
-    # PHP via PHP-FPM 8.4
+    # ── PHP via PHP-FPM 8.4 ─────────────────────────────────────────────────
     php_fastcgi 127.0.0.1:9000 {
         env APP_ENV local
     }
 
-    # Serve static files directly
+    # ── No-cache headers for all HTML/dynamic responses ───────────────────────
+    # Prevents browser from serving stale data after save/redirect
+    @dynamic {
+        not path *.css *.js *.png *.jpg *.jpeg *.gif *.svg *.ico *.woff *.woff2 *.ttf *.eot *.map
+    }
+    header @dynamic {
+        Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Pragma "no-cache"
+        Expires "0"
+        -ETag
+    }
+
+    # ── Static assets — allow caching with versioned URLs ────────────────────
+    @static {
+        path *.css *.js *.png *.jpg *.jpeg *.gif *.svg *.ico *.woff *.woff2 *.ttf *.eot
+    }
+    header @static Cache-Control "public, max-age=31536000, immutable"
+
+    # ── Serve static files ───────────────────────────────────────────────────
     file_server
 
-    # Encode responses
+    # ── Compress responses ───────────────────────────────────────────────────
     encode gzip
 
-    # Logs
+    # ── Logs ─────────────────────────────────────────────────────────────────
     log {
         output file /tmp/caddy-artisan.log
+        level ERROR
     }
 }

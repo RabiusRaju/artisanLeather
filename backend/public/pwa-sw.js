@@ -1,13 +1,13 @@
 // Artisan Leather Admin — Service Worker
-const CACHE_NAME  = 'al-admin-v3';
-const STATIC_CACHE = 'al-static-v3';
+const CACHE_NAME  = 'al-admin-v4';
+const STATIC_CACHE = 'al-static-v4';
 
-// Assets to cache on install
+// Assets to cache on install — only truly static resources
 const PRECACHE_URLS = [
-  '/admin',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  // NOTE: /admin is intentionally excluded — dynamic pages must never be cached
 ];
 
 // ── Install: pre-cache shell ──────────────────────────────────────────────
@@ -22,16 +22,25 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// ── Activate: clean old caches ────────────────────────────────────────────
+// ── Activate: clean old caches + purge any cached admin pages ─────────────
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
+    caches.keys().then(async keys => {
+      // Delete old cache versions
+      await Promise.all(
         keys
           .filter(key => key !== CACHE_NAME && key !== STATIC_CACHE)
           .map(key => caches.delete(key))
-      )
-    )
+      );
+      // Purge any /admin/* entries from the current cache (stale data cleanup)
+      const cache = await caches.open(CACHE_NAME);
+      const requests = await cache.keys();
+      await Promise.all(
+        requests
+          .filter(req => new URL(req.url).pathname.startsWith('/admin'))
+          .map(req => cache.delete(req))
+      );
+    })
   );
   self.clients.claim();
 });
@@ -61,9 +70,10 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Admin HTML pages → Stale while revalidate
+  // Admin HTML pages → ALWAYS network only — never serve stale data
+  // StaleWhileRevalidate was the bug: it served cached (old) page after save/redirect
   if (url.pathname.startsWith('/admin')) {
-    event.respondWith(staleWhileRevalidate(request));
+    event.respondWith(networkOnly(request));
     return;
   }
 });
@@ -99,16 +109,14 @@ async function cacheFirst(request) {
   }
 }
 
-async function staleWhileRevalidate(request) {
-  const cache  = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
-
-  const fetchPromise = fetch(request).then(response => {
-    if (response.ok) cache.put(request, response.clone());
-    return response;
-  }).catch(() => null);
-
-  return cached || await fetchPromise || offlinePage();
+// Network only — always fetch fresh from server, never serve stale cache.
+// Used for ALL admin pages to prevent stale data after save/redirect.
+async function networkOnly(request) {
+  try {
+    return await fetch(request);
+  } catch {
+    return offlinePage();
+  }
 }
 
 function offlinePage() {

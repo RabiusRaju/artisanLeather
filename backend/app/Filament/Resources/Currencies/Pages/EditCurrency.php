@@ -4,4 +4,5 @@ use App\Filament\Resources\Currencies\CurrencyResource;
 use Filament\Resources\Pages\EditRecord;
 class EditCurrency extends EditRecord {
     protected static string $resource = CurrencyResource::class;
+    protected function getRedirectUrl(): string { return $this->getResource()::getUrl("edit", ["record" => $this->getRecord()]); }
 }
