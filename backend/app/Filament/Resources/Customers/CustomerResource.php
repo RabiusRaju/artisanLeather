@@ -3,7 +3,9 @@ namespace App\Filament\Resources\Customers;
 
 use App\Filament\Resources\Customers\Pages;
 use App\Filament\Resources\Customers\RelationManagers;
+use App\Models\Country;
 use App\Models\Customer;
+use App\Models\Governorate;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
@@ -58,8 +60,8 @@ class CustomerResource extends Resource
                     ])->columns(3),
 
                     Section::make('Location')->schema([
-                        TextInput::make('country')->default('Oman')->columnSpan(1),
-                        TextInput::make('governorate')->columnSpan(1),
+                        Select::make('country')->label('Country')->options(\App\Models\Country::where('is_active',true)->orderBy('sort_order')->pluck('name','name'))->searchable()->default('Oman')->columnSpan(1),
+                        Select::make('governorate')->label('Governorate')->options(\App\Models\Governorate::where('is_active',true)->orderBy('sort_order')->pluck('name','name'))->searchable()->columnSpan(1),
                         TextInput::make('city')->columnSpan(1),
                         Textarea::make('address')->rows(2)->columnSpanFull(),
                     ])->columns(3),

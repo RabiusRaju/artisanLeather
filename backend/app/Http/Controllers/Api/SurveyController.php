@@ -6,6 +6,7 @@ use App\Models\Survey;
 use App\Models\SurveyAnswer;
 use App\Models\SurveyResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
 class SurveyController extends Controller
@@ -19,13 +20,16 @@ class SurveyController extends Controller
             return response()->json(['error' => 'Survey is not currently active.'], 403);
         }
 
-        // Check for duplicate submission (session-based)
+        // Check for duplicate submission (token + IP dual check)
         if (!$survey->allow_multiple_responses) {
             $token = $request->header('X-Survey-Token') ?? $request->query('token');
-            if ($token && SurveyResponse::where('survey_id', $survey->id)
-                                        ->where('session_token', $token)
-                                        ->whereNotNull('completed_at')
-                                        ->exists()) {
+            $tokenCompleted = $token && SurveyResponse::where('survey_id', $survey->id)
+                ->where('session_token', $token)->whereNotNull('completed_at')->exists();
+            $ipCompleted = SurveyResponse::where('survey_id', $survey->id)
+                ->where('ip_address', $request->ip())->whereNotNull('completed_at')
+                ->where('created_at', '>=', now()->subDays(7))->exists();
+
+            if ($tokenCompleted || $ipCompleted) {
                 return response()->json(['error' => 'You have already completed this survey.'], 409);
             }
         }
@@ -68,15 +72,37 @@ class SurveyController extends Controller
             return response()->json(['error' => 'Survey is not currently active.'], 403);
         }
 
-        // Generate or reuse session token
-        $token = $request->header('X-Survey-Token') ?? Str::random(32);
+        // C-5 FIX: IP-based rate limiting — max 5 submissions per IP per survey per hour
+        $rateLimitKey = 'survey:' . $survey->id . ':' . $request->ip();
+        if (RateLimiter::tooManyAttempts($rateLimitKey, maxAttempts: 5)) {
+            $seconds = RateLimiter::availableIn($rateLimitKey);
+            return response()->json([
+                'error' => 'Too many responses. Please try again in ' . ceil($seconds / 60) . ' minutes.',
+            ], 429);
+        }
+        RateLimiter::hit($rateLimitKey, decay: 3600);
 
-        // Duplicate submission check
+        // C-5 FIX: Server-side token — always generate server-side, never trust client token alone.
+        // Accept client token for dedup check, but generate a new one if absent.
+        $clientToken = $request->header('X-Survey-Token');
+        $token = $clientToken ?: Str::random(40);
+
+        // C-5 FIX: Dual deduplication — by token AND by IP (covers token-omission bypass)
         if (!$survey->allow_multiple_responses) {
-            if (SurveyResponse::where('survey_id', $survey->id)
-                              ->where('session_token', $token)
-                              ->whereNotNull('completed_at')
-                              ->exists()) {
+            // Check token-based dedup
+            $tokenExists = $clientToken && SurveyResponse::where('survey_id', $survey->id)
+                ->where('session_token', $clientToken)
+                ->whereNotNull('completed_at')
+                ->exists();
+
+            // Check IP-based dedup (catches token omission attack)
+            $ipExists = SurveyResponse::where('survey_id', $survey->id)
+                ->where('ip_address', $request->ip())
+                ->whereNotNull('completed_at')
+                ->where('created_at', '>=', now()->subDays(7))
+                ->exists();
+
+            if ($tokenExists || $ipExists) {
                 return response()->json(['error' => 'You have already completed this survey.'], 409);
             }
         }
@@ -111,9 +137,11 @@ class SurveyController extends Controller
             'completed_at'       => now(),
         ]);
 
-        // Save each answer
+        // M-4 FIX: Only save answers for questions that belong to THIS survey
+        $validQuestionIds = $survey->questions->pluck('id')->toArray();
         foreach ($validated['answers'] as $questionId => $answerValue) {
             if ($answerValue === null || $answerValue === '') continue;
+            if (!in_array((int)$questionId, $validQuestionIds)) continue; // reject foreign question IDs
             SurveyAnswer::create([
                 'survey_response_id' => $response->id,
                 'survey_question_id' => (int)$questionId,

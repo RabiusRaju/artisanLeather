@@ -4,7 +4,10 @@ namespace App\Filament\Resources\ContactMessages;
 use App\Filament\Resources\ContactMessages\Pages;
 use App\Models\ContactMessage;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -32,12 +35,61 @@ class ContactMessageResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Select::make('status')->options([
-                'unread'  => 'Unread',
-                'read'    => 'Read',
-                'replied' => 'Replied',
-            ])->required(),
-            Textarea::make('admin_notes')->rows(3)->label('Internal Notes')->columnSpanFull(),
+
+            Section::make('Customer Details')
+                ->description('Fill in when logging a phone or WhatsApp inquiry manually.')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('name')
+                        ->label('Full Name')
+                        ->required()
+                        ->placeholder('e.g. Ahmad Al Rashdi'),
+
+                    TextInput::make('email')
+                        ->label('Email Address')
+                        ->email()
+                        ->required()
+                        ->placeholder('e.g. ahmad@example.com'),
+
+                    TextInput::make('phone')
+                        ->label('Phone Number')
+                        ->tel()
+                        ->placeholder('+968 9X XXX XXX'),
+
+                    TextInput::make('subject')
+                        ->label('Subject')
+                        ->placeholder('e.g. Custom wallet enquiry'),
+                ]),
+
+            Section::make('Message')
+                ->schema([
+                    Textarea::make('message')
+                        ->label('Message / Enquiry')
+                        ->required()
+                        ->rows(4)
+                        ->placeholder('Write the customer\'s enquiry here…')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Status & Notes')
+                ->columns(2)
+                ->schema([
+                    Select::make('status')
+                        ->options([
+                            'unread'  => '🔴 Unread',
+                            'read'    => '🟡 Read',
+                            'replied' => '🟢 Replied',
+                        ])
+                        ->default('unread')
+                        ->required(),
+
+                    Textarea::make('admin_notes')
+                        ->label('Internal Notes')
+                        ->rows(3)
+                        ->placeholder('e.g. Called back, will visit showroom Thursday')
+                        ->columnSpanFull(),
+                ]),
+
         ]);
     }
 

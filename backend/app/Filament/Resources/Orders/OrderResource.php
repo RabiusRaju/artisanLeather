@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Orders;
 use App\Filament\Resources\Orders\Pages;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\Governorate;
 use App\Models\Product;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
@@ -44,19 +45,11 @@ class OrderResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        $omaniGovernorates = [
-            'Muscat'             => 'Muscat (مسقط)',
-            'Dhofar'             => 'Dhofar (ظفار)',
-            'Musandam'           => 'Musandam (مسندم)',
-            'Al Buraimi'         => 'Al Buraimi (البريمي)',
-            'Al Dakhiliyah'      => 'Al Dakhiliyah (الداخلية)',
-            'Al Batinah North'   => 'Al Batinah North (الباطنة شمال)',
-            'Al Batinah South'   => 'Al Batinah South (الباطنة جنوب)',
-            'Al Sharqiyah North' => 'Al Sharqiyah North (الشرقية شمال)',
-            'Al Sharqiyah South' => 'Al Sharqiyah South (الشرقية جنوب)',
-            'Al Dhahirah'        => 'Al Dhahirah (الظاهرة)',
-            'Al Wusta'           => 'Al Wusta (الوسطى)',
-        ];
+        // Governorates from DB — managed in Settings > Governorates
+        $omaniGovernorates = Governorate::where('is_active', true)
+            ->orderBy('sort_order')
+            ->pluck('name', 'name')
+            ->toArray();
 
         return $schema->schema([
 

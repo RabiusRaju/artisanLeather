@@ -22,8 +22,13 @@ class BrandController extends Controller
                 'slug'        => $b->slug,
                 'tagline'     => $locale === 'ar' && $b->tagline_ar ? $b->tagline_ar : $b->tagline,
                 'description' => $locale === 'ar' && $b->description_ar ? $b->description_ar : $b->description,
-                'logo'        => $b->logo ? asset('storage/' . $b->logo) : null,
-                'banner'      => $b->banner ? asset('storage/' . $b->banner) : null,
+                // H-1 FIX: Handle both external URLs (seeders) and local storage paths
+                'logo'        => $b->logo
+                    ? (str_starts_with($b->logo, 'http') ? $b->logo : asset('storage/' . $b->logo))
+                    : null,
+                'banner'      => $b->banner
+                    ? (str_starts_with($b->banner, 'http') ? $b->banner : asset('storage/' . $b->banner))
+                    : null,
                 'is_featured' => $b->is_featured,
                 'products_count' => $b->products_count,
             ]);

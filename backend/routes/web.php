@@ -108,9 +108,13 @@ Route::get('/robots.txt', function () {
 })->name('robots');
 
 // ── Invoice print view — protected by admin auth ──────────────────────────
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/invoice/{order}', function (Order $order) {
-        $order->loadMissing('items');
-        return view('invoice.show', compact('order'));
-    })->name('invoice.show');
-});
+// C-4 FIX: Use Filament's panel middleware so auth redirect goes to admin login,
+// not the non-existent web 'login' route. Also removed 'verified' — User model
+// does not implement MustVerifyEmail so it was always a no-op.
+Route::middleware(['panel:admin', Filament\Http\Middleware\Authenticate::class])
+    ->group(function () {
+        Route::get('/invoice/{order}', function (Order $order) {
+            $order->loadMissing('items');
+            return view('invoice.show', compact('order'));
+        })->name('invoice.show');
+    });

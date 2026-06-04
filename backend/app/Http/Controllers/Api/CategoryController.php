@@ -21,7 +21,10 @@ class CategoryController extends Controller
                 'name_en' => $c->name,
                 'name_ar' => $c->name_ar,
                 'slug'  => $c->slug,
-                'image' => $c->image,
+                // M-3 FIX: Wrap local path with asset() so images actually work
+                'image' => $c->image
+                    ? (str_starts_with($c->image, 'http') ? $c->image : asset('storage/' . $c->image))
+                    : null,
             ]);
 
         return response()->json(['data' => $categories]);

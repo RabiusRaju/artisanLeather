@@ -10,7 +10,7 @@ class EditContactMessage extends EditRecord
 {
     protected static string $resource = ContactMessageResource::class;
 
-    protected function getRedirectUrl(): string { return $this->getResource()::getUrl("edit", ["record" => $this->getRecord()]); }
+    protected function getRedirectUrl(): string { return $this->getResource()::getUrl("index"); }
     protected function getHeaderActions(): array
     {
         return [

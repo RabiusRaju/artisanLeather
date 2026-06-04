@@ -10,7 +10,7 @@ class EditOrder extends EditRecord
 {
     protected static string $resource = OrderResource::class;
 
-    protected function getRedirectUrl(): string { return $this->getResource()::getUrl("edit", ["record" => $this->getRecord()]); }
+    protected function getRedirectUrl(): string { return $this->getResource()::getUrl("index"); }
     protected function getHeaderActions(): array
     {
         return [
