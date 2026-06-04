@@ -1,3 +1,4 @@
+import { useSetting } from '../hooks/useSettings'
 import SEO from '../components/SEO'
 import { useLocation, Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -14,6 +15,7 @@ const paymentLabels = {
 export default function OrderConfirmation() {
   const { state }  = useLocation()
   const { format } = useCurrency()
+  const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
 
   if (!state?.orderNum) return <Navigate to="/" replace />
 
@@ -171,7 +173,7 @@ export default function OrderConfirmation() {
           Continue Shopping
         </Link>
         <a
-          href={`https://wa.me/96812345678?text=${waMessage}`}
+          href={`https://wa.me/${waNumber}?text=${waMessage}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 py-4 border border-[#25D366]/50 text-[#25D366] text-[10px] tracking-[0.3em] uppercase flex items-center justify-center gap-2 hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-all duration-300"

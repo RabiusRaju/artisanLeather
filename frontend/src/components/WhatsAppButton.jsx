@@ -1,10 +1,15 @@
 import { motion } from 'framer-motion'
 import { FaWhatsapp } from 'react-icons/fa'
+import { useSetting } from '../hooks/useSettings'
 
 export default function WhatsAppButton() {
+  const whatsapp = useSetting('business.whatsapp', '96812345678')
+  const message  = useSetting('orders.whatsapp_message', "Hello Artisan Leather, I'm interested in your products.")
+  const href = `https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`
+
   return (
     <motion.a
-      href="https://wa.me/96812345678?text=Hello%20Artisan%20Leather%2C%20I'm%20interested%20in%20your%20products."
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       initial={{ scale: 0, opacity: 0 }}

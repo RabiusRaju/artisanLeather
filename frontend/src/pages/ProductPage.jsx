@@ -1,3 +1,4 @@
+import { useSetting } from '../hooks/useSettings'
 import { useState, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
@@ -124,6 +125,7 @@ export default function ProductPage() {
   const { format }     = useCurrency()
   const { t, i18n }   = useTranslation()
   const isAr           = i18n.language === 'ar'
+  const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
 
   // Fetch related (same category)
   const { products: related } = useProducts(
@@ -461,7 +463,7 @@ export default function ProductPage() {
                 {t('product.addToCart')} — {format(product.price * quantity)}
               </button>
               <a
-                href={`https://wa.me/96812345678?text=${waMessage}`}
+                href={`https://wa.me/${waNumber}?text=${waMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-4 border border-[#25D366]/60 text-[#25D366] text-[10px] tracking-[0.35em] uppercase flex items-center justify-center gap-2.5 hover:bg-[#25D366] hover:text-white hover:border-[#25D366] active:scale-[0.99] transition-all duration-300"

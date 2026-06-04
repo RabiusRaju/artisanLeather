@@ -1,3 +1,4 @@
+import { useSetting } from '../hooks/useSettings'
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -26,6 +27,7 @@ export default function Navbar() {
   const currRef = useRef(null)
 
   const isAr = i18n.language === 'ar'
+  const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
 
   const navLinks = [
     { label: t('nav.collections'),                   to: '/collections' },
@@ -178,7 +180,7 @@ export default function Navbar() {
             </div>
 
             {/* WhatsApp */}
-            <a href="https://wa.me/96812345678" target="_blank" rel="noopener noreferrer"
+            <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer"
               className="hidden md:flex items-center gap-2 border border-gold/40 text-gold px-4 py-2 text-xs tracking-widest uppercase hover:bg-gold hover:text-dark transition-all duration-300">
               <FaWhatsapp size={13} /> {t('nav.whatsapp')}
             </a>
@@ -270,7 +272,7 @@ export default function Navbar() {
 
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}
                 className="border-t border-white/10 pt-4">
-                <a href="https://wa.me/96812345678" target="_blank" rel="noopener noreferrer"
+                <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-3 text-gold text-sm tracking-widest uppercase">
                   <FaWhatsapp size={18} /> {t('nav.whatsapp')}
                 </a>

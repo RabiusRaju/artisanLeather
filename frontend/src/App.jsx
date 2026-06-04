@@ -3,10 +3,11 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import './i18n'
-import { AuthProvider }     from './context/AuthContext'
-import { CartProvider }     from './context/CartContext'
-import { CurrencyProvider } from './context/CurrencyContext'
-import { ThemeProvider }    from './context/ThemeContext'
+import { AuthProvider }      from './context/AuthContext'
+import { CartProvider }      from './context/CartContext'
+import { CurrencyProvider }  from './context/CurrencyContext'
+import { ThemeProvider }     from './context/ThemeContext'
+import { SettingsProvider, useSetting } from './hooks/useSettings'
 import ThemeSelector        from './components/ThemeSelector'
 import Navbar               from './components/Navbar'
 import Footer               from './components/Footer'
@@ -74,15 +75,17 @@ export default function App() {
   return (
     <HelmetProvider>
     <BrowserRouter>
-      <ThemeProvider>
-        <AuthProvider>
-          <CurrencyProvider>
-            <CartProvider>
-              <Layout />
-            </CartProvider>
-          </CurrencyProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <SettingsProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <CurrencyProvider>
+              <CartProvider>
+                <Layout />
+              </CartProvider>
+            </CurrencyProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </SettingsProvider>
     </BrowserRouter>
     </HelmetProvider>
   )

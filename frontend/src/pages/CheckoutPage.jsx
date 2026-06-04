@@ -1,4 +1,5 @@
 import SEO from '../components/SEO'
+import { useSetting } from '../hooks/useSettings'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -56,6 +57,7 @@ export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart()
   const { format, currency } = useCurrency()
   const navigate   = useNavigate()
+  const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
   const total      = subtotal
 
   const [payment, setPayment] = useState('cod')
@@ -92,7 +94,7 @@ export default function CheckoutPage() {
     e.preventDefault()
 
     if (payment === 'whatsapp') {
-      window.open(`https://wa.me/96812345678?text=${waMessage}`, '_blank')
+      window.open(`https://wa.me/${waNumber}?text=${waMessage}`, '_blank')
       return
     }
 

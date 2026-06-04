@@ -1,3 +1,4 @@
+import { useSetting } from '../hooks/useSettings'
 import { Link } from 'react-router-dom'
 import { FaInstagram, FaWhatsapp, FaFacebook } from 'react-icons/fa'
 
@@ -23,6 +24,11 @@ const linkGroups = [
 ]
 
 export default function Footer() {
+  const waNumber  = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
+  const instagram = useSetting('social.instagram', '')
+  const facebook  = useSetting('social.facebook', '')
+  const email     = useSetting('business.email', 'info@artisanleatherom.com')
+
   return (
     <footer className="dark-section bg-dark border-t border-gold/10 pt-16 pb-10 px-6 lg:px-12" style={{ backgroundColor: '#120D05' }}>
       <div className="max-w-7xl mx-auto">
@@ -48,15 +54,19 @@ export default function Footer() {
               Premium handcrafted leather goods. Made in Oman. Delivered across the GCC.
             </p>
             <div className="flex gap-4 mt-7">
+              {instagram && (
+                <a
+                  href={instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/25 hover:text-gold transition-colors duration-300"
+                  aria-label="Instagram"
+                >
+                  <FaInstagram size={17} />
+                </a>
+              )}
               <a
-                href="#"
-                className="text-white/25 hover:text-gold transition-colors duration-300"
-                aria-label="Instagram"
-              >
-                <FaInstagram size={17} />
-              </a>
-              <a
-                href="https://wa.me/96812345678"
+                href={`https://wa.me/${waNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/25 hover:text-gold transition-colors duration-300"
@@ -64,13 +74,17 @@ export default function Footer() {
               >
                 <FaWhatsapp size={17} />
               </a>
-              <a
-                href="#"
-                className="text-white/25 hover:text-gold transition-colors duration-300"
-                aria-label="Facebook"
-              >
-                <FaFacebook size={17} />
-              </a>
+              {facebook && (
+                <a
+                  href={facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/25 hover:text-gold transition-colors duration-300"
+                  aria-label="Facebook"
+                >
+                  <FaFacebook size={17} />
+                </a>
+              )}
             </div>
           </div>
 
@@ -102,20 +116,20 @@ export default function Footer() {
               <li>Muscat, Sultanate of Oman</li>
               <li>
                 <a
-                  href="https://wa.me/96812345678"
+                  href={`https://wa.me/${waNumber}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-gold transition-colors duration-300"
                 >
-                  +968 1234 5678
+                  +{waNumber}
                 </a>
               </li>
               <li>
                 <a
-                  href="mailto:hello@artisanleatherom.com"
+                  href={`mailto:${email}`}
                   className="hover:text-gold transition-colors duration-300"
                 >
-                  hello@artisanleatherom.com
+                  {email}
                 </a>
               </li>
               <li className="pt-3">

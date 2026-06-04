@@ -1,3 +1,4 @@
+import { useSetting } from '../hooks/useSettings'
 import { useState, useRef } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { FaWhatsapp, FaInstagram, FaFacebook } from 'react-icons/fa'
@@ -78,6 +79,7 @@ function FAQItem({ item, index }) {
 
 // ── Contact form with success state ───────────────────────────────────────
 function ContactForm() {
+  const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
   const [form, setForm]       = useState({ name: '', email: '', phone: '', subject: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -128,7 +130,7 @@ function ContactForm() {
               <br />For urgent enquiries, please reach us on WhatsApp.
             </p>
             <a
-              href="https://wa.me/96812345678"
+              href={`https://wa.me/${waNumber}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 mt-8 border border-[#25D366]/50 text-[#25D366] px-7 py-3 text-[10px] tracking-[0.3em] uppercase hover:bg-[#25D366] hover:text-white transition-all duration-300"
@@ -243,6 +245,11 @@ function ContactForm() {
 
 // ── Page ───────────────────────────────────────────────────────────────────
 export default function Contact() {
+  const waNumber  = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
+  const instagram = useSetting('social.instagram', '')
+  const facebook  = useSetting('social.facebook', '')
+  const email     = useSetting('business.email', 'info@artisanleatherom.com')
+
   const infoRef = useRef(null)
   const waRef   = useRef(null)
   const faqRef  = useRef(null)
@@ -326,15 +333,15 @@ export default function Contact() {
               },
               {
                 label: 'Phone & WhatsApp',
-                value: '+968 1234 5678',
+                value: `+${waNumber}`,
                 sub: 'Available 9am – 9pm GST',
-                link: 'tel:+96812345678',
+                link: `https://wa.me/${waNumber}`,
               },
               {
                 label: 'Email',
-                value: 'hello@artisanleatherom.com',
+                value: email,
                 sub: 'We reply within 24 hours',
-                link: 'mailto:hello@artisanleatherom.com',
+                link: `mailto:${email}`,
               },
             ].map((item, i) => (
               <motion.div
@@ -365,27 +372,35 @@ export default function Contact() {
             {/* Socials */}
             <div className="pt-10">
               <p className="text-[9px] tracking-[0.4em] uppercase text-white/30 mb-6">Follow Along</p>
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-wrap">
                 <a
-                  href="https://wa.me/96812345678"
+                  href={`https://wa.me/${waNumber}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2.5 border border-[#25D366]/40 text-[#25D366] px-5 py-2.5 text-[10px] tracking-[0.25em] uppercase hover:bg-[#25D366] hover:text-white transition-all duration-300"
                 >
                   <FaWhatsapp size={13} /> WhatsApp
                 </a>
-                <a
-                  href="#"
-                  className="flex items-center gap-2.5 border border-gold/25 text-gold/70 px-5 py-2.5 text-[10px] tracking-[0.25em] uppercase hover:bg-gold hover:text-dark transition-all duration-300"
-                >
-                  <FaInstagram size={13} /> Instagram
-                </a>
-                <a
-                  href="#"
-                  className="flex items-center gap-2.5 border border-white/12 text-white/35 px-5 py-2.5 text-[10px] tracking-[0.25em] uppercase hover:border-gold/30 hover:text-gold transition-all duration-300"
-                >
-                  <FaFacebook size={13} /> Facebook
-                </a>
+                {instagram && (
+                  <a
+                    href={instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2.5 border border-gold/25 text-gold/70 px-5 py-2.5 text-[10px] tracking-[0.25em] uppercase hover:bg-gold hover:text-dark transition-all duration-300"
+                  >
+                    <FaInstagram size={13} /> Instagram
+                  </a>
+                )}
+                {facebook && (
+                  <a
+                    href={facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2.5 border border-white/12 text-white/35 px-5 py-2.5 text-[10px] tracking-[0.25em] uppercase hover:border-gold/30 hover:text-gold transition-all duration-300"
+                  >
+                    <FaFacebook size={13} /> Facebook
+                  </a>
+                )}
               </div>
             </div>
 
@@ -429,7 +444,7 @@ export default function Contact() {
             </p>
           </div>
           <a
-            href="https://wa.me/96812345678?text=Hello%20Artisan%20Leather%2C%20I%20have%20a%20question."
+            href={`https://wa.me/${waNumber}?text=Hello%20Artisan%20Leather%2C%20I%20have%20a%20question.`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-shrink-0 flex items-center gap-3 bg-[#25D366] text-white px-10 py-4 text-[10px] tracking-[0.35em] uppercase font-bold hover:bg-[#1da851] active:scale-[0.98] transition-all duration-300 shadow-lg shadow-[#25D366]/20"

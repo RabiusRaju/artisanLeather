@@ -1,3 +1,4 @@
+import { useSetting } from '../hooks/useSettings'
 import SEO from '../components/SEO'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -128,6 +129,7 @@ export default function CartPage() {
   const { format } = useCurrency()
   const { t }      = useTranslation()
   const navigate   = useNavigate()
+  const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
   const shipping   = 0
   const total      = subtotal + shipping
 
@@ -246,7 +248,7 @@ export default function CartPage() {
 
                 {/* WhatsApp order alternative */}
                 <a
-                  href={`https://wa.me/96812345678?text=${waMessage}`}
+                  href={`https://wa.me/${waNumber}?text=${waMessage}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full py-3.5 border border-[#25D366]/50 text-[#25D366] text-[10px] tracking-[0.3em] uppercase flex items-center justify-center gap-2 hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-all duration-300"

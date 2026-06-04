@@ -1,4 +1,5 @@
 import SEO from '../components/SEO'
+import { useSetting } from '../hooks/useSettings'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -29,6 +30,7 @@ export default function TrackOrderPage() {
   const isAr = i18n.language === 'ar'
 
   const [orderNum, setOrderNum] = useState('')
+  const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
   const [loading,  setLoading]  = useState(false)
   const [result,   setResult]   = useState(null)
   const [error,    setError]    = useState('')
@@ -194,7 +196,7 @@ export default function TrackOrderPage() {
 
               {/* WhatsApp support */}
               <div className="flex flex-col sm:flex-row gap-3">
-                <a href={`https://wa.me/96812345678?text=${waMsg}`} target="_blank" rel="noopener noreferrer"
+                <a href={`https://wa.me/${waNumber}?text=${waMsg}`} target="_blank" rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2.5 py-3.5 border border-[#25D366]/50 text-[#25D366] text-[10px] tracking-[0.3em] uppercase hover:bg-[#25D366] hover:text-white transition-all duration-300">
                   <FaWhatsapp size={15} />
                   {isAr ? 'تواصل معنا عبر واتساب' : 'Chat on WhatsApp'}
