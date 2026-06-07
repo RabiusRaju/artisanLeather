@@ -1,0 +1,77 @@
+name: Deploy Backend (Laravel → Hostinger)
+
+# Requires SSH access on your Hostinger plan (hPanel → Advanced → SSH Access).
+# If your plan has no SSH, see DEPLOYMENT.md for the FTP-only fallback.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install Composer dependencies (production)
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Build frontend assets used by the panel (if any)
+        run: |
+          if [ -f package.json ]; then
+            npm ci && npm run build || true
+          fi
+
+      - name: Sync application files to Hostinger via SSH/rsync
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete
+            --exclude='.env'
+            --exclude='.git*'
+            --exclude='storage/app/public'
+            --exclude='storage/logs'
+            --exclude='storage/framework/cache'
+            --exclude='storage/framework/sessions'
+            --exclude='storage/framework/views'
+            --exclude='node_modules'
+            --exclude='tests'
+          path: ./
+          remote_path: ${{ secrets.HOSTINGER_BACKEND_REMOTE_DIR }}
+          remote_host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          remote_port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          remote_user: ${{ secrets.HOSTINGER_SSH_USERNAME }}
+          remote_key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+
+      - name: Run post-deploy artisan commands over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          username: ${{ secrets.HOSTINGER_SSH_USERNAME }}
+          key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            cd ${{ secrets.HOSTINGER_BACKEND_REMOTE_DIR }}
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan filament:optimize
+            php artisan storage:link || true
+            php artisan queue:restart
