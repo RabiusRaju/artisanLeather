@@ -74,7 +74,8 @@
       "Bash(php /tmp/test_url.php)",
       "Bash(curl -s http://127.0.0.1:8000/api/v1/settings)",
       "Bash(grep -rn 'wa\\\\.me/\\\\${waNumber}' /Applications/XAMPP/xamppfiles/htdocs/artisan_leather/frontend/src/)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
