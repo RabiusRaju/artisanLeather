@@ -139,7 +139,21 @@ class PurchaseOrderResource extends Resource
                                     // Optional: product link + SKU (collapsible per item won't work, use hidden by default)
                                     Select::make('product_id')
                                         ->label('Link to catalogue product (optional)')
-                                        ->options(Product::pluck('name','id'))
+                                        ->options(function ($get) {
+                                            $usedIds = collect($get('../../items') ?? [])
+                                                ->pluck('product_id')
+                                                ->filter()
+                                                ->values()
+                                                ->toArray();
+                                            $current    = $get('product_id');
+                                            $excludeIds = collect($usedIds)
+                                                ->reject(fn($id) => $id == $current)
+                                                ->values()
+                                                ->toArray();
+
+                                            return Product::whereNotIn('id', $excludeIds)
+                                                ->pluck('name', 'id');
+                                        })
                                         ->searchable()->nullable()
                                         ->live()
                                         ->afterStateUpdated(fn($state,$set) =>
@@ -172,21 +186,51 @@ class PurchaseOrderResource extends Resource
                         ->description('Add shipping, customs or other charges on top of item costs.')
                         ->schema([
                             TextInput::make('shipping_cost_omr')->label('Shipping & Freight (OMR)')
-                                ->numeric()->prefix('OMR')->step(0.001)->default(0),
+                                ->numeric()->prefix('OMR')->step(0.001)->default(0)
+                                ->live()
+                                ->afterStateUpdated(fn($get, $set) => $set('total_omr',
+                                    round(
+                                        (float)($get('subtotal_omr') ?: 0)
+                                        + (float)($get('shipping_cost_omr') ?: 0)
+                                        + (float)($get('customs_duty_omr') ?: 0)
+                                        + (float)($get('other_costs_omr') ?: 0),
+                                    3)
+                                )),
                             TextInput::make('customs_duty_omr')->label('Customs Duty (OMR)')
-                                ->numeric()->prefix('OMR')->step(0.001)->default(0),
+                                ->numeric()->prefix('OMR')->step(0.001)->default(0)
+                                ->live()
+                                ->afterStateUpdated(fn($get, $set) => $set('total_omr',
+                                    round(
+                                        (float)($get('subtotal_omr') ?: 0)
+                                        + (float)($get('shipping_cost_omr') ?: 0)
+                                        + (float)($get('customs_duty_omr') ?: 0)
+                                        + (float)($get('other_costs_omr') ?: 0),
+                                    3)
+                                )),
                             TextInput::make('other_costs_omr')->label('Other Charges (OMR)')
-                                ->numeric()->prefix('OMR')->step(0.001)->default(0),
+                                ->numeric()->prefix('OMR')->step(0.001)->default(0)
+                                ->live()
+                                ->afterStateUpdated(fn($get, $set) => $set('total_omr',
+                                    round(
+                                        (float)($get('subtotal_omr') ?: 0)
+                                        + (float)($get('shipping_cost_omr') ?: 0)
+                                        + (float)($get('customs_duty_omr') ?: 0)
+                                        + (float)($get('other_costs_omr') ?: 0),
+                                    3)
+                                )),
                         ])->columns(['default'=>1,'md'=>3]),
 
                     Section::make('Order Total')
                         ->schema([
                             TextInput::make('subtotal_omr')->label('Items Subtotal (OMR)')
                                 ->numeric()->prefix('OMR')->step(0.001)->default(0)
-                                ->helperText('Sum of all line totals'),
+                                ->readOnly()
+                                ->helperText('Auto-calculated from item lines on save'),
                             TextInput::make('total_omr')->label('Grand Total (OMR)')
                                 ->numeric()->prefix('OMR')->step(0.001)->default(0)
-                                ->extraInputAttributes(['class'=>'font-bold text-lg']),
+                                ->readOnly()
+                                ->helperText('Subtotal + Shipping + Customs + Other')
+                                ->extraInputAttributes(['style' => 'font-weight:700;color:#d97706;font-size:1.1rem']),
                         ])->columns(['default'=>1,'md'=>2]),
 
                     Section::make('Payment Status')

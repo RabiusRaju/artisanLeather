@@ -1,6 +1,31 @@
 <?php
 namespace App\Filament\Resources\Finance\PurchaseOrders\Pages;
+
 use App\Filament\Resources\Finance\PurchaseOrders\PurchaseOrderResource;
 use Filament\Resources\Pages\CreateRecord;
-class CreatePurchaseOrder extends CreateRecord { protected function getRedirectUrl(): string { return $this->getResource()::getUrl("edit", ["record" => $this->getRecord()]); }
-    protected static string $resource = PurchaseOrderResource::class; }
+
+class CreatePurchaseOrder extends CreateRecord
+{
+    protected static string $resource = PurchaseOrderResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('edit', ['record' => $this->getRecord()]);
+    }
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $subtotal = collect($data['items'] ?? [])->sum(fn($i) => (float)($i['total_cost_omr'] ?? 0));
+
+        $data['subtotal_omr'] = round($subtotal, 3);
+        $data['total_omr']    = round(
+            $subtotal
+            + (float)($data['shipping_cost_omr'] ?? 0)
+            + (float)($data['customs_duty_omr']  ?? 0)
+            + (float)($data['other_costs_omr']   ?? 0),
+            3
+        );
+
+        return $data;
+    }
+}

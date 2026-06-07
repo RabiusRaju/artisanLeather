@@ -164,13 +164,26 @@ class OrderResource extends Resource
 
                                         Select::make('product_id')
                                             ->label('Product')
-                                            ->options(
-                                                Product::orderBy('name')
+                                            ->options(function ($get) {
+                                                $allItems   = $get('../../items') ?? [];
+                                                $usedIds    = collect($allItems)
+                                                    ->pluck('product_id')
+                                                    ->filter()
+                                                    ->values()
+                                                    ->toArray();
+                                                $current    = $get('product_id');
+                                                $excludeIds = collect($usedIds)
+                                                    ->reject(fn($id) => $id == $current)
+                                                    ->values()
+                                                    ->toArray();
+
+                                                return Product::orderBy('name')
+                                                    ->whereNotIn('id', $excludeIds)
                                                     ->get()
                                                     ->mapWithKeys(fn($p) => [
                                                         $p->id => $p->name . '  —  OMR ' . number_format((float)$p->price, 3),
-                                                    ])
-                                            )
+                                                    ]);
+                                            })
                                             ->searchable()
                                             ->required()
                                             ->placeholder('Search and select a product…')
@@ -178,13 +191,16 @@ class OrderResource extends Resource
                                             ->afterStateUpdated(function ($state, $set, $get) {
                                                 $product = Product::find($state);
                                                 if (!$product) return;
+                                                $qty     = (int)($get('quantity') ?: 1);
+                                                $newLine = round((float)$product->price * $qty, 3);
                                                 $set('product_name',    $product->name);
                                                 $set('product_name_ar', $product->name_ar ?? '');
                                                 $set('unit_price_omr',  round((float)$product->price, 3));
                                                 $set('color_name', null);
                                                 $set('color_hex',  null);
-                                                $qty = (int)($get('quantity') ?: 1);
-                                                $set('total_price_omr', round((float)$product->price * $qty, 3));
+                                                $set('total_price_omr', $newLine);
+                                                $subtotal = collect($get('../../items') ?? [])->sum(fn($i) => (float)($i['total_price_omr'] ?? 0));
+                                                $set('../../subtotal_omr', round($subtotal, 3));
                                             })
                                             ->columnSpanFull(),
 
@@ -206,10 +222,12 @@ class OrderResource extends Resource
                                             ->minValue(1)
                                             ->required()
                                             ->live()
-                                            ->afterStateUpdated(fn($state, $get, $set) =>
-                                                $set('total_price_omr',
-                                                    round((float)($get('unit_price_omr') ?: 0) * (int)($state ?: 1), 3))
-                                            )
+                                            ->afterStateUpdated(function ($state, $get, $set) {
+                                                $newLine = round((float)($get('unit_price_omr') ?: 0) * (int)($state ?: 1), 3);
+                                                $set('total_price_omr', $newLine);
+                                                $subtotal = collect($get('../../items') ?? [])->sum(fn($i) => (float)($i['total_price_omr'] ?? 0));
+                                                $set('../../subtotal_omr', round($subtotal, 3));
+                                            })
                                             ->columnSpan(['default' => 1, 'md' => 1]),
 
                                         TextInput::make('unit_price_omr')
@@ -219,10 +237,12 @@ class OrderResource extends Resource
                                             ->step(0.001)
                                             ->required()
                                             ->live()
-                                            ->afterStateUpdated(fn($state, $get, $set) =>
-                                                $set('total_price_omr',
-                                                    round((float)($state ?: 0) * (int)($get('quantity') ?: 1), 3))
-                                            )
+                                            ->afterStateUpdated(function ($state, $get, $set) {
+                                                $newLine = round((float)($state ?: 0) * (int)($get('quantity') ?: 1), 3);
+                                                $set('total_price_omr', $newLine);
+                                                $subtotal = collect($get('../../items') ?? [])->sum(fn($i) => (float)($i['total_price_omr'] ?? 0));
+                                                $set('../../subtotal_omr', round($subtotal, 3));
+                                            })
                                             ->columnSpan(['default' => 1, 'md' => 1]),
 
                                         TextInput::make('total_price_omr')
@@ -296,7 +316,8 @@ class OrderResource extends Resource
                                     ->prefix('OMR')
                                     ->readOnly()
                                     ->default(0)
-                                    ->helperText('Auto-calculated from items when saved'),
+                                    ->helperText('Updates live as you add items')
+                                    ->extraInputAttributes(['style' => 'font-size:1.2rem;font-weight:700;color:#d97706']),
                             ]),
 
                         Section::make('Internal Notes')
@@ -442,13 +463,14 @@ class OrderResource extends Resource
                     TextEntry::make('financials')
                         ->label('')
                         ->getStateUsing(function (Order $record) {
-                            $subtotal = number_format($record->subtotal_omr, 3);
-                            $total    = number_format($record->total_omr, 3);
+                            $calculated = $record->items->sum('total_price_omr');
+                            $subtotal   = $calculated ?: $record->subtotal_omr;
+                            $total      = $calculated ?: $record->total_omr;
                             return new HtmlString('
                                 <div style="display:flex;flex-direction:column;gap:8px;max-width:320px;margin-left:auto;">
                                     <div style="display:flex;justify-content:space-between;color:#6b7280;">
                                         <span>Subtotal</span>
-                                        <span>OMR ' . $subtotal . '</span>
+                                        <span>OMR ' . number_format($subtotal, 3) . '</span>
                                     </div>
                                     <div style="display:flex;justify-content:space-between;color:#6b7280;">
                                         <span>Shipping</span>
@@ -456,7 +478,7 @@ class OrderResource extends Resource
                                     </div>
                                     <div style="display:flex;justify-content:space-between;border-top:2px solid #e5e7eb;padding-top:8px;font-weight:700;font-size:1.1rem;">
                                         <span>Total</span>
-                                        <span style="color:#d97706;">OMR ' . $total . '</span>
+                                        <span style="color:#d97706;">OMR ' . number_format($total, 3) . '</span>
                                     </div>
                                     <div style="font-size:0.75rem;color:#9ca3af;text-align:right;">
                                         Currency: ' . e($record->currency_code) . ' (rate: ' . $record->currency_rate . ')

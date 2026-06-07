@@ -167,7 +167,7 @@ class BrandResource extends Resource
                         ->getStateUsing(fn(Brand $r) => $r->is_featured ? '⭐ Featured' : 'Not Featured')
                         ->badge()->color(fn($state) => str_starts_with($state, '⭐') ? 'warning' : 'gray'),
                 ]),
-                \Filament\Infolists\Components\TextEntry::make('tagline')->italic()->placeholder('—'),
+                \Filament\Infolists\Components\TextEntry::make('tagline')->placeholder('—'),
                 \Filament\Infolists\Components\TextEntry::make('description')->placeholder('—'),
             ]),
         ]);

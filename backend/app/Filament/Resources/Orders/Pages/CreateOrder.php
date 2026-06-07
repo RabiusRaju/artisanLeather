@@ -17,23 +17,23 @@ class CreateOrder extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Auto-generate unique order number
         do {
             $data['order_number'] = Order::generateOrderNumber();
         } while (Order::where('order_number', $data['order_number'])->exists());
 
-        // Compute subtotal and total from repeater items
-        $subtotal = 0;
-        foreach ($data['items'] ?? [] as $item) {
-            $subtotal += (float)($item['total_price_omr'] ?? 0);
-        }
-
-        $data['subtotal_omr'] = round($subtotal, 3);
-        $data['total_omr']    = round($subtotal, 3); // no shipping cost
-
-        // Remove virtual customer selector field
         unset($data['_customer_id']);
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        $record   = $this->record->fresh('items');
+        $subtotal = round($record->items->sum('total_price_omr'), 3);
+
+        $record->update([
+            'subtotal_omr' => $subtotal,
+            'total_omr'    => $subtotal,
+        ]);
     }
 }

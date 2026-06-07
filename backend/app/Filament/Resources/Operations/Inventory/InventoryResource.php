@@ -45,8 +45,14 @@ class InventoryResource extends Resource
         return $schema->schema([
             Section::make('Stock Settings')->schema([
                 Select::make('product_id')->label('Product')
-                    ->options(Product::where('is_active', true)->pluck('name', 'id'))
-                    ->required()->searchable()->columnSpanFull(),
+                    ->options(function () {
+                        $existing = ProductStock::pluck('product_id')->toArray();
+                        return Product::where('is_active', true)
+                            ->whereNotIn('id', $existing)
+                            ->pluck('name', 'id');
+                    })
+                    ->required()->searchable()->columnSpanFull()
+                    ->helperText('Only products without an existing stock record are shown. To update stock, use the + Stock In / - Stock Out buttons on the inventory list.'),
                 TextInput::make('quantity')->label('Current Stock Quantity')
                     ->numeric()->required()->default(0)->columnSpan(1),
                 TextInput::make('minimum_alert')->label('Low Stock Alert (trigger below)')
