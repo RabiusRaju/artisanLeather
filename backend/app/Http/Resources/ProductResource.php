@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Str;
 
 class ProductResource extends JsonResource
 {
@@ -49,7 +50,9 @@ class ProductResource extends JsonResource
             ] : null,
             'images' => $this->images->map(fn($img) => [
                 'id'         => $img->id,
-                'url'        => $img->url,
+                'url'        => $img->url
+                    ? (Str::startsWith($img->url, ['http://', 'https://']) ? $img->url : asset('storage/' . $img->url))
+                    : null,
                 'label'      => $img->label,
                 'alt_text'   => $img->alt_text
                     ?: ($this->name . ($img->label ? ' — ' . $img->label : '') . ' | Artisan Leather Oman'),

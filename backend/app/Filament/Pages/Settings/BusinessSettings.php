@@ -4,6 +4,7 @@ namespace App\Filament\Pages\Settings;
 use App\Enums\NavigationGroupEnum;
 use App\Models\Setting;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -52,6 +53,21 @@ class BusinessSettings extends Page implements HasSchemas
                         ->helperText('Format: 96891234567 — no + or spaces')
                         ->placeholder('96891234567'),
                     TextInput::make('business.city')->label('City'),
+                    Select::make('business.timezone')
+                        ->label('Timezone')
+                        ->options([
+                            'Asia/Muscat'    => 'Oman (Asia/Muscat, UTC+4)',
+                            'Asia/Dubai'     => 'UAE (Asia/Dubai, UTC+4)',
+                            'Asia/Riyadh'    => 'Saudi Arabia (Asia/Riyadh, UTC+3)',
+                            'Asia/Kuwait'    => 'Kuwait (Asia/Kuwait, UTC+3)',
+                            'Asia/Qatar'     => 'Qatar (Asia/Qatar, UTC+3)',
+                            'Asia/Bahrain'   => 'Bahrain (Asia/Bahrain, UTC+3)',
+                            'Europe/London'  => 'United Kingdom (Europe/London)',
+                            'UTC'            => 'UTC',
+                        ])
+                        ->default('Asia/Muscat')
+                        ->required()
+                        ->helperText('Controls how dates & times are displayed and entered throughout the admin panel.'),
                     Textarea::make('business.address')->label('Full Address')->rows(2)->columnSpanFull(),
                 ]),
 

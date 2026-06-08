@@ -53,7 +53,7 @@ class OrderController extends Controller
             // C-6 FIX: Check stock before creating order
             foreach ($validated['items'] as $item) {
                 $stock = ProductStock::where('product_id', $item['product_id'])->first();
-                if ($stock && $stock->quantity < $item['quantity']) {
+                if (!$stock || $stock->quantity < $item['quantity']) {
                     abort(422, 'Insufficient stock for: ' . $products[$item['product_id']]->name);
                 }
             }

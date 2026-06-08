@@ -80,7 +80,7 @@ class SurveyController extends Controller
                 'error' => 'Too many responses. Please try again in ' . ceil($seconds / 60) . ' minutes.',
             ], 429);
         }
-        RateLimiter::hit($rateLimitKey, decay: 3600);
+        RateLimiter::hit($rateLimitKey, decaySeconds: 3600);
 
         // C-5 FIX: Server-side token — always generate server-side, never trust client token alone.
         // Accept client token for dedup check, but generate a new one if absent.

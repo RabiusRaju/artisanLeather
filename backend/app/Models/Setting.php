@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class Setting extends Model
 {
@@ -17,7 +18,14 @@ class Setting extends Model
 
     public static function set(string $key, mixed $value): void
     {
-        static::updateOrCreate(['key' => $key], ['value' => $value]);
+        $setting = static::firstOrNew(['key' => $key]);
+        $setting->value = $value;
+
+        if (! $setting->exists) {
+            $setting->label = Str::of($key)->afterLast('.')->replace(['_', '-'], ' ')->title();
+        }
+
+        $setting->save();
         Cache::forget("setting:{$key}");
     }
 
