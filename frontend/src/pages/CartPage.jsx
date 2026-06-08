@@ -28,6 +28,9 @@ function CartItem({ item }) {
       {/* Thumbnail */}
       <Link to={`/product/${item.slug}`} className="flex-shrink-0">
         <div className="w-20 h-20 md:w-24 md:h-24 relative overflow-hidden" style={{ background: item.gradient }}>
+          {item.image && (
+            <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
+          )}
           <div className="absolute top-1.5 left-1.5 w-3 h-3 border-t border-l border-gold/30" />
           <div className="absolute bottom-1.5 right-1.5 w-3 h-3 border-b border-r border-gold/30" />
         </div>

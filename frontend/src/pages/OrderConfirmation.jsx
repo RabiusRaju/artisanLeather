@@ -116,7 +116,11 @@ export default function OrderConfirmation() {
         <div className="space-y-4 mb-8">
           {items.map((item) => (
             <div key={`${item.id}-${item.colorName}`} className="flex items-center gap-4">
-              <div className="w-12 h-12 flex-shrink-0" style={{ background: item.gradient }} />
+              <div className="w-12 h-12 flex-shrink-0 relative overflow-hidden" style={{ background: item.gradient }}>
+                {item.image && (
+                  <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
+                )}
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white/70 text-sm truncate">{item.name}</p>
                 <p className="text-white/30 text-xs mt-0.5">{item.colorName} · Qty {item.quantity}</p>

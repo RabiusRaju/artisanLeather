@@ -160,6 +160,7 @@ export default function ProductPage() {
       colorName: color?.name  || '',
       colorHex:  color?.hex   || '#1A1A1A',
       quantity,
+      image:     product.images?.[0]?.url || null,
       gradient:  `linear-gradient(160deg, #2A1A08, #1A1008, #0A0704)`,
     })
     setToastVisible(true)
