@@ -28,6 +28,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
 
 class OrderResource extends Resource
 {
@@ -413,6 +414,9 @@ class OrderResource extends Resource
                             $rows = '';
                             foreach ($record->items as $item) {
                                 $imgUrl = $item->product?->images?->first()?->url;
+                                $imgUrl = $imgUrl && !Str::startsWith($imgUrl, ['http://', 'https://'])
+                                    ? asset('storage/' . $imgUrl)
+                                    : $imgUrl;
                                 $imgHtml = $imgUrl
                                     ? '<img src="' . e($imgUrl) . '" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:1px solid rgba(0,0,0,0.1);">'
                                     : '<div style="width:52px;height:52px;background:#f3f4f6;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:18px;">🧳</div>';

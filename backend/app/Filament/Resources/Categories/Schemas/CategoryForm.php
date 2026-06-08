@@ -20,7 +20,9 @@ class CategoryForm
                 TextInput::make('slug')
                     ->required(),
                 FileUpload::make('image')
-                    ->image(),
+                    ->image()
+                    ->disk('public')
+                    ->visibility('public'),
                 Toggle::make('is_active')
                     ->required(),
                 TextInput::make('sort_order')

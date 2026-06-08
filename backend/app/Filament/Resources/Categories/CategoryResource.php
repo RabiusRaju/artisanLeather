@@ -37,7 +37,7 @@ class CategoryResource extends Resource
                 ->afterStateUpdated(fn($state, $set) => $set('slug', Str::slug($state))),
             TextInput::make('name_ar')->label('Name (Arabic)'),
             TextInput::make('slug')->required()->unique(ignoreRecord: true),
-            FileUpload::make('image')->image()->directory('categories'),
+            FileUpload::make('image')->image()->directory('categories')->disk('public')->visibility('public'),
             TextInput::make('sort_order')->numeric()->default(0),
             Toggle::make('is_active')->default(true),
         ]);

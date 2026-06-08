@@ -109,7 +109,17 @@
       "Bash(pkill -f \"artisan serve\")",
       "Bash(grep -n \"track_stock\\\\|manage_stock\\\\|track_inventory\\\\|stock_tracking\" app/Models/Product.php app/Http/Resources/ProductResource.php database/migrations/*.php)",
       "Bash(sed -n '1,75p' app/Models/Product.php)",
-      "Bash(php -l app/Http/Controllers/Api/OrderController.php)"
+      "Bash(php -l app/Http/Controllers/Api/OrderController.php)",
+      "Bash(curl -s -o /dev/null -w \"artisanleatherom.com: %{http_code} \\(time: %{time_total}s\\)\\\\n\" --max-time 15 https://artisanleatherom.com)",
+      "Bash(curl -s -o /dev/null -w \"api.artisanleatherom.com: %{http_code} \\(time: %{time_total}s\\)\\\\n\" --max-time 15 https://api.artisanleatherom.com/admin)",
+      "Bash(nc -zv -w 10 69.62.78.34 22)",
+      "Bash(ping -c 3 -t 5 69.62.78.34)",
+      "Bash(grep -rn \"img src=.*\\\\\\\\\\\\$\\\\|img.*\\\\\\\\\\\\$.*url\\\\|->images.*->url\\\\|->image.*->url\" app/Filament --include=\"*.php\" -l)",
+      "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $app = require '\\\\''bootstrap/app.php'\\\\'';')",
+      "Bash(grep -rn 'protected string \\\\$diskName\\\\|function getDiskName\\\\|disk\\(' vendor/filament/forms/src/Components/FileUpload.php)",
+      "Bash(sed -n '261,295p' app/Filament/Resources/Products/ProductResource.php)",
+      "Bash(sed -n '123,135p' app/Filament/Resources/CustomOrders/CustomOrderResource.php)",
+      "Bash(curl -sI http://localhost/artisan_leather/backend/public/storage/categories/01KT9MGMDJ9D5ZWMZDT82DZ1JJ.jpg)"
     ]
   }
 }

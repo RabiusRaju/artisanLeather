@@ -122,6 +122,7 @@ class CustomOrderResource extends Resource
                             ->rows(3)->placeholder('Font style, placement, any special requests...')->columnSpanFull(),
                         FileUpload::make('reference_images')->label('Reference Images')
                             ->multiple()->image()->directory('custom-orders')
+                            ->disk('public')->visibility('public')
                             ->maxFiles(6)->maxSize(5120)
                             ->helperText('Upload up to 6 reference photos (max 5MB each)')
                             ->columnSpanFull(),
