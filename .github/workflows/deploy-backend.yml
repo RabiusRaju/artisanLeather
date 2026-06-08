@@ -51,7 +51,7 @@ jobs:
             --exclude='storage/framework/views'
             --exclude='node_modules'
             --exclude='tests'
-          path: ./
+          path: backend/
           remote_path: ${{ secrets.HOSTINGER_BACKEND_REMOTE_DIR }}
           remote_host: ${{ secrets.HOSTINGER_SSH_HOST }}
           remote_port: ${{ secrets.HOSTINGER_SSH_PORT }}
