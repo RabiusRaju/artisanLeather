@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use App\Support\VideoEmbedder;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -56,9 +57,9 @@ class PostController extends Controller
         ];
 
         if ($full) {
-            $base['content']    = $isAr && $post->content_ar ? $post->content_ar : $post->content;
-            $base['content_en'] = $post->content;
-            $base['content_ar'] = $post->content_ar;
+            $base['content']    = VideoEmbedder::embed($isAr && $post->content_ar ? $post->content_ar : $post->content);
+            $base['content_en'] = VideoEmbedder::embed($post->content);
+            $base['content_ar'] = VideoEmbedder::embed($post->content_ar);
         }
 
         return $base;

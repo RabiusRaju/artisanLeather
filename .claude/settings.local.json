@@ -119,7 +119,18 @@
       "Bash(grep -rn 'protected string \\\\$diskName\\\\|function getDiskName\\\\|disk\\(' vendor/filament/forms/src/Components/FileUpload.php)",
       "Bash(sed -n '261,295p' app/Filament/Resources/Products/ProductResource.php)",
       "Bash(sed -n '123,135p' app/Filament/Resources/CustomOrders/CustomOrderResource.php)",
-      "Bash(curl -sI http://localhost/artisan_leather/backend/public/storage/categories/01KT9MGMDJ9D5ZWMZDT82DZ1JJ.jpg)"
+      "Bash(curl -sI http://localhost/artisan_leather/backend/public/storage/categories/01KT9MGMDJ9D5ZWMZDT82DZ1JJ.jpg)",
+      "Bash(ls utils *)",
+      "Bash(ls lib *)",
+      "Bash(grep -rn 'fn \\(Get $get\\)\\\\|fn\\(Get $get\\)\\\\|Get $get' app/Filament -r -h)",
+      "Bash(php -l app/Support/VideoEmbedder.php)",
+      "Bash(php -l app/Filament/Resources/Blog/PostResource.php)",
+      "Bash(php -l app/Http/Controllers/Api/PostController.php)",
+      "Bash(awk '/2026-06-08 17:35:46/{found=1} found{print NR\": \"$0} found && /^\\\\[2026/ && NR>29736 {exit}' storage/logs/laravel.log)",
+      "Bash(cd /Applications/XAMPP/xamppfiles/htdocs/artisan_leather && find . -iname \"*.log\" -newer /tmp -mtime -2 2>/dev/null | grep -v vendor | grep -v node_modules | head -20 *)",
+      "Read(//private/tmp/**)",
+      "Read(//Applications/XAMPP/xamppfiles/logs/**)",
+      "Bash(ssh -o ConnectTimeout=5 -o BatchMode=yes root@69.62.78.34 \"echo connected\")"
     ]
   }
 }

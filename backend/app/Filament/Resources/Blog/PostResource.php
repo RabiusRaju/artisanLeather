@@ -32,6 +32,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Illuminate\Support\HtmlString;
+use App\Support\VideoEmbedder;
 
 class PostResource extends Resource
 {
@@ -84,13 +85,21 @@ class PostResource extends Resource
                             RichEditor::make('content')
                                 ->label('Content (English)')
                                 ->required()
+                                ->live(debounce: 800)
                                 ->toolbarButtons([
                                     'h2', 'h3', 'bold', 'italic', 'underline', 'strike',
                                     'link', 'bulletList', 'orderedList', 'blockquote',
                                     'codeBlock', 'attachFiles', 'horizontalRule', 'undo',
                                 ])
+                                ->helperText('💡 Paste a YouTube or Vimeo link on its own line and it will automatically appear as a playable video — both here in the preview and on the published article.')
                                 ->fileAttachmentsDirectory('blog/attachments')
                                 ->fileAttachmentsDisk('public')
+                                ->columnSpanFull(),
+
+                            Placeholder::make('content_video_preview')
+                                ->label('Video Preview')
+                                ->content(fn($get) => new HtmlString(VideoEmbedder::extractEmbeds($get('content') ?? '')))
+                                ->visible(fn($get) => VideoEmbedder::hasVideoLinks($get('content') ?? ''))
                                 ->columnSpanFull(),
 
                         ]),
@@ -129,10 +138,18 @@ class PostResource extends Resource
 
                             RichEditor::make('content_ar')
                                 ->label('المحتوى بالعربية')
+                                ->live(debounce: 800)
                                 ->toolbarButtons([
                                     'h2', 'h3', 'bold', 'italic', 'underline',
                                     'link', 'bulletList', 'orderedList', 'blockquote', 'undo',
                                 ])
+                                ->helperText('💡 Paste a YouTube or Vimeo link on its own line and it will automatically appear as a playable video — both here in the preview and on the published article.')
+                                ->columnSpanFull(),
+
+                            Placeholder::make('content_ar_video_preview')
+                                ->label('Video Preview')
+                                ->content(fn($get) => new HtmlString(VideoEmbedder::extractEmbeds($get('content_ar') ?? '')))
+                                ->visible(fn($get) => VideoEmbedder::hasVideoLinks($get('content_ar') ?? ''))
                                 ->columnSpanFull(),
                         ]),
 
