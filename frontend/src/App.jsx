@@ -9,6 +9,7 @@ import { CurrencyProvider }  from './context/CurrencyContext'
 import { ThemeProvider }     from './context/ThemeContext'
 import { SettingsProvider, useSetting } from './hooks/useSettings'
 import ThemeSelector        from './components/ThemeSelector'
+import Analytics            from './components/Analytics'
 import Navbar               from './components/Navbar'
 import Footer               from './components/Footer'
 import WhatsAppButton       from './components/WhatsAppButton'
@@ -44,6 +45,7 @@ function Layout() {
   return (
     <>
       <RTLSyncer />
+      <Analytics />
       <Navbar />
       <Routes>
         <Route path="/"                      element={<Home />} />

@@ -36,6 +36,11 @@ return [
         'key' => env('OPENAI_API_KEY'),
     ],
 
+    'google_cse' => [
+        'key' => env('GOOGLE_CSE_KEY'),
+        'cx'  => env('GOOGLE_CSE_ID'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

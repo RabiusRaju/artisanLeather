@@ -1,6 +1,6 @@
 import { useSetting } from '../hooks/useSettings'
 import { Link } from 'react-router-dom'
-import { FaInstagram, FaWhatsapp, FaFacebook } from 'react-icons/fa'
+import { FaInstagram, FaWhatsapp, FaFacebook, FaGoogle } from 'react-icons/fa'
 
 const linkGroups = [
   {
@@ -28,6 +28,9 @@ export default function Footer() {
   const instagram = useSetting('social.instagram', '')
   const facebook  = useSetting('social.facebook', '')
   const email     = useSetting('business.email', 'info@artisanleatherom.com')
+  const tagline       = useSetting('footer.tagline',        'Premium handcrafted leather goods. Made in Oman. Delivered across the GCC.')
+  const copyright     = useSetting('footer.copyright',      '© 2025 Artisan Leather · artisanleatherom.com · All rights reserved')
+  const googleBusiness = useSetting('seo.google_business',  '')
 
   return (
     <footer className="dark-section bg-dark border-t border-gold/10 pt-16 pb-10 px-6 lg:px-12" style={{ backgroundColor: '#120D05' }}>
@@ -51,7 +54,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-white/35 text-sm leading-relaxed font-light max-w-48">
-              Premium handcrafted leather goods. Made in Oman. Delivered across the GCC.
+              {tagline}
             </p>
             <div className="flex gap-4 mt-7">
               {instagram && (
@@ -83,6 +86,17 @@ export default function Footer() {
                   aria-label="Facebook"
                 >
                   <FaFacebook size={17} />
+                </a>
+              )}
+              {googleBusiness && (
+                <a
+                  href={googleBusiness}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/25 hover:text-gold transition-colors duration-300"
+                  aria-label="Google Business"
+                >
+                  <FaGoogle size={17} />
                 </a>
               )}
             </div>
@@ -149,7 +163,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-white/20 text-xs tracking-wider">
-            © 2025 Artisan Leather · artisanleatherom.com · All rights reserved
+            {copyright}
           </p>
           <div className="flex gap-6">
             <Link to="/privacy" className="text-white/20 hover:text-gold/60 text-xs transition-colors">

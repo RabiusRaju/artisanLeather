@@ -2,66 +2,7 @@ import SEO from '../components/SEO'
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useInView } from 'framer-motion'
-
-// ── Data ───────────────────────────────────────────────────────────────────
-const craftSteps = [
-  {
-    num: '01',
-    title: 'Select the Hide',
-    body: 'Every hide is hand-inspected for natural grain, firmness, and character. Only the top 15% passes our standard — the rest is returned.',
-  },
-  {
-    num: '02',
-    title: 'Cut & Shape',
-    body: 'Each pattern is traced and cut by hand using solid steel templates. No laser cutters — only a steady hand and decades of muscle memory.',
-  },
-  {
-    num: '03',
-    title: 'Hand Stitch',
-    body: 'We use the saddle-stitch technique — two needles, one thread, pulled in opposite directions — creating a lock stitch that holds even if one side breaks.',
-  },
-  {
-    num: '04',
-    title: 'Finish & Age',
-    body: 'Edges are bevelled, burnished, and hand-painted. The piece is conditioned with natural beeswax and left to settle — becoming truly itself.',
-  },
-]
-
-const materials = [
-  {
-    name: 'Full Grain',
-    subtitle: 'The Pinnacle of Leather',
-    desc: 'The outermost layer of the hide — untouched by sanding or buffing. Full grain retains every natural mark, developing a rich unique patina over decades.',
-    gradient: 'linear-gradient(135deg, #5A2C10, #3A1A08, #1E0C04)',
-  },
-  {
-    name: 'Vegetable Tanned',
-    subtitle: 'Slow-Made & Sustainable',
-    desc: 'Tanned using plant extracts — bark, leaves, roots — over 30–60 days. The result is leather with remarkable firmness that softens and deepens with age.',
-    gradient: 'linear-gradient(135deg, #3D2010, #261408, #160A04)',
-  },
-  {
-    name: 'Italian Calfskin',
-    subtitle: 'Silken & Refined',
-    desc: 'Sourced from the finest Italian tanneries. Calfskin offers an unmatched surface — fine-grained, almost silk-like, ideal for slim wallets and dress pieces.',
-    gradient: 'linear-gradient(135deg, #2A1A0A, #1A1006, #0C0803)',
-  },
-]
-
-const values = [
-  { number: 'I',   title: 'Heritage',     desc: 'Rooted in centuries of leather tradition. Every technique we use can be traced back further than any trend.' },
-  { number: 'II',  title: 'Precision',    desc: 'Every millimeter is intentional. Every edge, stitch, and finish is measured and placed with care.' },
-  { number: 'III', title: 'Longevity',    desc: 'We do not design for seasons. We design for decades. Our pieces are made to outlast the person who owns them first.' },
-  { number: 'IV',  title: 'Authenticity', desc: 'No shortcuts. No synthetic blends. No compromise. What you hold is exactly what it claims to be.' },
-]
-
-const timeline = [
-  { year: '2009', title: 'First Workshop',    desc: 'A small atelier opened in the heart of Muscat. Three craftsmen. One mission.' },
-  { year: '2013', title: 'First Collection',  desc: 'The Heritage Collection — six wallets and two belts — sold out in three weeks.' },
-  { year: '2018', title: 'GCC Expansion',     desc: 'Artisan Leather pieces reached Dubai, Riyadh, and Kuwait through word of mouth alone.' },
-  { year: '2023', title: 'Flagship Identity', desc: 'The gold-and-black mark became recognised across the Gulf.' },
-  { year: '2025', title: 'Online Launch',     desc: 'Bringing our full collection online — crafted in Oman, delivered to the world.' },
-]
+import { useSettings } from '../hooks/useSettings'
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 function CraftStep({ step, index }) {
@@ -166,10 +107,18 @@ function TimelineItem({ item, index }) {
 }
 
 function StorySection() {
+  const s = useSettings()
   const leftRef  = useRef(null)
   const rightRef = useRef(null)
   const leftInView  = useInView(leftRef,  { once: true, margin: '-100px' })
   const rightInView = useInView(rightRef, { once: true, margin: '-100px' })
+
+  const headline       = s['about.story.headline']        || 'Born from a Love'
+  const headlineAccent = s['about.story.headline_accent'] || 'of the Craft'
+  const years          = s['about.story.years']           || '16+'
+  const p1             = s['about.story.p1']              || 'Artisan Leather began not as a business plan, but as an obsession. Our founder spent years studying leatherwork — in Italy, in Morocco, and eventually in Oman — learning what makes a piece truly last.'
+  const p2             = s['about.story.p2']              || 'The first workshop was a single room in Muscat. Three craftsmen. One set of tools. No shortcuts. That ethos has never changed, even as the brand has grown across the GCC.'
+  const p3             = s['about.story.p3']              || 'Today, every piece that leaves our workshop is still inspected by hand, still stitched by hand, and still conditioned by hand — because the day we stop caring is the day we stop being Artisan Leather.'
 
   return (
     <section className="py-28 px-6 lg:px-12 max-w-7xl mx-auto">
@@ -195,7 +144,7 @@ function StorySection() {
             transition={{ duration: 0.7, delay: 0.55 }}
             className="absolute -bottom-8 -right-6 bg-dark border border-gold/20 px-8 py-6 hidden md:block"
           >
-            <div className="font-serif text-5xl text-gradient-gold">16+</div>
+            <div className="font-serif text-5xl text-gradient-gold">{years}</div>
             <div className="text-white/35 text-[9px] tracking-[0.35em] uppercase mt-1.5">Years of Craft</div>
           </motion.div>
         </motion.div>
@@ -208,25 +157,14 @@ function StorySection() {
         >
           <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-5">Our Story</p>
           <h2 className="font-serif text-4xl md:text-5xl text-white font-light leading-tight mb-8">
-            Born from a Love
+            {headline}
             <br />
-            <span className="italic text-gradient-gold">of the Craft</span>
+            <span className="italic text-gradient-gold">{headlineAccent}</span>
           </h2>
           <div className="w-12 h-px bg-gold mb-8" />
-          <p className="text-white/55 leading-loose mb-6 font-light text-[15px]">
-            Artisan Leather began not as a business plan, but as an obsession. Our founder spent
-            years studying leatherwork — in Italy, in Morocco, and eventually in Oman — learning
-            what makes a piece truly last.
-          </p>
-          <p className="text-white/45 leading-loose mb-6 font-light text-[15px]">
-            The first workshop was a single room in Muscat. Three craftsmen. One set of tools.
-            No shortcuts. That ethos has never changed, even as the brand has grown across the GCC.
-          </p>
-          <p className="text-white/38 leading-loose font-light text-[15px]">
-            Today, every piece that leaves our workshop is still inspected by hand, still stitched
-            by hand, and still conditioned by hand — because the day we stop caring is the day we
-            stop being Artisan Leather.
-          </p>
+          <p className="text-white/55 leading-loose mb-6 font-light text-[15px]">{p1}</p>
+          <p className="text-white/45 leading-loose mb-6 font-light text-[15px]">{p2}</p>
+          <p className="text-white/38 leading-loose font-light text-[15px]">{p3}</p>
         </motion.div>
       </div>
     </section>
@@ -234,6 +172,9 @@ function StorySection() {
 }
 
 function CTASection() {
+  const s = useSettings()
+  const heading = s['about.cta.heading'] || 'Own a Piece of the Craft'
+  const text    = s['about.cta.text']    || 'Every wallet, bag, and belt we make is a promise — that the hands behind it cared as much as the hands that will carry it.'
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true })
   return (
@@ -246,12 +187,11 @@ function CTASection() {
       >
         <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-6">Start Your Journey</p>
         <h2 className="font-serif text-4xl md:text-5xl text-white font-light mb-6">
-          Own a Piece of the Craft
+          {heading}
         </h2>
         <div className="w-14 h-px bg-gold mx-auto mb-8" />
         <p className="text-white/40 font-light leading-relaxed mb-12 text-[15px]">
-          Every wallet, bag, and belt we make is a promise — that the hands behind it
-          cared as much as the hands that will carry it.
+          {text}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
@@ -274,6 +214,41 @@ function CTASection() {
 
 // ── Page ───────────────────────────────────────────────────────────────────
 export default function About() {
+  const s = useSettings()
+
+  const craftSteps = [
+    { num: s['about.craft.1.num'] || '01', title: s['about.craft.1.title'] || 'Select the Hide',  body: s['about.craft.1.body'] || 'Every hide is hand-inspected for natural grain, firmness, and character. Only the top 15% passes our standard — the rest is returned.' },
+    { num: s['about.craft.2.num'] || '02', title: s['about.craft.2.title'] || 'Cut & Shape',      body: s['about.craft.2.body'] || 'Each pattern is traced and cut by hand using solid steel templates. No laser cutters — only a steady hand and decades of muscle memory.' },
+    { num: s['about.craft.3.num'] || '03', title: s['about.craft.3.title'] || 'Hand Stitch',      body: s['about.craft.3.body'] || 'We use the saddle-stitch technique — two needles, one thread, pulled in opposite directions — creating a lock stitch that holds even if one side breaks.' },
+    { num: s['about.craft.4.num'] || '04', title: s['about.craft.4.title'] || 'Finish & Age',     body: s['about.craft.4.body'] || 'Edges are bevelled, burnished, and hand-painted. The piece is conditioned with natural beeswax and left to settle — becoming truly itself.' },
+  ]
+
+  const materials = [
+    { name: s['about.material.1.name'] || 'Full Grain',       subtitle: s['about.material.1.subtitle'] || 'The Pinnacle of Leather',   desc: s['about.material.1.desc'] || 'The outermost layer of the hide — untouched by sanding or buffing. Full grain retains every natural mark, developing a rich unique patina over decades.',   gradient: 'linear-gradient(135deg, #5A2C10, #3A1A08, #1E0C04)' },
+    { name: s['about.material.2.name'] || 'Vegetable Tanned', subtitle: s['about.material.2.subtitle'] || 'Slow-Made & Sustainable',    desc: s['about.material.2.desc'] || 'Tanned using plant extracts — bark, leaves, roots — over 30–60 days. The result is leather with remarkable firmness that softens and deepens with age.',    gradient: 'linear-gradient(135deg, #3D2010, #261408, #160A04)' },
+    { name: s['about.material.3.name'] || 'Italian Calfskin', subtitle: s['about.material.3.subtitle'] || 'Silken & Refined',           desc: s['about.material.3.desc'] || 'Sourced from the finest Italian tanneries. Calfskin offers an unmatched surface — fine-grained, almost silk-like, ideal for slim wallets and dress pieces.',    gradient: 'linear-gradient(135deg, #2A1A0A, #1A1006, #0C0803)' },
+  ]
+
+  const values = [
+    { number: s['about.value.1.number'] || 'I',   title: s['about.value.1.title'] || 'Heritage',     desc: s['about.value.1.desc'] || 'Rooted in centuries of leather tradition. Every technique we use can be traced back further than any trend.' },
+    { number: s['about.value.2.number'] || 'II',  title: s['about.value.2.title'] || 'Precision',    desc: s['about.value.2.desc'] || 'Every millimeter is intentional. Every edge, stitch, and finish is measured and placed with care.' },
+    { number: s['about.value.3.number'] || 'III', title: s['about.value.3.title'] || 'Longevity',    desc: s['about.value.3.desc'] || 'We do not design for seasons. We design for decades. Our pieces are made to outlast the person who owns them first.' },
+    { number: s['about.value.4.number'] || 'IV',  title: s['about.value.4.title'] || 'Authenticity', desc: s['about.value.4.desc'] || 'No shortcuts. No synthetic blends. No compromise. What you hold is exactly what it claims to be.' },
+  ]
+
+  const timeline = [
+    { year: s['about.timeline.1.year'] || '2009', title: s['about.timeline.1.title'] || 'First Workshop',    desc: s['about.timeline.1.desc'] || 'A small atelier opened in the heart of Muscat. Three craftsmen. One mission.' },
+    { year: s['about.timeline.2.year'] || '2013', title: s['about.timeline.2.title'] || 'First Collection',  desc: s['about.timeline.2.desc'] || 'The Heritage Collection — six wallets and two belts — sold out in three weeks.' },
+    { year: s['about.timeline.3.year'] || '2018', title: s['about.timeline.3.title'] || 'GCC Expansion',     desc: s['about.timeline.3.desc'] || 'Artisan Leather pieces reached Dubai, Riyadh, and Kuwait through word of mouth alone.' },
+    { year: s['about.timeline.4.year'] || '2023', title: s['about.timeline.4.title'] || 'Flagship Identity', desc: s['about.timeline.4.desc'] || 'The gold-and-black mark became recognised across the Gulf.' },
+    { year: s['about.timeline.5.year'] || '2025', title: s['about.timeline.5.title'] || 'Online Launch',     desc: s['about.timeline.5.desc'] || 'Bringing our full collection online — crafted in Oman, delivered to the world.' },
+  ]
+
+  const heroEyebrow  = s['about.hero.eyebrow']        || 'Muscat · Oman · Est. 2009'
+  const heroHeadline = s['about.hero.headline']       || 'A Story Written'
+  const heroAccent   = s['about.hero.headline_accent'] || 'in Leather'
+  const heroSubtitle = s['about.hero.subtitle']       || 'Sixteen years of craft. One unwavering standard.'
+
   const craftRef     = useRef(null)
   const materialsRef = useRef(null)
   const valuesRef    = useRef(null)
@@ -313,7 +288,7 @@ export default function About() {
             transition={{ duration: 0.8 }}
             className="text-gold/60 tracking-[0.6em] uppercase text-[10px] mb-8"
           >
-            Muscat · Oman · Est. 2009
+            {heroEyebrow}
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 28 }}
@@ -321,9 +296,9 @@ export default function About() {
             transition={{ duration: 0.9, delay: 0.15 }}
             className="font-serif text-6xl md:text-7xl text-white font-light leading-[1.05] mb-8"
           >
-            A Story Written
+            {heroHeadline}
             <br />
-            <span className="text-gradient-gold italic">in Leather</span>
+            <span className="text-gradient-gold italic">{heroAccent}</span>
           </motion.h1>
           <motion.div
             initial={{ scaleX: 0 }}
@@ -337,7 +312,7 @@ export default function About() {
             transition={{ duration: 0.8, delay: 0.7 }}
             className="text-white/45 text-lg font-light leading-relaxed"
           >
-            Sixteen years of craft. One unwavering standard.
+            {heroSubtitle}
           </motion.p>
         </div>
       </section>
