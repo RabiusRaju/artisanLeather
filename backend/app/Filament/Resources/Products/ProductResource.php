@@ -737,7 +737,7 @@ class ProductResource extends Resource
         return $paths;
     }
 
-    private static function fillAiFields(\Closure $set, array $data): void
+    private static function fillAiFields($set, array $data): void
     {
         $set('name',             $data['name']             ?? '');
         $set('name_ar',          $data['name_ar']          ?? '');

@@ -306,7 +306,7 @@ class TestimonialResource extends Resource
         ];
     }
 
-    private static function fillAiFields(\Closure $set, array $data): void
+    private static function fillAiFields($set, array $data): void
     {
         $set('quote',    $data['quote']    ?? '');
         $set('quote_ar', $data['quote_ar'] ?? '');
