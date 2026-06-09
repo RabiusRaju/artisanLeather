@@ -13,6 +13,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use App\Enums\NavigationGroupEnum;
+use App\Services\AiPostService;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -59,6 +60,86 @@ class SurveyResource extends Resource
         ];
 
         return $schema->schema([
+
+            // ── AI Auto-Fill ─────────────────────────────────────────────
+            Section::make('✨ AI Content Generator')
+                ->description('Describe the survey you want, then choose which AI to generate it. All questions, options and Arabic translations will be filled automatically.')
+                ->collapsed()
+                ->schema([
+                    Textarea::make('ai_prompt')
+                        ->label('What should this survey be about?')
+                        ->placeholder('e.g. Post-purchase satisfaction survey to understand how customers feel about product quality and delivery')
+                        ->helperText('Be specific about the goal and target audience.')
+                        ->rows(4)
+                        ->columnSpanFull(),
+
+                    \Filament\Schemas\Components\Actions::make([
+
+                        Action::make('generate_claude')
+                            ->label('Generate with Claude')
+                            ->icon('heroicon-o-sparkles')
+                            ->color('warning')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate Survey with Claude AI')
+                            ->modalDescription('This will overwrite the title, descriptions, thank-you messages and all questions. Continue?')
+                            ->modalSubmitActionLabel('Yes, generate')
+                            ->action(function ($get, $set) {
+                                $prompt = $get('ai_prompt');
+                                if (blank($prompt)) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Please enter a survey description first.')
+                                        ->warning()->send();
+                                    return;
+                                }
+                                try {
+                                    $data = app(AiPostService::class)->generateSurveyWithClaude($prompt);
+                                    self::fillAiFields($set, $data);
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('✅ Claude generated your survey!')
+                                        ->body('Review the Questions tab before saving.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Claude generation failed')
+                                        ->body($e->getMessage())
+                                        ->danger()->send();
+                                }
+                            }),
+
+                        Action::make('generate_openai')
+                            ->label('Generate with OpenAI')
+                            ->icon('heroicon-o-cpu-chip')
+                            ->color('info')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate Survey with OpenAI (GPT-4o)')
+                            ->modalDescription('This will overwrite the title, descriptions, thank-you messages and all questions. Continue?')
+                            ->modalSubmitActionLabel('Yes, generate')
+                            ->action(function ($get, $set) {
+                                $prompt = $get('ai_prompt');
+                                if (blank($prompt)) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Please enter a survey description first.')
+                                        ->warning()->send();
+                                    return;
+                                }
+                                try {
+                                    $data = app(AiPostService::class)->generateSurveyWithOpenAI($prompt);
+                                    self::fillAiFields($set, $data);
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('✅ OpenAI generated your survey!')
+                                        ->body('Review the Questions tab before saving.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('OpenAI generation failed')
+                                        ->body($e->getMessage())
+                                        ->danger()->send();
+                                }
+                            }),
+
+                    ]),
+                ]),
+
             Tabs::make()->tabs([
 
                 // ── Tab 1: Survey Details ─────────────────────────────────
@@ -436,6 +517,31 @@ class SurveyResource extends Resource
                     ]),
             ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);
+    }
+
+    private static function fillAiFields(\Closure $set, array $data): void
+    {
+        $set('title',                $data['title']                ?? '');
+        $set('slug',                 Str::slug($data['title']      ?? ''));
+        $set('description',          $data['description']          ?? '');
+        $set('description_ar',       $data['description_ar']       ?? '');
+        $set('thank_you_message',    $data['thank_you_message']    ?? '');
+        $set('thank_you_message_ar', $data['thank_you_message_ar'] ?? '');
+
+        $questions = [];
+        foreach ($data['questions'] ?? [] as $i => $q) {
+            $questions[(string) Str::uuid()] = [
+                'type'        => $q['type']        ?? 'text_short',
+                'question'    => $q['question']    ?? '',
+                'question_ar' => $q['question_ar'] ?? '',
+                'description' => $q['description'] ?? '',
+                'options'     => $q['options']     ?? [],
+                'options_ar'  => $q['options_ar']  ?? [],
+                'is_required' => $q['is_required'] ?? true,
+                'sort_order'  => $q['sort_order']  ?? $i,
+            ];
+        }
+        $set('questions', $questions);
     }
 
     public static function getPages(): array

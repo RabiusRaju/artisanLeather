@@ -15,6 +15,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use App\Enums\NavigationGroupEnum;
+use App\Services\AiPostService;
+use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
@@ -45,6 +47,86 @@ class ProductResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
+
+            // ── AI Auto-Fill ─────────────────────────────────────────────
+            Section::make('✨ AI Content Generator')
+                ->description('Describe the product, then choose which AI to generate all copy. Review every tab before saving.')
+                ->collapsed()
+                ->schema([
+                    Textarea::make('ai_prompt')
+                        ->label('What is this product?')
+                        ->placeholder('e.g. Black premium calf leather bifold wallet with 8 card slots, handmade in Oman')
+                        ->helperText('Be specific about colour, material, style and use case.')
+                        ->rows(4)
+                        ->columnSpanFull(),
+
+                    \Filament\Schemas\Components\Actions::make([
+
+                        Action::make('generate_claude')
+                            ->label('Generate with Claude')
+                            ->icon('heroicon-o-sparkles')
+                            ->color('warning')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate with Claude AI')
+                            ->modalDescription('This will overwrite all text fields (name, description, care, shipping, SEO…). Continue?')
+                            ->modalSubmitActionLabel('Yes, generate')
+                            ->action(function ($get, $set) {
+                                $prompt = $get('ai_prompt');
+                                if (blank($prompt)) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Please enter a product description first.')
+                                        ->warning()->send();
+                                    return;
+                                }
+                                try {
+                                    $data = app(AiPostService::class)->generateProductWithClaude($prompt);
+                                    self::fillAiFields($set, $data);
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('✅ Claude generated your product copy!')
+                                        ->body('Review all tabs before saving.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Claude generation failed')
+                                        ->body($e->getMessage())
+                                        ->danger()->send();
+                                }
+                            }),
+
+                        Action::make('generate_openai')
+                            ->label('Generate with OpenAI')
+                            ->icon('heroicon-o-cpu-chip')
+                            ->color('info')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate with OpenAI (GPT-4o)')
+                            ->modalDescription('This will overwrite all text fields (name, description, care, shipping, SEO…). Continue?')
+                            ->modalSubmitActionLabel('Yes, generate')
+                            ->action(function ($get, $set) {
+                                $prompt = $get('ai_prompt');
+                                if (blank($prompt)) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Please enter a product description first.')
+                                        ->warning()->send();
+                                    return;
+                                }
+                                try {
+                                    $data = app(AiPostService::class)->generateProductWithOpenAI($prompt);
+                                    self::fillAiFields($set, $data);
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('✅ OpenAI generated your product copy!')
+                                        ->body('Review all tabs before saving.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('OpenAI generation failed')
+                                        ->body($e->getMessage())
+                                        ->danger()->send();
+                                }
+                            }),
+
+                    ]),
+                ]),
+
             Tabs::make('Product')
                 ->tabs([
 
@@ -511,6 +593,27 @@ class ProductResource extends Resource
             ->recordActions([EditAction::make(), DeleteAction::make()])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
             ->defaultSort('sort_order');
+    }
+
+    private static function fillAiFields(\Closure $set, array $data): void
+    {
+        $set('name',             $data['name']             ?? '');
+        $set('name_ar',          $data['name_ar']          ?? '');
+        $set('slug',             Str::slug($data['name']   ?? ''));
+        $set('tagline',          $data['tagline']          ?? '');
+        $set('tagline_ar',       $data['tagline_ar']       ?? '');
+        $set('description',      $data['description']      ?? '');
+        $set('description_ar',   $data['description_ar']   ?? '');
+        $set('material',         $data['material']         ?? '');
+        $set('material_ar',      $data['material_ar']      ?? '');
+        $set('origin',           $data['origin']           ?? '');
+        $set('origin_ar',        $data['origin_ar']        ?? '');
+        $set('care',             $data['care']             ?? '');
+        $set('care_ar',          $data['care_ar']          ?? '');
+        $set('shipping',         $data['shipping']         ?? '');
+        $set('shipping_ar',      $data['shipping_ar']      ?? '');
+        $set('meta_title',       $data['meta_title']       ?? '');
+        $set('meta_description', $data['meta_description'] ?? '');
     }
 
     public static function getPages(): array

@@ -13,6 +13,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use App\Enums\NavigationGroupEnum;
+use App\Services\AiPostService;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -20,7 +21,6 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Actions\Action;
-use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -50,6 +50,88 @@ class PostResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
+
+            // ── AI Auto-Fill ─────────────────────────────────────────────
+            Section::make('✨ AI Content Generator')
+                ->description('Describe the blog post you want, then choose which AI to generate with. Review all tabs before saving.')
+                ->collapsed()
+                ->schema([
+                    Textarea::make('ai_prompt')
+                        ->label('What should the post be about?')
+                        ->placeholder('e.g. How to clean and condition a leather wallet to make it last 10 years')
+                        ->helperText('Be specific. The more detail you give, the better the result.')
+                        ->rows(4)
+                        ->columnSpanFull(),
+
+                    \Filament\Schemas\Components\Actions::make([
+
+                        Action::make('generate_claude')
+                            ->label('Generate with Claude')
+                            ->icon('heroicon-o-sparkles')
+                            ->color('warning')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate with Claude AI')
+                            ->modalDescription('This will overwrite any existing content in all fields. Continue?')
+                            ->modalSubmitActionLabel('Yes, generate')
+                            ->action(function ($get, $set) {
+                                $prompt = $get('ai_prompt');
+                                if (blank($prompt)) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Please enter a prompt first.')
+                                        ->warning()->send();
+                                    return;
+                                }
+                                try {
+                                    $data = app(AiPostService::class)
+                                        ->generatePostWithClaude($prompt, $get('category') ?: 'general');
+                                    self::fillAiFields($set, $data);
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('✅ Claude generated your content!')
+                                        ->body('Review all tabs before saving.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Claude generation failed')
+                                        ->body($e->getMessage())
+                                        ->danger()->send();
+                                }
+                            }),
+
+                        Action::make('generate_openai')
+                            ->label('Generate with OpenAI')
+                            ->icon('heroicon-o-cpu-chip')
+                            ->color('info')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate with OpenAI (GPT-4o)')
+                            ->modalDescription('This will overwrite any existing content in all fields. Continue?')
+                            ->modalSubmitActionLabel('Yes, generate')
+                            ->action(function ($get, $set) {
+                                $prompt = $get('ai_prompt');
+                                if (blank($prompt)) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Please enter a prompt first.')
+                                        ->warning()->send();
+                                    return;
+                                }
+                                try {
+                                    $data = app(AiPostService::class)
+                                        ->generatePostWithOpenAI($prompt, $get('category') ?: 'general');
+                                    self::fillAiFields($set, $data);
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('✅ OpenAI generated your content!')
+                                        ->body('Review all tabs before saving.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('OpenAI generation failed')
+                                        ->body($e->getMessage())
+                                        ->danger()->send();
+                                }
+                            }),
+
+                    ]),
+                ]),
+
             Tabs::make()->tabs([
 
                 // ── Tab 1: Content ───────────────────────────────────────
@@ -349,6 +431,22 @@ class PostResource extends Resource
                     ]),
             ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);
+    }
+
+    private static function fillAiFields(\Closure $set, array $data): void
+    {
+        $set('title',            $data['title']            ?? '');
+        $set('slug',             Str::slug($data['title']  ?? ''));
+        $set('excerpt',          $data['excerpt']           ?? '');
+        $set('content',          $data['content']           ?? '');
+        $set('title_ar',         $data['title_ar']          ?? '');
+        $set('excerpt_ar',       $data['excerpt_ar']        ?? '');
+        $set('content_ar',       $data['content_ar']        ?? '');
+        $set('tags',             $data['tags']              ?? []);
+        $set('category',         $data['category']          ?? 'general');
+        $set('read_time',        $data['read_time']         ?? 4);
+        $set('meta_title',       $data['meta_title']        ?? '');
+        $set('meta_description', $data['meta_description']  ?? '');
     }
 
     public static function getPages(): array
