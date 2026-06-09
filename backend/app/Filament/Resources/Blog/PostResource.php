@@ -576,7 +576,7 @@ class PostResource extends Resource
         return $paths;
     }
 
-    private static function fillAiFields(\Closure $set, array $data): void
+    private static function fillAiFields($set, array $data): void
     {
         $set('title',            $data['title']            ?? '');
         $set('slug',             Str::slug($data['title']  ?? ''));
