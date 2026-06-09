@@ -102,19 +102,68 @@ class BusinessSettings extends Page implements HasSchemas
                         ->helperText('Message sent when customer chooses WhatsApp payment'),
                 ]),
 
+            Section::make('🦶 Footer')
+                ->description('Text shown in the footer across every page.')
+                ->columns(1)
+                ->schema([
+                    Textarea::make('footer.tagline')
+                        ->label('Brand Tagline')
+                        ->rows(2)
+                        ->placeholder('Premium handcrafted leather goods. Made in Oman. Delivered across the GCC.'),
+
+                    TextInput::make('footer.copyright')
+                        ->label('Copyright Line')
+                        ->placeholder('© 2025 Artisan Leather · artisanleatherom.com · All rights reserved'),
+                ]),
+
             Section::make('🔍 SEO & Analytics')
                 ->columns(2)
                 ->schema([
                     TextInput::make('seo.meta_title')->label('Default Page Title')->columnSpanFull(),
                     Textarea::make('seo.meta_description')->label('Default Meta Description')->rows(2)->columnSpanFull(),
+
                     TextInput::make('seo.google_analytics')
                         ->label('Google Analytics 4 ID')
                         ->placeholder('G-XXXXXXXXXX')
                         ->helperText('Format: G-XXXXXXXXXX'),
+
                     TextInput::make('seo.google_tag_manager')
                         ->label('Google Tag Manager ID')
                         ->placeholder('GTM-XXXXXXX')
                         ->helperText('Format: GTM-XXXXXXX'),
+
+                    TextInput::make('seo.search_console')
+                        ->label('Google Search Console — Verification Code')
+                        ->placeholder('abc123XYZ...')
+                        ->helperText('Paste only the content="..." value from the verification meta tag.'),
+
+                    TextInput::make('seo.meta_pixel')
+                        ->label('Meta (Facebook) Pixel ID')
+                        ->placeholder('1234567890123456')
+                        ->helperText('Found in Meta Events Manager → your Pixel → Settings.'),
+
+                    TextInput::make('seo.clarity')
+                        ->label('Microsoft Clarity Project ID')
+                        ->placeholder('abc1defgh2')
+                        ->helperText('Found in Clarity → Settings → Overview → Tracking Code.'),
+
+                    TextInput::make('seo.google_business')
+                        ->label('Google Business Profile URL')
+                        ->url()
+                        ->placeholder('https://maps.app.goo.gl/...')
+                        ->helperText('Shown as a "Find us on Google" link in the footer.'),
+
+                    TextInput::make('seo.google_cse_key')
+                        ->label('Google Custom Search — API Key')
+                        ->password()
+                        ->revealable()
+                        ->placeholder('AIzaSy...')
+                        ->helperText('Google Cloud Console → APIs & Services → Credentials → API Key. Used by AI to research competitor content before generating.'),
+
+                    TextInput::make('seo.google_cse_id')
+                        ->label('Google Custom Search — Engine ID (cx)')
+                        ->placeholder('a1b2c3:xyz...')
+                        ->helperText('programmablesearchengine.google.com → your engine → Setup → Search engine ID. Free quota: 100 searches/day.'),
                 ]),
 
         ])->statePath('data');

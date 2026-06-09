@@ -9,10 +9,15 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use App\Models\Setting;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use App\Enums\NavigationGroupEnum;
+use App\Services\AiPostService;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -59,6 +64,102 @@ class SurveyResource extends Resource
         ];
 
         return $schema->schema([
+
+            // ── AI Auto-Fill ─────────────────────────────────────────────
+            Section::make('✨ AI Content Generator')
+                ->description('Describe the survey you want, then choose which AI to generate it. All questions, options and Arabic translations will be filled automatically.')
+                ->collapsed()
+                ->schema([
+                    Textarea::make('ai_prompt')
+                        ->label('What should this survey be about?')
+                        ->placeholder('e.g. Post-purchase satisfaction survey to understand how customers feel about product quality and delivery')
+                        ->helperText('Be specific about the goal and target audience.')
+                        ->rows(4)
+                        ->columnSpanFull(),
+
+                    FileUpload::make('ai_attachments')
+                        ->label('Reference Images & Documents (optional)')
+                        ->helperText('Claude reads images + PDFs. OpenAI reads images only.')
+                        ->multiple()
+                        ->disk('local')
+                        ->directory('ai-uploads')
+                        ->visibility('private')
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf', 'text/plain'])
+                        ->maxSize(10240)
+                        ->maxFiles(5)
+                        ->columnSpanFull(),
+
+                    \Filament\Schemas\Components\Actions::make([
+
+                        Action::make('generate_claude')
+                            ->label('Generate with Claude')
+                            ->icon('heroicon-o-sparkles')
+                            ->color('warning')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate Survey with Claude AI')
+                            ->modalDescription('This will overwrite the title, descriptions, thank-you messages and all questions. Continue?')
+                            ->modalSubmitActionLabel('Yes, generate')
+                            ->action(function ($get, $set) {
+                                $prompt = $get('ai_prompt');
+                                if (blank($prompt)) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Please enter a survey description first.')
+                                        ->warning()->send();
+                                    return;
+                                }
+                                $filePaths = self::resolveAiFilePaths($get('ai_attachments') ?? []);
+                                try {
+                                    $data = app(AiPostService::class)->generateSurveyWithClaude($prompt, $filePaths);
+                                    self::fillAiFields($set, $data);
+                                    $set('ai_attachments', []);
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('✅ Claude generated your survey!')
+                                        ->body('Review the Questions tab before saving.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Claude generation failed')
+                                        ->body($e->getMessage())
+                                        ->danger()->send();
+                                }
+                            }),
+
+                        Action::make('generate_openai')
+                            ->label('Generate with OpenAI')
+                            ->icon('heroicon-o-cpu-chip')
+                            ->color('info')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate Survey with OpenAI (GPT-4o)')
+                            ->modalDescription('This will overwrite the title, descriptions, thank-you messages and all questions. Continue?')
+                            ->modalSubmitActionLabel('Yes, generate')
+                            ->action(function ($get, $set) {
+                                $prompt = $get('ai_prompt');
+                                if (blank($prompt)) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Please enter a survey description first.')
+                                        ->warning()->send();
+                                    return;
+                                }
+                                $filePaths = self::resolveAiFilePaths($get('ai_attachments') ?? []);
+                                try {
+                                    $data = app(AiPostService::class)->generateSurveyWithOpenAI($prompt, $filePaths);
+                                    self::fillAiFields($set, $data);
+                                    $set('ai_attachments', []);
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('✅ OpenAI generated your survey!')
+                                        ->body('Review the Questions tab before saving.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('OpenAI generation failed')
+                                        ->body($e->getMessage())
+                                        ->danger()->send();
+                                }
+                            }),
+
+                    ]),
+                ]),
+
             Tabs::make()->tabs([
 
                 // ── Tab 1: Survey Details ─────────────────────────────────
@@ -237,7 +338,241 @@ class SurveyResource extends Resource
 
                 ]),
 
-                // ── Tab 3: Responses ──────────────────────────────────────
+                // ── Tab 3: Preview ────────────────────────────────────────
+                Tab::make('Preview')->icon('heroicon-o-eye')->schema([
+
+                    Section::make('Respondent View')
+                        ->description('This is exactly how your survey looks to someone filling it in. Check it before sharing.')
+                        ->schema([
+                            Placeholder::make('survey_preview')
+                                ->label('')
+                                ->content(function ($get) {
+                                    $title       = $get('title')       ?: 'Survey Title';
+                                    $description = $get('description') ?: '';
+                                    $questions   = array_values($get('questions') ?? []);
+
+                                    if (empty($questions)) {
+                                        return new HtmlString('<p style="color:#9ca3af;font-style:italic;font-size:13px;">Add questions in the Questions tab to see the preview.</p>');
+                                    }
+
+                                    $typeIcons = [
+                                        'single_choice'   => '🔘',
+                                        'multiple_choice' => '☑️',
+                                        'rating'          => '⭐',
+                                        'nps'             => '📊',
+                                        'text_short'      => '📝',
+                                        'text_long'       => '📄',
+                                        'yes_no'          => '✅',
+                                        'dropdown'        => '📋',
+                                    ];
+
+                                    $html  = '<div style="font-family:sans-serif;max-width:640px;background:#fff;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;">';
+
+                                    // Header strip
+                                    $html .= '<div style="background:linear-gradient(135deg,#1a1208,#2a1a08);padding:28px 32px;">';
+                                    $html .= '<h2 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#fff;">' . e($title) . '</h2>';
+                                    if (!blank($description)) {
+                                        $html .= '<p style="margin:0;font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5;">' . e($description) . '</p>';
+                                    }
+                                    $html .= '</div>';
+
+                                    // Questions
+                                    $html .= '<div style="padding:24px 32px;display:flex;flex-direction:column;gap:24px;">';
+
+                                    foreach ($questions as $i => $q) {
+                                        $type     = $q['type']     ?? 'text_short';
+                                        $question = $q['question'] ?? '';
+                                        $required = !empty($q['is_required']);
+                                        $options  = $q['options']  ?? [];
+                                        $icon     = $typeIcons[$type] ?? '❓';
+
+                                        $html .= '<div style="padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">';
+
+                                        // Question label
+                                        $html .= '<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:12px;">';
+                                        $html .= '<span style="font-size:11px;color:#9ca3af;flex-shrink:0;">Q' . ($i + 1) . '</span>';
+                                        $html .= '<span style="font-size:14px;font-weight:600;color:#111827;line-height:1.4;">' . e($question);
+                                        if ($required) $html .= ' <span style="color:#ef4444;font-size:12px;">*</span>';
+                                        $html .= '</span></div>';
+
+                                        // Input mock by type
+                                        if ($type === 'text_short') {
+                                            $html .= '<div style="height:38px;background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:0 12px;line-height:38px;font-size:12px;color:#d1d5db;">Your answer…</div>';
+
+                                        } elseif ($type === 'text_long') {
+                                            $html .= '<div style="height:80px;background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:10px 12px;font-size:12px;color:#d1d5db;">Your answer…</div>';
+
+                                        } elseif ($type === 'yes_no') {
+                                            $html .= '<div style="display:flex;gap:10px;">';
+                                            foreach (['Yes', 'No'] as $opt) {
+                                                $html .= '<div style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#fff;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;cursor:pointer;">';
+                                                $html .= '<div style="width:14px;height:14px;border-radius:50%;border:2px solid #d1d5db;flex-shrink:0;"></div>' . e($opt) . '</div>';
+                                            }
+                                            $html .= '</div>';
+
+                                        } elseif ($type === 'single_choice') {
+                                            foreach ($options as $opt) {
+                                                $html .= '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;color:#374151;">';
+                                                $html .= '<div style="width:14px;height:14px;border-radius:50%;border:2px solid #d1d5db;flex-shrink:0;"></div>' . e($opt) . '</div>';
+                                            }
+
+                                        } elseif ($type === 'multiple_choice') {
+                                            foreach ($options as $opt) {
+                                                $html .= '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;color:#374151;">';
+                                                $html .= '<div style="width:14px;height:14px;border-radius:3px;border:2px solid #d1d5db;flex-shrink:0;"></div>' . e($opt) . '</div>';
+                                            }
+
+                                        } elseif ($type === 'dropdown') {
+                                            $html .= '<div style="height:38px;background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:0 12px;line-height:38px;font-size:12px;color:#6b7280;display:flex;justify-content:space-between;align-items:center;">';
+                                            $html .= '<span>' . (empty($options) ? 'Select an option…' : e($options[0]) . '…') . '</span><span style="color:#9ca3af;">▾</span></div>';
+
+                                        } elseif ($type === 'rating') {
+                                            $html .= '<div style="display:flex;gap:8px;">';
+                                            for ($s = 1; $s <= 5; $s++) {
+                                                $html .= '<div style="width:36px;height:36px;border-radius:50%;border:2px solid #d1d5db;display:flex;align-items:center;justify-content:center;font-size:13px;color:#9ca3af;cursor:pointer;">' . $s . '</div>';
+                                            }
+                                            $html .= '</div>';
+
+                                        } elseif ($type === 'nps') {
+                                            $html .= '<div style="display:flex;gap:4px;flex-wrap:wrap;">';
+                                            for ($s = 0; $s <= 10; $s++) {
+                                                $html .= '<div style="width:32px;height:32px;border-radius:4px;border:1px solid #d1d5db;display:flex;align-items:center;justify-content:center;font-size:12px;color:#9ca3af;cursor:pointer;">' . $s . '</div>';
+                                            }
+                                            $html .= '</div>';
+                                            $html .= '<div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:#9ca3af;"><span>Not at all likely</span><span>Extremely likely</span></div>';
+                                        }
+
+                                        $html .= '</div>'; // end question card
+                                    }
+
+                                    $html .= '</div>'; // end questions wrapper
+
+                                    // Submit button mock
+                                    $html .= '<div style="padding:0 32px 28px;">';
+                                    $html .= '<div style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#d4af37);color:#1a1208;font-weight:700;font-size:13px;padding:10px 28px;border-radius:6px;cursor:pointer;letter-spacing:.04em;">Submit →</div>';
+                                    $html .= '</div>';
+
+                                    $html .= '</div>'; // end card
+
+                                    return new HtmlString($html);
+                                })
+                                ->columnSpanFull(),
+                        ]),
+
+                    Section::make('📊 SEO Ranking Potential')
+                        ->description('AI-estimated engagement and reach potential for this survey. Generate with AI first to see this score.')
+                        ->collapsed()
+                        ->schema([
+                            TextInput::make('_seo_score')->dehydrated(false)->hidden(),
+                            Textarea::make('_seo_notes')->dehydrated(false)->hidden(),
+
+                            Placeholder::make('_seo_score_card')
+                                ->label('')
+                                ->content(function ($get) {
+                                    $score = (int) ($get('_seo_score') ?? 0);
+                                    $notes = trim($get('_seo_notes') ?? '');
+
+                                    if ($score === 0 && blank($notes)) {
+                                        return new HtmlString('<p style="color:#9ca3af;font-style:italic;font-size:13px;">Generate with AI to see the engagement potential score and tips to maximise response rates.</p>');
+                                    }
+
+                                    $color = $score >= 75 ? '#16a34a' : ($score >= 50 ? '#d97706' : '#dc2626');
+                                    $label = $score >= 75 ? 'Strong' : ($score >= 50 ? 'Average' : 'Needs Work');
+
+                                    $notesHtml = '';
+                                    if (!blank($notes)) {
+                                        $lines = array_filter(array_map('trim', explode("\n", $notes)));
+                                        $items = implode('', array_map(fn($l) => '<li style="margin-bottom:6px;">' . e($l) . '</li>', $lines));
+                                        $notesHtml = '<div style="margin-top:14px;"><div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">Tips to Improve Response Rate</div><ul style="margin:0;padding-left:18px;color:#374151;font-size:13px;line-height:1.6;">' . $items . '</ul></div>';
+                                    }
+
+                                    return new HtmlString('
+                                        <div style="font-family:sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;max-width:600px;">
+                                            <div style="display:flex;align-items:center;gap:16px;">
+                                                <div style="flex-shrink:0;width:64px;height:64px;border-radius:50%;background:' . $color . ';display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700;">' . $score . '</div>
+                                                <div>
+                                                    <div style="font-size:20px;font-weight:700;color:' . $color . ';">' . $label . '</div>
+                                                    <div style="font-size:12px;color:#6b7280;">AI Engagement Potential Score out of 100</div>
+                                                </div>
+                                            </div>
+                                            ' . $notesHtml . '
+                                        </div>
+                                    ');
+                                })
+                                ->columnSpanFull(),
+                        ]),
+
+                    Section::make('🔍 Google Competition')
+                        ->description('Research what content exists on this survey topic — so you can ask better, more relevant questions.')
+                        ->collapsed()
+                        ->schema([
+                            Textarea::make('_competition_json')->dehydrated(false)->hidden(),
+
+                            \Filament\Schemas\Components\Actions::make([
+                                Action::make('research_competition_survey')
+                                    ->label('Research Topic')
+                                    ->icon('heroicon-o-magnifying-glass')
+                                    ->color('gray')
+                                    ->action(function ($get, $set) {
+                                        $query = trim($get('title') ?: '');
+                                        if (blank($query)) {
+                                            \Filament\Notifications\Notification::make()
+                                                ->title('Enter a survey title first.')
+                                                ->body('The survey title is used as the search query.')
+                                                ->warning()->send();
+                                            return;
+                                        }
+                                        try {
+                                            $results = self::fetchCompetitionData($query);
+                                            $set('_competition_json', json_encode($results));
+                                            if (empty($results)) {
+                                                \Filament\Notifications\Notification::make()
+                                                    ->title('No results returned.')
+                                                    ->body('Check your Google CSE settings in Business Settings → SEO & Analytics.')
+                                                    ->warning()->send();
+                                            }
+                                        } catch (\Throwable $e) {
+                                            \Filament\Notifications\Notification::make()
+                                                ->title('Research failed')
+                                                ->body($e->getMessage())
+                                                ->danger()->send();
+                                        }
+                                    }),
+                            ]),
+
+                            Placeholder::make('_competition_preview')
+                                ->label('')
+                                ->content(function ($get) {
+                                    $json = $get('_competition_json') ?? '';
+                                    if (blank($json)) {
+                                        return new HtmlString('<p style="color:#9ca3af;font-style:italic;font-size:13px;">Click "Research Topic" to see what content already exists on this topic.</p>');
+                                    }
+                                    $items = json_decode($json, true) ?: [];
+                                    if (empty($items)) {
+                                        return new HtmlString('<p style="color:#9ca3af;font-style:italic;font-size:13px;">No results found for this query.</p>');
+                                    }
+                                    $cards = '';
+                                    foreach ($items as $i => $item) {
+                                        $pos     = $i + 1;
+                                        $title   = e($item['title']   ?? '');
+                                        $url     = e($item['url']     ?? '');
+                                        $domain  = e($item['domain']  ?? '');
+                                        $snippet = e($item['snippet'] ?? '');
+                                        $cards  .= '
+                                            <div style="padding:12px 14px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;">
+                                                <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">#' . $pos . ' &nbsp;·&nbsp; ' . $domain . '</div>
+                                                <a href="' . $url . '" target="_blank" rel="noopener" style="font-size:15px;color:#1a0dab;text-decoration:none;font-weight:500;line-height:1.3;">' . $title . '</a>
+                                                <div style="font-size:13px;color:#545454;margin-top:5px;line-height:1.5;">' . $snippet . '</div>
+                                            </div>';
+                                    }
+                                    return new HtmlString('<div style="font-family:arial,sans-serif;display:flex;flex-direction:column;gap:10px;max-width:680px;">' . $cards . '</div>');
+                                })
+                                ->columnSpanFull(),
+                        ]),
+
+                ]), // end Preview tab
+
+                // ── Tab 5: Responses ──────────────────────────────────────
                 Tab::make('Responses')->icon('heroicon-o-inbox')->schema([
 
                     Section::make('Response Summary')
@@ -277,7 +612,7 @@ class SurveyResource extends Resource
 
                 ]),
 
-                // ── Tab 4: Analytics ──────────────────────────────────────
+                // ── Tab 6: Analytics ──────────────────────────────────────
                 Tab::make('Analytics')->icon('heroicon-o-chart-bar')->schema([
 
                     Section::make('Question-by-Question Results')
@@ -436,6 +771,80 @@ class SurveyResource extends Resource
                     ]),
             ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);
+    }
+
+    private static function resolveAiFilePaths(mixed $files): array
+    {
+        $paths = [];
+        foreach ((array) $files as $relativePath) {
+            if (blank($relativePath)) continue;
+            $abs = Storage::disk('local')->path($relativePath);
+            if (file_exists($abs)) {
+                $paths[] = $abs;
+            }
+        }
+        return $paths;
+    }
+
+    private static function fillAiFields(\Closure $set, array $data): void
+    {
+        $set('title',                $data['title']                ?? '');
+        $set('slug',                 Str::slug($data['title']      ?? ''));
+        $set('description',          $data['description']          ?? '');
+        $set('description_ar',       $data['description_ar']       ?? '');
+        $set('thank_you_message',    $data['thank_you_message']    ?? '');
+        $set('thank_you_message_ar', $data['thank_you_message_ar'] ?? '');
+        $set('_seo_score',           (string) ($data['seo_score']  ?? 0));
+        $set('_seo_notes',           $data['seo_notes']            ?? '');
+
+        $questions = [];
+        foreach ($data['questions'] ?? [] as $i => $q) {
+            $questions[(string) Str::uuid()] = [
+                'type'        => $q['type']        ?? 'text_short',
+                'question'    => $q['question']    ?? '',
+                'question_ar' => $q['question_ar'] ?? '',
+                'description' => $q['description'] ?? '',
+                'options'     => $q['options']     ?? [],
+                'options_ar'  => $q['options_ar']  ?? [],
+                'is_required' => $q['is_required'] ?? true,
+                'sort_order'  => $q['sort_order']  ?? $i,
+            ];
+        }
+        $set('questions', $questions);
+    }
+
+    private static function fetchCompetitionData(string $query): array
+    {
+        $flat = Setting::pluck('value', 'key')->toArray();
+        $key  = $flat['seo.google_cse_key'] ?? config('services.google_cse.key');
+        $cx   = $flat['seo.google_cse_id']  ?? config('services.google_cse.cx');
+
+        if (blank($key) || blank($cx)) {
+            throw new \RuntimeException('Google Custom Search is not configured. Add your API Key and Engine ID in Business Settings → SEO & Analytics.');
+        }
+
+        $response = Http::timeout(10)->get('https://www.googleapis.com/customsearch/v1', [
+            'key' => $key,
+            'cx'  => $cx,
+            'q'   => $query,
+            'num' => 5,
+        ]);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException('Google search failed: ' . ($response->json('error.message') ?? $response->status()));
+        }
+
+        $results = [];
+        foreach ($response->json('items', []) as $item) {
+            $url       = $item['link'] ?? '';
+            $results[] = [
+                'title'   => $item['title']   ?? '',
+                'url'     => $url,
+                'domain'  => parse_url($url, PHP_URL_HOST) ?: $url,
+                'snippet' => $item['snippet'] ?? '',
+            ];
+        }
+        return $results;
     }
 
     public static function getPages(): array

@@ -1,16 +1,18 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-
-const stats = [
-  { value: '100%', label: 'Handcrafted' },
-  { value: '15+', label: 'Years of Excellence' },
-  { value: '50+', label: 'Unique Designs' },
-  { value: 'GCC', label: 'Wide Delivery' },
-]
+import { useSettings } from '../hooks/useSettings'
 
 export default function Stats() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true })
+  const s = useSettings()
+
+  const stats = [
+    { value: s['stats.1.value'] || '100%', label: s['stats.1.label'] || 'Handcrafted' },
+    { value: s['stats.2.value'] || '15+',  label: s['stats.2.label'] || 'Years of Excellence' },
+    { value: s['stats.3.value'] || '50+',  label: s['stats.3.label'] || 'Unique Designs' },
+    { value: s['stats.4.value'] || 'GCC',  label: s['stats.4.label'] || 'Wide Delivery' },
+  ]
 
   return (
     <section ref={ref} className="py-20 border-y border-gold/10">
@@ -18,7 +20,7 @@ export default function Stats() {
         <div className="grid grid-cols-2 md:grid-cols-4">
           {stats.map((stat, i) => (
             <motion.div
-              key={stat.label}
+              key={i}
               initial={{ opacity: 0, y: 24 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: i * 0.1 }}

@@ -7,36 +7,151 @@ use Illuminate\Support\Facades\Cache;
 
 class SettingsController extends Controller
 {
-    // GET /api/v1/settings — only expose safe public settings
+    // GET /api/v1/settings — only expose whitelisted public settings
     public function index()
     {
-        $settings = Cache::remember('public_settings', 3600, function () {
-            return Setting::whereIn('group', ['business', 'social', 'website', 'seo', 'orders'])
-                ->pluck('value', 'key')
-                ->toArray();
-        });
+        // Load all settings by key (group column is never reliably set by Setting::set())
+        $settings = Cache::remember('public_settings', 3600, fn() =>
+            Setting::pluck('value', 'key')->toArray()
+        );
 
-        // Never expose internal/admin-only settings
         $safe = [
-            'business.name'             => $settings['business.name'] ?? 'Artisan Leather',
-            'business.tagline'          => $settings['business.tagline'] ?? '',
-            'business.email'            => $settings['business.email'] ?? '',
-            'business.phone'            => $settings['business.phone'] ?? '',
-            'business.whatsapp'         => $settings['business.whatsapp'] ?? '',
-            'business.address'          => $settings['business.address'] ?? '',
-            'business.city'             => $settings['business.city'] ?? 'Muscat',
-            'social.instagram'          => $settings['social.instagram'] ?? '',
-            'social.facebook'           => $settings['social.facebook'] ?? '',
-            'social.tiktok'             => $settings['social.tiktok'] ?? '',
-            'social.twitter'            => $settings['social.twitter'] ?? '',
-            'website.url'               => $settings['website.url'] ?? 'https://artisanleatherom.com',
-            'website.support_email'     => $settings['website.support_email'] ?? '',
+            // Business
+            'business.name'                  => $settings['business.name']             ?? 'Artisan Leather',
+            'business.tagline'               => $settings['business.tagline']           ?? '',
+            'business.email'                 => $settings['business.email']             ?? '',
+            'business.phone'                 => $settings['business.phone']             ?? '',
+            'business.whatsapp'              => $settings['business.whatsapp']          ?? '',
+            'business.address'               => $settings['business.address']           ?? '',
+            'business.city'                  => $settings['business.city']              ?? 'Muscat',
+
+            // Social
+            'social.instagram'               => $settings['social.instagram']           ?? '',
+            'social.facebook'                => $settings['social.facebook']            ?? '',
+            'social.tiktok'                  => $settings['social.tiktok']              ?? '',
+            'social.twitter'                 => $settings['social.twitter']             ?? '',
+
+            // Website
+            'website.url'                    => $settings['website.url']                ?? 'https://artisanleatherom.com',
+            'website.support_email'          => $settings['website.support_email']      ?? '',
+
+            // Orders
             'orders.free_delivery_threshold' => $settings['orders.free_delivery_threshold'] ?? '0',
-            'orders.whatsapp_message'   => $settings['orders.whatsapp_message'] ?? '',
-            'seo.meta_title'            => $settings['seo.meta_title'] ?? '',
-            'seo.meta_description'      => $settings['seo.meta_description'] ?? '',
-            'seo.google_analytics'      => $settings['seo.google_analytics'] ?? '',
-            'seo.google_tag_manager'    => $settings['seo.google_tag_manager'] ?? '',
+            'orders.whatsapp_message'        => $settings['orders.whatsapp_message']    ?? '',
+
+            // SEO
+            'seo.meta_title'                 => $settings['seo.meta_title']             ?? '',
+            'seo.meta_description'           => $settings['seo.meta_description']       ?? '',
+            'seo.google_analytics'           => $settings['seo.google_analytics']       ?? '',
+            'seo.google_tag_manager'         => $settings['seo.google_tag_manager']     ?? '',
+            'seo.search_console'             => $settings['seo.search_console']         ?? '',
+            'seo.meta_pixel'                 => $settings['seo.meta_pixel']             ?? '',
+            'seo.clarity'                    => $settings['seo.clarity']                ?? '',
+            'seo.google_business'            => $settings['seo.google_business']        ?? '',
+
+            // Homepage Hero
+            'hero.eyebrow'                   => $settings['hero.eyebrow']               ?? 'Muscat · Sultanate of Oman',
+            'hero.headline'                  => $settings['hero.headline']               ?? 'Where Leather',
+            'hero.headline_accent'           => $settings['hero.headline_accent']        ?? 'Becomes Legacy',
+            'hero.subtitle'                  => $settings['hero.subtitle']               ?? 'Handcrafted premium leather goods for those who appreciate the art of timeless elegance.',
+            'hero.cta_primary'               => $settings['hero.cta_primary']            ?? 'Explore Collection',
+            'hero.cta_secondary'             => $settings['hero.cta_secondary']          ?? 'Our Story',
+
+            // Homepage Stats
+            'stats.1.value'                  => $settings['stats.1.value']              ?? '100%',
+            'stats.1.label'                  => $settings['stats.1.label']              ?? 'Handcrafted',
+            'stats.2.value'                  => $settings['stats.2.value']              ?? '15+',
+            'stats.2.label'                  => $settings['stats.2.label']              ?? 'Years of Excellence',
+            'stats.3.value'                  => $settings['stats.3.value']              ?? '50+',
+            'stats.3.label'                  => $settings['stats.3.label']              ?? 'Unique Designs',
+            'stats.4.value'                  => $settings['stats.4.value']              ?? 'GCC',
+            'stats.4.label'                  => $settings['stats.4.label']              ?? 'Wide Delivery',
+
+            // Footer
+            'footer.tagline'                 => $settings['footer.tagline']             ?? 'Premium handcrafted leather goods. Made in Oman. Delivered across the GCC.',
+            'footer.copyright'               => $settings['footer.copyright']           ?? '© 2025 Artisan Leather · artisanleatherom.com · All rights reserved',
+
+            // About — Hero
+            'about.hero.eyebrow'             => $settings['about.hero.eyebrow']         ?? 'Muscat · Oman · Est. 2009',
+            'about.hero.headline'            => $settings['about.hero.headline']        ?? 'A Story Written',
+            'about.hero.headline_accent'     => $settings['about.hero.headline_accent'] ?? 'in Leather',
+            'about.hero.subtitle'            => $settings['about.hero.subtitle']        ?? 'Sixteen years of craft. One unwavering standard.',
+
+            // About — Story
+            'about.story.headline'           => $settings['about.story.headline']           ?? 'Born from a Love',
+            'about.story.headline_accent'    => $settings['about.story.headline_accent']    ?? 'of the Craft',
+            'about.story.years'              => $settings['about.story.years']              ?? '16+',
+            'about.story.p1'                 => $settings['about.story.p1']                 ?? 'Artisan Leather began not as a business plan, but as an obsession. Our founder spent years studying leatherwork — in Italy, in Morocco, and eventually in Oman — learning what makes a piece truly last.',
+            'about.story.p2'                 => $settings['about.story.p2']                 ?? 'The first workshop was a single room in Muscat. Three craftsmen. One set of tools. No shortcuts. That ethos has never changed, even as the brand has grown across the GCC.',
+            'about.story.p3'                 => $settings['about.story.p3']                 ?? 'Today, every piece that leaves our workshop is still inspected by hand, still stitched by hand, and still conditioned by hand — because the day we stop caring is the day we stop being Artisan Leather.',
+
+            // About — Craft Steps
+            'about.craft.1.num'              => $settings['about.craft.1.num']   ?? '01',
+            'about.craft.1.title'            => $settings['about.craft.1.title'] ?? 'Select the Hide',
+            'about.craft.1.body'             => $settings['about.craft.1.body']  ?? 'Every hide is hand-inspected for natural grain, firmness, and character. Only the top 15% passes our standard — the rest is returned.',
+            'about.craft.2.num'              => $settings['about.craft.2.num']   ?? '02',
+            'about.craft.2.title'            => $settings['about.craft.2.title'] ?? 'Cut & Shape',
+            'about.craft.2.body'             => $settings['about.craft.2.body']  ?? 'Each pattern is traced and cut by hand using solid steel templates. No laser cutters — only a steady hand and decades of muscle memory.',
+            'about.craft.3.num'              => $settings['about.craft.3.num']   ?? '03',
+            'about.craft.3.title'            => $settings['about.craft.3.title'] ?? 'Hand Stitch',
+            'about.craft.3.body'             => $settings['about.craft.3.body']  ?? 'We use the saddle-stitch technique — two needles, one thread, pulled in opposite directions — creating a lock stitch that holds even if one side breaks.',
+            'about.craft.4.num'              => $settings['about.craft.4.num']   ?? '04',
+            'about.craft.4.title'            => $settings['about.craft.4.title'] ?? 'Finish & Age',
+            'about.craft.4.body'             => $settings['about.craft.4.body']  ?? 'Edges are bevelled, burnished, and hand-painted. The piece is conditioned with natural beeswax and left to settle — becoming truly itself.',
+
+            // About — Materials
+            'about.material.1.name'          => $settings['about.material.1.name']     ?? 'Full Grain',
+            'about.material.1.subtitle'      => $settings['about.material.1.subtitle'] ?? 'The Pinnacle of Leather',
+            'about.material.1.desc'          => $settings['about.material.1.desc']     ?? 'The outermost layer of the hide — untouched by sanding or buffing. Full grain retains every natural mark, developing a rich unique patina over decades.',
+            'about.material.2.name'          => $settings['about.material.2.name']     ?? 'Vegetable Tanned',
+            'about.material.2.subtitle'      => $settings['about.material.2.subtitle'] ?? 'Slow-Made & Sustainable',
+            'about.material.2.desc'          => $settings['about.material.2.desc']     ?? 'Tanned using plant extracts — bark, leaves, roots — over 30–60 days. The result is leather with remarkable firmness that softens and deepens with age.',
+            'about.material.3.name'          => $settings['about.material.3.name']     ?? 'Italian Calfskin',
+            'about.material.3.subtitle'      => $settings['about.material.3.subtitle'] ?? 'Silken & Refined',
+            'about.material.3.desc'          => $settings['about.material.3.desc']     ?? 'Sourced from the finest Italian tanneries. Calfskin offers an unmatched surface — fine-grained, almost silk-like, ideal for slim wallets and dress pieces.',
+
+            // About — Values
+            'about.value.1.number'           => $settings['about.value.1.number'] ?? 'I',
+            'about.value.1.title'            => $settings['about.value.1.title']  ?? 'Heritage',
+            'about.value.1.desc'             => $settings['about.value.1.desc']   ?? 'Rooted in centuries of leather tradition. Every technique we use can be traced back further than any trend.',
+            'about.value.2.number'           => $settings['about.value.2.number'] ?? 'II',
+            'about.value.2.title'            => $settings['about.value.2.title']  ?? 'Precision',
+            'about.value.2.desc'             => $settings['about.value.2.desc']   ?? 'Every millimeter is intentional. Every edge, stitch, and finish is measured and placed with care.',
+            'about.value.3.number'           => $settings['about.value.3.number'] ?? 'III',
+            'about.value.3.title'            => $settings['about.value.3.title']  ?? 'Longevity',
+            'about.value.3.desc'             => $settings['about.value.3.desc']   ?? 'We do not design for seasons. We design for decades. Our pieces are made to outlast the person who owns them first.',
+            'about.value.4.number'           => $settings['about.value.4.number'] ?? 'IV',
+            'about.value.4.title'            => $settings['about.value.4.title']  ?? 'Authenticity',
+            'about.value.4.desc'             => $settings['about.value.4.desc']   ?? 'No shortcuts. No synthetic blends. No compromise. What you hold is exactly what it claims to be.',
+
+            // About — Timeline
+            'about.timeline.1.year'          => $settings['about.timeline.1.year']  ?? '2009',
+            'about.timeline.1.title'         => $settings['about.timeline.1.title'] ?? 'First Workshop',
+            'about.timeline.1.desc'          => $settings['about.timeline.1.desc']  ?? 'A small atelier opened in the heart of Muscat. Three craftsmen. One mission.',
+            'about.timeline.2.year'          => $settings['about.timeline.2.year']  ?? '2013',
+            'about.timeline.2.title'         => $settings['about.timeline.2.title'] ?? 'First Collection',
+            'about.timeline.2.desc'          => $settings['about.timeline.2.desc']  ?? 'The Heritage Collection — six wallets and two belts — sold out in three weeks.',
+            'about.timeline.3.year'          => $settings['about.timeline.3.year']  ?? '2018',
+            'about.timeline.3.title'         => $settings['about.timeline.3.title'] ?? 'GCC Expansion',
+            'about.timeline.3.desc'          => $settings['about.timeline.3.desc']  ?? 'Artisan Leather pieces reached Dubai, Riyadh, and Kuwait through word of mouth alone.',
+            'about.timeline.4.year'          => $settings['about.timeline.4.year']  ?? '2023',
+            'about.timeline.4.title'         => $settings['about.timeline.4.title'] ?? 'Flagship Identity',
+            'about.timeline.4.desc'          => $settings['about.timeline.4.desc']  ?? 'The gold-and-black mark became recognised across the Gulf.',
+            'about.timeline.5.year'          => $settings['about.timeline.5.year']  ?? '2025',
+            'about.timeline.5.title'         => $settings['about.timeline.5.title'] ?? 'Online Launch',
+            'about.timeline.5.desc'          => $settings['about.timeline.5.desc']  ?? 'Bringing our full collection online — crafted in Oman, delivered to the world.',
+
+            // About — CTA
+            'about.cta.heading'              => $settings['about.cta.heading'] ?? 'Own a Piece of the Craft',
+            'about.cta.text'                 => $settings['about.cta.text']    ?? 'Every wallet, bag, and belt we make is a promise — that the hands behind it cared as much as the hands that will carry it.',
+
+            // About — SEO
+            'about.seo.meta_title'           => $settings['about.seo.meta_title']       ?? '',
+            'about.seo.meta_description'     => $settings['about.seo.meta_description'] ?? '',
+
+            // Homepage — SEO
+            'homepage.seo.meta_title'        => $settings['homepage.seo.meta_title']       ?? '',
+            'homepage.seo.meta_description'  => $settings['homepage.seo.meta_description'] ?? '',
         ];
 
         return response()->json(['data' => $safe]);

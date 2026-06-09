@@ -25,4 +25,5 @@ export const fetchSurvey      = (slug)        => api.get(`/surveys/${slug}`)
 export const submitSurvey     = (slug, data, token) => api.post(`/surveys/${slug}/respond`, data, {
   headers: token ? { 'X-Survey-Token': token } : {}
 })
-export const fetchSettings    = ()            => api.get('/settings')
+export const fetchSettings      = ()            => api.get('/settings')
+export const fetchTestimonials  = ()            => api.get('/testimonials')

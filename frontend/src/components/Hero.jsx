@@ -1,7 +1,15 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { useSetting } from '../hooks/useSettings'
 
 export default function Hero() {
+  const eyebrow        = useSetting('hero.eyebrow',         'Muscat · Sultanate of Oman')
+  const headline       = useSetting('hero.headline',         'Where Leather')
+  const headlineAccent = useSetting('hero.headline_accent',  'Becomes Legacy')
+  const subtitle       = useSetting('hero.subtitle',         'Handcrafted premium leather goods for those who appreciate the art of timeless elegance.')
+  const ctaPrimary     = useSetting('hero.cta_primary',      'Explore Collection')
+  const ctaSecondary   = useSetting('hero.cta_secondary',    'Our Story')
+
   return (
     <section className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
       {/* Background layers */}
@@ -14,6 +22,7 @@ export default function Hero() {
           backgroundSize: '200px',
         }}
       />
+
       {/* Diagonal gold accent lines */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-gold/10 to-transparent" />
@@ -30,7 +39,7 @@ export default function Hero() {
           transition={{ duration: 0.8 }}
           className="text-gold/80 tracking-[0.6em] uppercase text-xs mb-10"
         >
-          Muscat · Sultanate of Oman
+          {eyebrow}
         </motion.p>
 
         <motion.h1
@@ -39,9 +48,9 @@ export default function Hero() {
           transition={{ duration: 1, delay: 0.2 }}
           className="font-serif text-6xl md:text-8xl lg:text-[7rem] font-light text-white leading-[1.05] mb-8"
         >
-          Where Leather
+          {headline}
           <br />
-          <span className="text-gradient-gold italic">Becomes Legacy</span>
+          <span className="text-gradient-gold italic">{headlineAccent}</span>
         </motion.h1>
 
         <motion.div
@@ -57,8 +66,7 @@ export default function Hero() {
           transition={{ duration: 0.9, delay: 0.7 }}
           className="text-white/50 text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto mb-14 leading-relaxed"
         >
-          Handcrafted premium leather goods for those who appreciate
-          the art of timeless elegance.
+          {subtitle}
         </motion.p>
 
         <motion.div
@@ -71,13 +79,13 @@ export default function Hero() {
             to="/collections"
             className="px-12 py-4 bg-gold text-dark text-xs tracking-[0.3em] uppercase font-semibold hover:bg-gold-300 transition-all duration-300"
           >
-            Explore Collection
+            {ctaPrimary}
           </Link>
           <Link
             to="/about"
             className="px-12 py-4 border border-white/25 text-white text-xs tracking-[0.3em] uppercase hover:border-gold hover:text-gold transition-all duration-300"
           >
-            Our Story
+            {ctaSecondary}
           </Link>
         </motion.div>
       </div>
