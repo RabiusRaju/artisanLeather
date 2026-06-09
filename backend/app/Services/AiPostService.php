@@ -58,6 +58,32 @@ PROMPT;
         return $this->callOpenAI($this->buildSurveyMessage($prompt), $filePaths);
     }
 
+    // ── Testimonials ────────────────────────────────────────────────────────
+
+    public function generateTestimonialWithClaude(string $prompt): array
+    {
+        return $this->callClaude($this->buildTestimonialMessage($prompt));
+    }
+
+    public function generateTestimonialWithOpenAI(string $prompt): array
+    {
+        return $this->callOpenAI($this->buildTestimonialMessage($prompt));
+    }
+
+    // ── Homepage ────────────────────────────────────────────────────────────
+
+    public function generateHomepageWithClaude(string $theme): array
+    {
+        return $this->callClaude($this->buildHomepageMessage($theme));
+    }
+
+    // ── About Page ─────────────────────────────────────────────────────────
+
+    public function generateAboutPageWithClaude(string $theme): array
+    {
+        return $this->callClaude($this->buildAboutPageMessage($theme));
+    }
+
     // ── Private: API callers ───────────────────────────────────────────────
 
     private function callClaude(string $message, array $filePaths = []): array
@@ -275,6 +301,128 @@ Rules for questions array:
 - For rating / nps / text_short / text_long / yes_no types: set options and options_ar to []
 - For single_choice / multiple_choice / dropdown types: provide 3-5 options AND their Arabic translations
 - sort_order increments from 0
+MSG;
+    }
+
+    private function buildTestimonialMessage(string $prompt): string
+    {
+        return <<<MSG
+Create a realistic customer testimonial for Artisan Leather based on this request: "{$prompt}"
+
+Return a single JSON object with exactly these keys:
+{
+  "quote": "Genuine English customer quote (2-4 sentences, authentic voice — not marketing copy — include a specific detail about the product or experience)",
+  "quote_ar": "Faithful Arabic translation in natural Gulf Arabic",
+  "author": "Customer full name (a realistic Gulf Arabic name)",
+  "location": "City, Country (GCC only: Muscat, Dubai, Abu Dhabi, Riyadh, Jeddah, Kuwait City, or Doha)",
+  "product": "The Artisan Leather product purchased (e.g. Heritage Bifold Wallet, Classic Leather Belt, Leather Tote Bag)",
+  "rating": 5
+}
+
+Rules:
+- The quote must sound like a real customer wrote it — specific details, honest enthusiasm, personal context
+- Avoid generic phrases like "amazing quality" — instead describe texture, durability, or a specific moment
+- Keep the GCC/Gulf context authentic
+MSG;
+    }
+
+    private function buildHomepageMessage(string $theme): string
+    {
+        return <<<MSG
+Generate homepage hero and stats copy for Artisan Leather based on this theme: "{$theme}"
+
+Artisan Leather is a premium leather goods brand based in Muscat, Oman — wallets, bags, belts, accessories. Tone: sophisticated, expert, timeless. Target audience: quality-conscious shoppers in Oman and GCC.
+
+Return a single JSON object with exactly these keys:
+{
+  "hero_eyebrow": "Short location or brand positioning line (e.g. Muscat · Sultanate of Oman)",
+  "hero_headline": "Headline line 1 — white text, 2-4 impactful words (e.g. Where Leather)",
+  "hero_headline_accent": "Headline line 2 — gold italic, 2-4 words completing the thought (e.g. Becomes Legacy)",
+  "hero_subtitle": "1-2 sentence brand subtitle — sophisticated and specific, max 130 chars",
+  "hero_cta_primary": "Primary button label (2-3 words, action-oriented, e.g. Explore Collection)",
+  "hero_cta_secondary": "Secondary button label (2-3 words, e.g. Our Story)",
+  "stat_1_value": "Stat 1 value (e.g. 100%)",
+  "stat_1_label": "Stat 1 label (e.g. Handcrafted)",
+  "stat_2_value": "Stat 2 value (e.g. 15+)",
+  "stat_2_label": "Stat 2 label (e.g. Years of Excellence)",
+  "stat_3_value": "Stat 3 value (e.g. 50+)",
+  "stat_3_label": "Stat 3 label (e.g. Unique Designs)",
+  "stat_4_value": "Stat 4 value (e.g. GCC)",
+  "stat_4_label": "Stat 4 label (e.g. Wide Delivery)"
+}
+MSG;
+    }
+
+    private function buildAboutPageMessage(string $theme): string
+    {
+        return <<<MSG
+Generate complete About page content for Artisan Leather based on this theme: "{$theme}"
+
+Artisan Leather is a premium leather goods brand based in Muscat, Oman — founded 2009. They sell handcrafted wallets, bags, belts, and accessories. Story: started as a passion project in a single workshop, grew across the GCC through quality and word of mouth. Tone: heritage, precision, authenticity.
+
+Return a single JSON object with exactly these keys (no extras):
+{
+  "hero_eyebrow": "Short location/era line (e.g. Muscat · Oman · Est. 2009)",
+  "hero_headline": "Page headline line 1 — white text (2-4 words)",
+  "hero_headline_accent": "Page headline line 2 — gold italic (2-4 words)",
+  "hero_subtitle": "1-sentence hero subtitle (max 80 chars)",
+  "story_headline": "Story section headline line 1 (2-4 words)",
+  "story_headline_accent": "Story section headline line 2 — gold italic (2-4 words)",
+  "story_years": "Badge text (e.g. 16+)",
+  "story_p1": "Brand story paragraph 1 (60-100 words)",
+  "story_p2": "Brand story paragraph 2 (60-100 words)",
+  "story_p3": "Brand story paragraph 3 (60-100 words)",
+  "craft_1_num": "01",
+  "craft_1_title": "Craft step 1 title (3-5 words)",
+  "craft_1_body": "Craft step 1 description (30-60 words)",
+  "craft_2_num": "02",
+  "craft_2_title": "Craft step 2 title",
+  "craft_2_body": "Craft step 2 description (30-60 words)",
+  "craft_3_num": "03",
+  "craft_3_title": "Craft step 3 title",
+  "craft_3_body": "Craft step 3 description (30-60 words)",
+  "craft_4_num": "04",
+  "craft_4_title": "Craft step 4 title",
+  "craft_4_body": "Craft step 4 description (30-60 words)",
+  "material_1_name": "Leather material 1 name (e.g. Full Grain)",
+  "material_1_subtitle": "Material 1 subtitle (e.g. The Pinnacle of Leather)",
+  "material_1_desc": "Material 1 description (30-55 words)",
+  "material_2_name": "Leather material 2 name",
+  "material_2_subtitle": "Material 2 subtitle",
+  "material_2_desc": "Material 2 description (30-55 words)",
+  "material_3_name": "Leather material 3 name",
+  "material_3_subtitle": "Material 3 subtitle",
+  "material_3_desc": "Material 3 description (30-55 words)",
+  "value_1_number": "I",
+  "value_1_title": "Value 1 title (e.g. Heritage)",
+  "value_1_desc": "Value 1 description (20-40 words)",
+  "value_2_number": "II",
+  "value_2_title": "Value 2 title (e.g. Precision)",
+  "value_2_desc": "Value 2 description (20-40 words)",
+  "value_3_number": "III",
+  "value_3_title": "Value 3 title (e.g. Longevity)",
+  "value_3_desc": "Value 3 description (20-40 words)",
+  "value_4_number": "IV",
+  "value_4_title": "Value 4 title (e.g. Authenticity)",
+  "value_4_desc": "Value 4 description (20-40 words)",
+  "timeline_1_year": "2009",
+  "timeline_1_title": "Milestone 1 title",
+  "timeline_1_desc": "Milestone 1 description (15-30 words)",
+  "timeline_2_year": "2013",
+  "timeline_2_title": "Milestone 2 title",
+  "timeline_2_desc": "Milestone 2 description (15-30 words)",
+  "timeline_3_year": "2018",
+  "timeline_3_title": "Milestone 3 title",
+  "timeline_3_desc": "Milestone 3 description (15-30 words)",
+  "timeline_4_year": "2023",
+  "timeline_4_title": "Milestone 4 title",
+  "timeline_4_desc": "Milestone 4 description (15-30 words)",
+  "timeline_5_year": "2025",
+  "timeline_5_title": "Milestone 5 title",
+  "timeline_5_desc": "Milestone 5 description (15-30 words)",
+  "cta_heading": "CTA section heading (4-8 words)",
+  "cta_text": "CTA body text (30-60 words, motivational, not salesy)"
+}
 MSG;
     }
 

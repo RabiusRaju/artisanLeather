@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Testimonials;
 use App\Enums\NavigationGroupEnum;
 use App\Filament\Resources\Testimonials\Pages;
 use App\Models\Testimonial;
+use App\Services\AiPostService;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
@@ -14,6 +16,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -40,6 +43,74 @@ class TestimonialResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
+
+            // ── 0. AI Generator ───────────────────────────────────────────
+            Section::make('🤖 AI Content Generator')
+                ->description('Describe the testimonial you want and AI will generate it instantly.')
+                ->schema([
+                    Textarea::make('ai_prompt')
+                        ->label('Describe the testimonial')
+                        ->placeholder('e.g. A 5-star review from a Riyadh businessman about the Heritage Bifold Wallet he has been using for 2 years')
+                        ->rows(3)
+                        ->dehydrated(false)
+                        ->columnSpanFull(),
+
+                    \Filament\Schemas\Components\Actions::make([
+
+                        Action::make('generate_testimonial_claude')
+                            ->label('Generate with Claude')
+                            ->icon('heroicon-o-sparkles')
+                            ->color('warning')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate with Claude AI')
+                            ->modalDescription('This will overwrite any existing content in all fields. Continue?')
+                            ->modalSubmitActionLabel('Yes, generate')
+                            ->action(function ($get, $set) {
+                                $prompt = $get('ai_prompt');
+                                if (blank($prompt)) {
+                                    Notification::make()->title('Please enter a description first.')->warning()->send();
+                                    return;
+                                }
+                                try {
+                                    $data = app(AiPostService::class)->generateTestimonialWithClaude($prompt);
+                                    self::fillAiFields($set, $data);
+                                    Notification::make()
+                                        ->title('✅ Claude generated your testimonial!')
+                                        ->body('Review and save.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    Notification::make()->title('Claude generation failed')->body($e->getMessage())->danger()->send();
+                                }
+                            }),
+
+                        Action::make('generate_testimonial_openai')
+                            ->label('Generate with OpenAI')
+                            ->icon('heroicon-o-cpu-chip')
+                            ->color('info')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate with OpenAI (GPT-4o)')
+                            ->modalDescription('This will overwrite any existing content in all fields. Continue?')
+                            ->modalSubmitActionLabel('Yes, generate')
+                            ->action(function ($get, $set) {
+                                $prompt = $get('ai_prompt');
+                                if (blank($prompt)) {
+                                    Notification::make()->title('Please enter a description first.')->warning()->send();
+                                    return;
+                                }
+                                try {
+                                    $data = app(AiPostService::class)->generateTestimonialWithOpenAI($prompt);
+                                    self::fillAiFields($set, $data);
+                                    Notification::make()
+                                        ->title('✅ OpenAI generated your testimonial!')
+                                        ->body('Review and save.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    Notification::make()->title('OpenAI generation failed')->body($e->getMessage())->danger()->send();
+                                }
+                            }),
+
+                    ]),
+                ]),
 
             // ── 1. Quote ──────────────────────────────────────────────────
             Section::make('Quote')
@@ -233,5 +304,17 @@ class TestimonialResource extends Resource
             'create' => Pages\CreateTestimonial::route('/create'),
             'edit'   => Pages\EditTestimonial::route('/{record}/edit'),
         ];
+    }
+
+    private static function fillAiFields(\Closure $set, array $data): void
+    {
+        $set('quote',    $data['quote']    ?? '');
+        $set('quote_ar', $data['quote_ar'] ?? '');
+        $set('author',   $data['author']   ?? '');
+        $set('location', $data['location'] ?? '');
+        $set('product',  $data['product']  ?? '');
+        if (isset($data['rating'])) {
+            $set('rating', (int) $data['rating']);
+        }
     }
 }

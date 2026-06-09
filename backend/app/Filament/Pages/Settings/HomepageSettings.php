@@ -44,6 +44,60 @@ class HomepageSettings extends Page implements HasSchemas
     {
         return $schema->components([
 
+            // ── AI Generator ──────────────────────────────────────────────
+            Section::make('🤖 AI Content Generator')
+                ->description('Let Claude refresh your homepage hero and stats. Describe a theme or campaign, or leave blank for a general brand refresh.')
+                ->schema([
+                    Textarea::make('_ai_hp_prompt')
+                        ->label('Theme or campaign (optional)')
+                        ->placeholder('e.g. Eid gifting season — emphasise premium gifting, luxury packaging, GCC delivery')
+                        ->rows(2)
+                        ->dehydrated(false)
+                        ->columnSpanFull(),
+
+                    \Filament\Schemas\Components\Actions::make([
+                        Action::make('generate_homepage_claude')
+                            ->label('Generate with Claude')
+                            ->icon('heroicon-o-sparkles')
+                            ->color('warning')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate Homepage Content with Claude AI')
+                            ->modalDescription('This will overwrite the hero text and stats bar. You can still adjust before saving. Continue?')
+                            ->modalSubmitActionLabel('Yes, generate')
+                            ->action(function ($get, $set) {
+                                $apiKey = config('services.anthropic.key');
+                                if (blank($apiKey)) {
+                                    Notification::make()->title('Anthropic API key not set.')->warning()->send();
+                                    return;
+                                }
+                                $theme = trim($get('_ai_hp_prompt') ?: 'General homepage refresh for a premium leather goods brand in Muscat, Oman.');
+                                try {
+                                    $data = app(\App\Services\AiPostService::class)->generateHomepageWithClaude($theme);
+                                    $set('hero.eyebrow',         $data['hero_eyebrow']         ?? '');
+                                    $set('hero.headline',        $data['hero_headline']        ?? '');
+                                    $set('hero.headline_accent', $data['hero_headline_accent'] ?? '');
+                                    $set('hero.subtitle',        $data['hero_subtitle']        ?? '');
+                                    $set('hero.cta_primary',     $data['hero_cta_primary']     ?? '');
+                                    $set('hero.cta_secondary',   $data['hero_cta_secondary']   ?? '');
+                                    $set('stats.1.value',        $data['stat_1_value']         ?? '');
+                                    $set('stats.1.label',        $data['stat_1_label']         ?? '');
+                                    $set('stats.2.value',        $data['stat_2_value']         ?? '');
+                                    $set('stats.2.label',        $data['stat_2_label']         ?? '');
+                                    $set('stats.3.value',        $data['stat_3_value']         ?? '');
+                                    $set('stats.3.label',        $data['stat_3_label']         ?? '');
+                                    $set('stats.4.value',        $data['stat_4_value']         ?? '');
+                                    $set('stats.4.label',        $data['stat_4_label']         ?? '');
+                                    Notification::make()
+                                        ->title('✅ Claude generated your homepage content!')
+                                        ->body('Review all sections, then click Save.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    Notification::make()->title('Generation failed')->body($e->getMessage())->danger()->send();
+                                }
+                            }),
+                    ]),
+                ]),
+
             Section::make('🏠 Hero')
                 ->description('The big headline and text visitors see first when they land on your website.')
                 ->columns(2)

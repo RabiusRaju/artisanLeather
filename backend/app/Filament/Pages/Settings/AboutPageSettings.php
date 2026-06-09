@@ -44,6 +44,94 @@ class AboutPageSettings extends Page implements HasSchemas
     {
         return $schema->components([
 
+            // ── AI Generator ──────────────────────────────────────────────
+            Section::make('🤖 AI Content Generator')
+                ->description('Let Claude rewrite the entire About page in one click. Describe a tone or theme, or leave blank for a general brand refresh.')
+                ->schema([
+                    Textarea::make('_ai_about_prompt')
+                        ->label('Theme or tone (optional)')
+                        ->placeholder('e.g. Focus on sustainability and ethical sourcing, appeal to eco-conscious GCC shoppers')
+                        ->rows(2)
+                        ->dehydrated(false)
+                        ->columnSpanFull(),
+
+                    \Filament\Schemas\Components\Actions::make([
+                        Action::make('generate_about_claude')
+                            ->label('Generate with Claude')
+                            ->icon('heroicon-o-sparkles')
+                            ->color('warning')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate About Page Content with Claude AI')
+                            ->modalDescription('This will overwrite all About page sections (hero, story, craft steps, materials, values, timeline, CTA). You can still adjust before saving. Continue?')
+                            ->modalSubmitActionLabel('Yes, generate everything')
+                            ->action(function ($get, $set) {
+                                $apiKey = config('services.anthropic.key');
+                                if (blank($apiKey)) {
+                                    Notification::make()->title('Anthropic API key not set.')->warning()->send();
+                                    return;
+                                }
+                                $theme = trim($get('_ai_about_prompt') ?: 'General About page refresh for a premium leather goods brand in Muscat, Oman — heritage, craftsmanship, authenticity.');
+                                try {
+                                    $data = app(\App\Services\AiPostService::class)->generateAboutPageWithClaude($theme);
+
+                                    // Hero
+                                    $set('about.hero.eyebrow',         $data['hero_eyebrow']         ?? '');
+                                    $set('about.hero.headline',        $data['hero_headline']        ?? '');
+                                    $set('about.hero.headline_accent', $data['hero_headline_accent'] ?? '');
+                                    $set('about.hero.subtitle',        $data['hero_subtitle']        ?? '');
+
+                                    // Story
+                                    $set('about.story.headline',        $data['story_headline']        ?? '');
+                                    $set('about.story.headline_accent', $data['story_headline_accent'] ?? '');
+                                    $set('about.story.years',           $data['story_years']           ?? '');
+                                    $set('about.story.p1',              $data['story_p1']              ?? '');
+                                    $set('about.story.p2',              $data['story_p2']              ?? '');
+                                    $set('about.story.p3',              $data['story_p3']              ?? '');
+
+                                    // Craft Steps
+                                    for ($i = 1; $i <= 4; $i++) {
+                                        $set("about.craft.{$i}.num",   $data["craft_{$i}_num"]   ?? "0{$i}");
+                                        $set("about.craft.{$i}.title", $data["craft_{$i}_title"] ?? '');
+                                        $set("about.craft.{$i}.body",  $data["craft_{$i}_body"]  ?? '');
+                                    }
+
+                                    // Materials
+                                    for ($i = 1; $i <= 3; $i++) {
+                                        $set("about.material.{$i}.name",     $data["material_{$i}_name"]     ?? '');
+                                        $set("about.material.{$i}.subtitle", $data["material_{$i}_subtitle"] ?? '');
+                                        $set("about.material.{$i}.desc",     $data["material_{$i}_desc"]     ?? '');
+                                    }
+
+                                    // Values
+                                    $numerals = ['I', 'II', 'III', 'IV'];
+                                    for ($i = 1; $i <= 4; $i++) {
+                                        $set("about.value.{$i}.number", $data["value_{$i}_number"] ?? $numerals[$i - 1]);
+                                        $set("about.value.{$i}.title",  $data["value_{$i}_title"]  ?? '');
+                                        $set("about.value.{$i}.desc",   $data["value_{$i}_desc"]   ?? '');
+                                    }
+
+                                    // Timeline
+                                    for ($i = 1; $i <= 5; $i++) {
+                                        $set("about.timeline.{$i}.year",  $data["timeline_{$i}_year"]  ?? '');
+                                        $set("about.timeline.{$i}.title", $data["timeline_{$i}_title"] ?? '');
+                                        $set("about.timeline.{$i}.desc",  $data["timeline_{$i}_desc"]  ?? '');
+                                    }
+
+                                    // CTA
+                                    $set('about.cta.heading', $data['cta_heading'] ?? '');
+                                    $set('about.cta.text',    $data['cta_text']    ?? '');
+
+                                    Notification::make()
+                                        ->title('✅ Claude generated your About page!')
+                                        ->body('Review all sections, then click Save.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    Notification::make()->title('Generation failed')->body($e->getMessage())->danger()->send();
+                                }
+                            }),
+                    ]),
+                ]),
+
             // ── Hero ─────────────────────────────────────────────────────
             Section::make('🎯 Page Hero')
                 ->description('The banner displayed at the top of the About page.')
