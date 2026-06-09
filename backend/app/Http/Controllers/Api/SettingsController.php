@@ -144,6 +144,14 @@ class SettingsController extends Controller
             // About — CTA
             'about.cta.heading'              => $settings['about.cta.heading'] ?? 'Own a Piece of the Craft',
             'about.cta.text'                 => $settings['about.cta.text']    ?? 'Every wallet, bag, and belt we make is a promise — that the hands behind it cared as much as the hands that will carry it.',
+
+            // About — SEO
+            'about.seo.meta_title'           => $settings['about.seo.meta_title']       ?? '',
+            'about.seo.meta_description'     => $settings['about.seo.meta_description'] ?? '',
+
+            // Homepage — SEO
+            'homepage.seo.meta_title'        => $settings['homepage.seo.meta_title']       ?? '',
+            'homepage.seo.meta_description'  => $settings['homepage.seo.meta_description'] ?? '',
         ];
 
         return response()->json(['data' => $safe]);

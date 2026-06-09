@@ -91,6 +91,43 @@ class HomepageSettings extends Page implements HasSchemas
                     TextInput::make('stats.4.label')->label('Stat 4 — Label')->placeholder('Wide Delivery'),
                 ]),
 
+            // ── SEO ───────────────────────────────────────────────────────
+            Section::make('🔍 SEO')
+                ->description('Custom meta title and description for the Homepage. Overrides the site-wide defaults.')
+                ->schema([
+                    TextInput::make('homepage.seo.meta_title')
+                        ->label('SEO Title')
+                        ->maxLength(70)
+                        ->placeholder('Luxury Handcrafted Leather Goods — Wallets, Bags & Accessories | Artisan Leather Oman')
+                        ->helperText(fn($state) => sprintf('%d chars · Max 60 for best display %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 60 ? '⚠️' : '✅'))
+                        ->live(onBlur: true)
+                        ->columnSpanFull(),
+
+                    Textarea::make('homepage.seo.meta_description')
+                        ->label('SEO Description')
+                        ->maxLength(170)
+                        ->rows(3)
+                        ->placeholder('Discover premium handcrafted leather wallets, bags, belts and accessories from Artisan Leather, Muscat Oman. Free delivery across Oman and GCC.')
+                        ->helperText(fn($state) => sprintf('%d chars · Max 160 chars %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 160 ? '⚠️' : '✅'))
+                        ->live(onBlur: true)
+                        ->columnSpanFull(),
+
+                    Placeholder::make('homepage_google_preview')
+                        ->label('Google Preview')
+                        ->content(function ($get) {
+                            $title = $get('homepage.seo.meta_title') ?: 'Luxury Handcrafted Leather Goods — Wallets, Bags & Accessories | Artisan Leather Oman';
+                            $desc  = $get('homepage.seo.meta_description') ?: 'Discover premium handcrafted leather wallets, bags, belts and accessories from Artisan Leather, Muscat Oman. Free delivery across Oman and GCC.';
+                            return new HtmlString('
+                                <div style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+                                    <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com</div>
+                                    <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
+                                    <div style="font-size:13px;color:#545454;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
+                                </div>
+                            ');
+                        })
+                        ->columnSpanFull(),
+                ]),
+
             // ── Preview ───────────────────────────────────────────────────
             Section::make('🌐 Website Preview')
                 ->description('Live preview of how the homepage hero looks to visitors.')

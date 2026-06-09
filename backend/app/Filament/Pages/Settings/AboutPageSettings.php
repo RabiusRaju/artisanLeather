@@ -257,6 +257,43 @@ class AboutPageSettings extends Page implements HasSchemas
                         ->placeholder('Every wallet, bag, and belt we make is a promise...'),
                 ]),
 
+            // ── SEO ───────────────────────────────────────────────────────
+            Section::make('🔍 SEO')
+                ->description('Custom meta title and description for the About page. Overrides the site-wide defaults.')
+                ->schema([
+                    TextInput::make('about.seo.meta_title')
+                        ->label('SEO Title')
+                        ->maxLength(70)
+                        ->placeholder('Our Story — Handcrafted Leather Artisans in Muscat, Oman')
+                        ->helperText(fn($state) => sprintf('%d chars · Max 60 for best display %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 60 ? '⚠️' : '✅'))
+                        ->live(onBlur: true)
+                        ->columnSpanFull(),
+
+                    Textarea::make('about.seo.meta_description')
+                        ->label('SEO Description')
+                        ->maxLength(170)
+                        ->rows(3)
+                        ->placeholder('Learn about Artisan Leather\'s heritage, craftsmanship philosophy, and the skilled artisans behind every handcrafted leather piece made in Muscat, Oman.')
+                        ->helperText(fn($state) => sprintf('%d chars · Max 160 chars %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 160 ? '⚠️' : '✅'))
+                        ->live(onBlur: true)
+                        ->columnSpanFull(),
+
+                    Placeholder::make('about_google_preview')
+                        ->label('Google Preview')
+                        ->content(function ($get) {
+                            $title = $get('about.seo.meta_title') ?: 'Our Story — Handcrafted Leather Artisans in Muscat, Oman';
+                            $desc  = $get('about.seo.meta_description') ?: 'Learn about Artisan Leather\'s heritage, craftsmanship philosophy, and the skilled artisans behind every handcrafted leather piece made in Muscat, Oman.';
+                            return new HtmlString('
+                                <div style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+                                    <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com › about</div>
+                                    <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
+                                    <div style="font-size:13px;color:#545454;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
+                                </div>
+                            ');
+                        })
+                        ->columnSpanFull(),
+                ]),
+
             // ── Preview ───────────────────────────────────────────────────
             Section::make('🌐 Website Preview')
                 ->description('Live preview of the About page hero, story, values and CTA as visitors see them.')
