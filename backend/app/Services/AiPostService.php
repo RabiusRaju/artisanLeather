@@ -77,11 +77,21 @@ PROMPT;
         return $this->callClaude($this->buildHomepageMessage($theme));
     }
 
+    public function generateHomepageWithOpenAI(string $theme): array
+    {
+        return $this->callOpenAI($this->buildHomepageMessage($theme));
+    }
+
     // ── About Page ─────────────────────────────────────────────────────────
 
     public function generateAboutPageWithClaude(string $theme): array
     {
         return $this->callClaude($this->buildAboutPageMessage($theme));
+    }
+
+    public function generateAboutPageWithOpenAI(string $theme): array
+    {
+        return $this->callOpenAI($this->buildAboutPageMessage($theme));
     }
 
     // ── Private: API callers ───────────────────────────────────────────────
@@ -333,22 +343,34 @@ Generate homepage hero and stats copy for Artisan Leather based on this theme: "
 
 Artisan Leather is a premium leather goods brand based in Muscat, Oman — wallets, bags, belts, accessories. Tone: sophisticated, expert, timeless. Target audience: quality-conscious shoppers in Oman and GCC.
 
+Provide every text field in both English and Arabic (Gulf Arabic, natural and professional — not a literal word-for-word translation).
+
 Return a single JSON object with exactly these keys:
 {
   "hero_eyebrow": "Short location or brand positioning line (e.g. Muscat · Sultanate of Oman)",
+  "hero_eyebrow_ar": "Arabic translation of hero_eyebrow",
   "hero_headline": "Headline line 1 — white text, 2-4 impactful words (e.g. Where Leather)",
+  "hero_headline_ar": "Arabic translation of hero_headline",
   "hero_headline_accent": "Headline line 2 — gold italic, 2-4 words completing the thought (e.g. Becomes Legacy)",
+  "hero_headline_accent_ar": "Arabic translation of hero_headline_accent",
   "hero_subtitle": "1-2 sentence brand subtitle — sophisticated and specific, max 130 chars",
+  "hero_subtitle_ar": "Arabic translation of hero_subtitle",
   "hero_cta_primary": "Primary button label (2-3 words, action-oriented, e.g. Explore Collection)",
+  "hero_cta_primary_ar": "Arabic translation of hero_cta_primary",
   "hero_cta_secondary": "Secondary button label (2-3 words, e.g. Our Story)",
+  "hero_cta_secondary_ar": "Arabic translation of hero_cta_secondary",
   "stat_1_value": "Stat 1 value (e.g. 100%)",
   "stat_1_label": "Stat 1 label (e.g. Handcrafted)",
+  "stat_1_label_ar": "Arabic translation of stat_1_label",
   "stat_2_value": "Stat 2 value (e.g. 15+)",
   "stat_2_label": "Stat 2 label (e.g. Years of Excellence)",
+  "stat_2_label_ar": "Arabic translation of stat_2_label",
   "stat_3_value": "Stat 3 value (e.g. 50+)",
   "stat_3_label": "Stat 3 label (e.g. Unique Designs)",
+  "stat_3_label_ar": "Arabic translation of stat_3_label",
   "stat_4_value": "Stat 4 value (e.g. GCC)",
-  "stat_4_label": "Stat 4 label (e.g. Wide Delivery)"
+  "stat_4_label": "Stat 4 label (e.g. Wide Delivery)",
+  "stat_4_label_ar": "Arabic translation of stat_4_label"
 }
 MSG;
     }
@@ -360,68 +382,116 @@ Generate complete About page content for Artisan Leather based on this theme: "{
 
 Artisan Leather is a premium leather goods brand based in Muscat, Oman — founded 2009. They sell handcrafted wallets, bags, belts, and accessories. Story: started as a passion project in a single workshop, grew across the GCC through quality and word of mouth. Tone: heritage, precision, authenticity.
 
+Provide every text field in both English and Arabic (Gulf Arabic, natural and professional — not a literal word-for-word translation). For every "*_ar" key, write the Arabic version of the field with the same key name minus "_ar".
+
 Return a single JSON object with exactly these keys (no extras):
 {
   "hero_eyebrow": "Short location/era line (e.g. Muscat · Oman · Est. 2009)",
+  "hero_eyebrow_ar": "Arabic translation of hero_eyebrow",
   "hero_headline": "Page headline line 1 — white text (2-4 words)",
+  "hero_headline_ar": "Arabic translation of hero_headline",
   "hero_headline_accent": "Page headline line 2 — gold italic (2-4 words)",
+  "hero_headline_accent_ar": "Arabic translation of hero_headline_accent",
   "hero_subtitle": "1-sentence hero subtitle (max 80 chars)",
+  "hero_subtitle_ar": "Arabic translation of hero_subtitle",
   "story_headline": "Story section headline line 1 (2-4 words)",
+  "story_headline_ar": "Arabic translation of story_headline",
   "story_headline_accent": "Story section headline line 2 — gold italic (2-4 words)",
+  "story_headline_accent_ar": "Arabic translation of story_headline_accent",
   "story_years": "Badge text (e.g. 16+)",
   "story_p1": "Brand story paragraph 1 (60-100 words)",
+  "story_p1_ar": "Arabic translation of story_p1",
   "story_p2": "Brand story paragraph 2 (60-100 words)",
+  "story_p2_ar": "Arabic translation of story_p2",
   "story_p3": "Brand story paragraph 3 (60-100 words)",
+  "story_p3_ar": "Arabic translation of story_p3",
   "craft_1_num": "01",
   "craft_1_title": "Craft step 1 title (3-5 words)",
+  "craft_1_title_ar": "Arabic translation of craft_1_title",
   "craft_1_body": "Craft step 1 description (30-60 words)",
+  "craft_1_body_ar": "Arabic translation of craft_1_body",
   "craft_2_num": "02",
   "craft_2_title": "Craft step 2 title",
+  "craft_2_title_ar": "Arabic translation of craft_2_title",
   "craft_2_body": "Craft step 2 description (30-60 words)",
+  "craft_2_body_ar": "Arabic translation of craft_2_body",
   "craft_3_num": "03",
   "craft_3_title": "Craft step 3 title",
+  "craft_3_title_ar": "Arabic translation of craft_3_title",
   "craft_3_body": "Craft step 3 description (30-60 words)",
+  "craft_3_body_ar": "Arabic translation of craft_3_body",
   "craft_4_num": "04",
   "craft_4_title": "Craft step 4 title",
+  "craft_4_title_ar": "Arabic translation of craft_4_title",
   "craft_4_body": "Craft step 4 description (30-60 words)",
+  "craft_4_body_ar": "Arabic translation of craft_4_body",
   "material_1_name": "Leather material 1 name (e.g. Full Grain)",
+  "material_1_name_ar": "Arabic translation of material_1_name",
   "material_1_subtitle": "Material 1 subtitle (e.g. The Pinnacle of Leather)",
+  "material_1_subtitle_ar": "Arabic translation of material_1_subtitle",
   "material_1_desc": "Material 1 description (30-55 words)",
+  "material_1_desc_ar": "Arabic translation of material_1_desc",
   "material_2_name": "Leather material 2 name",
+  "material_2_name_ar": "Arabic translation of material_2_name",
   "material_2_subtitle": "Material 2 subtitle",
+  "material_2_subtitle_ar": "Arabic translation of material_2_subtitle",
   "material_2_desc": "Material 2 description (30-55 words)",
+  "material_2_desc_ar": "Arabic translation of material_2_desc",
   "material_3_name": "Leather material 3 name",
+  "material_3_name_ar": "Arabic translation of material_3_name",
   "material_3_subtitle": "Material 3 subtitle",
+  "material_3_subtitle_ar": "Arabic translation of material_3_subtitle",
   "material_3_desc": "Material 3 description (30-55 words)",
+  "material_3_desc_ar": "Arabic translation of material_3_desc",
   "value_1_number": "I",
   "value_1_title": "Value 1 title (e.g. Heritage)",
+  "value_1_title_ar": "Arabic translation of value_1_title",
   "value_1_desc": "Value 1 description (20-40 words)",
+  "value_1_desc_ar": "Arabic translation of value_1_desc",
   "value_2_number": "II",
   "value_2_title": "Value 2 title (e.g. Precision)",
+  "value_2_title_ar": "Arabic translation of value_2_title",
   "value_2_desc": "Value 2 description (20-40 words)",
+  "value_2_desc_ar": "Arabic translation of value_2_desc",
   "value_3_number": "III",
   "value_3_title": "Value 3 title (e.g. Longevity)",
+  "value_3_title_ar": "Arabic translation of value_3_title",
   "value_3_desc": "Value 3 description (20-40 words)",
+  "value_3_desc_ar": "Arabic translation of value_3_desc",
   "value_4_number": "IV",
   "value_4_title": "Value 4 title (e.g. Authenticity)",
+  "value_4_title_ar": "Arabic translation of value_4_title",
   "value_4_desc": "Value 4 description (20-40 words)",
+  "value_4_desc_ar": "Arabic translation of value_4_desc",
   "timeline_1_year": "2009",
   "timeline_1_title": "Milestone 1 title",
+  "timeline_1_title_ar": "Arabic translation of timeline_1_title",
   "timeline_1_desc": "Milestone 1 description (15-30 words)",
+  "timeline_1_desc_ar": "Arabic translation of timeline_1_desc",
   "timeline_2_year": "2013",
   "timeline_2_title": "Milestone 2 title",
+  "timeline_2_title_ar": "Arabic translation of timeline_2_title",
   "timeline_2_desc": "Milestone 2 description (15-30 words)",
+  "timeline_2_desc_ar": "Arabic translation of timeline_2_desc",
   "timeline_3_year": "2018",
   "timeline_3_title": "Milestone 3 title",
+  "timeline_3_title_ar": "Arabic translation of timeline_3_title",
   "timeline_3_desc": "Milestone 3 description (15-30 words)",
+  "timeline_3_desc_ar": "Arabic translation of timeline_3_desc",
   "timeline_4_year": "2023",
   "timeline_4_title": "Milestone 4 title",
+  "timeline_4_title_ar": "Arabic translation of timeline_4_title",
   "timeline_4_desc": "Milestone 4 description (15-30 words)",
+  "timeline_4_desc_ar": "Arabic translation of timeline_4_desc",
   "timeline_5_year": "2025",
   "timeline_5_title": "Milestone 5 title",
+  "timeline_5_title_ar": "Arabic translation of timeline_5_title",
   "timeline_5_desc": "Milestone 5 description (15-30 words)",
+  "timeline_5_desc_ar": "Arabic translation of timeline_5_desc",
   "cta_heading": "CTA section heading (4-8 words)",
-  "cta_text": "CTA body text (30-60 words, motivational, not salesy)"
+  "cta_heading_ar": "Arabic translation of cta_heading",
+  "cta_text": "CTA body text (30-60 words, motivational, not salesy)",
+  "cta_text_ar": "Arabic translation of cta_text"
 }
 MSG;
     }
@@ -437,12 +507,12 @@ MSG;
         }
 
         $markets = [
-            'om' => 'Oman',
-            'ae' => 'UAE',
-            'sa' => 'Saudi Arabia',
-            'qa' => 'Qatar',
-            'kw' => 'Kuwait',
-            'bh' => 'Bahrain',
+            'om' => ['label' => 'Oman',         'location' => 'Muscat, Oman'],
+            'ae' => ['label' => 'UAE',          'location' => 'Dubai, United Arab Emirates'],
+            'sa' => ['label' => 'Saudi Arabia', 'location' => 'Riyadh, Saudi Arabia'],
+            'qa' => ['label' => 'Qatar',        'location' => 'Doha, Qatar'],
+            'kw' => ['label' => 'Kuwait',       'location' => 'Kuwait City, Kuwait'],
+            'bh' => ['label' => 'Bahrain',      'location' => 'Manama, Bahrain'],
         ];
 
         try {
@@ -452,22 +522,40 @@ MSG;
                 now()->addHours(2),
                 function () use ($key, $query, $markets) {
                     $languages = ['en' => 'EN', 'ar' => 'AR'];
-                    $items = [];
-                    foreach ($markets as $gl => $label) {
+                    $candidates = [];
+                    foreach ($markets as $gl => $market) {
                         foreach ($languages as $hl => $langLabel) {
                             $response = Http::timeout(8)
                                 ->withHeaders(['X-API-KEY' => $key, 'Content-Type' => 'application/json'])
-                                ->post('https://google.serper.dev/search', ['q' => $query, 'num' => 1, 'gl' => $gl, 'hl' => $hl]);
+                                ->post('https://google.serper.dev/search', [
+                                    'q' => $query, 'num' => 3, 'gl' => $gl, 'hl' => $hl, 'location' => $market['location'],
+                                ]);
                             if (!$response->successful()) {
                                 continue;
                             }
                             foreach ($response->json('organic', []) as $item) {
-                                $items[] = [
+                                $url = $item['link'] ?? '';
+                                $candidates[] = [
                                     'title'   => $item['title']   ?? '',
                                     'snippet' => $item['snippet'] ?? '',
-                                    'market'  => $label . ' · ' . $langLabel,
+                                    'domain'  => parse_url($url, PHP_URL_HOST) ?: $url,
+                                    'market'  => $market['label'] . ' · ' . $langLabel,
                                 ];
                             }
+                        }
+                    }
+
+                    // Dedupe by domain so the AI sees different competitors, not the same site repeated
+                    $seenDomains = [];
+                    $items = [];
+                    foreach ($candidates as $candidate) {
+                        if (in_array($candidate['domain'], $seenDomains, true)) {
+                            continue;
+                        }
+                        $seenDomains[] = $candidate['domain'];
+                        $items[] = $candidate;
+                        if (count($items) >= 12) {
+                            break;
                         }
                     }
                     return $items;

@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Testimonials;
 
+use Anthropic\Client as AnthropicClient;
 use App\Enums\NavigationGroupEnum;
 use App\Filament\Resources\Testimonials\Pages;
+use App\Models\Setting;
 use App\Models\Testimonial;
 use App\Services\AiPostService;
 use Filament\Actions\Action;
@@ -23,6 +25,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\HtmlString;
 
 class TestimonialResource extends Resource
@@ -222,6 +225,172 @@ class TestimonialResource extends Resource
                         ->columnSpanFull(),
                 ]),
 
+            // ── 5. SEO Ranking Potential ──────────────────────────────────
+            Section::make('📊 SEO Ranking Potential')
+                ->description('Ask AI to score this testimonial for on-page SEO value (keywords, product/location mentions) and give improvement tips.')
+                ->collapsed()
+                ->schema([
+                    TextInput::make('_seo_score')->dehydrated(false)->hidden(),
+                    Textarea::make('_seo_notes')->dehydrated(false)->hidden(),
+
+                    \Filament\Schemas\Components\Actions::make([
+                        Action::make('analyse_testimonial_seo')
+                            ->label('Analyse with AI')
+                            ->icon('heroicon-o-sparkles')
+                            ->color('warning')
+                            ->action(function ($get, $set) {
+                                $apiKey = config('services.anthropic.key');
+                                if (blank($apiKey)) {
+                                    Notification::make()->title('Anthropic API key not set.')->warning()->send();
+                                    return;
+                                }
+                                $quote    = $get('quote')    ?? '';
+                                $quoteAr  = $get('quote_ar') ?? '';
+                                $author   = $get('author')   ?? '';
+                                $location = $get('location') ?? '';
+                                $product  = $get('product')  ?? '';
+                                if (blank($quote)) {
+                                    Notification::make()->title('Write the quote first.')->warning()->send();
+                                    return;
+                                }
+                                $context = "[English]\nQuote: {$quote}\nCustomer: {$author}\nLocation: {$location}\nProduct: {$product}";
+                                if (!blank($quoteAr)) {
+                                    $context .= "\n\n[Arabic]\nQuote: {$quoteAr}";
+                                }
+                                try {
+                                    $client   = new AnthropicClient(apiKey: $apiKey);
+                                    $response = $client->messages->create(
+                                        model: 'claude-opus-4-8',
+                                        maxTokens: 600,
+                                        system: 'You are an SEO expert for Artisan Leather, a premium leather goods brand in Muscat, Oman targeting GCC shoppers. Return only valid JSON, no markdown.',
+                                        messages: [['role' => 'user', 'content' => "Analyse this customer testimonial (English and, if provided, Arabic) for on-page SEO value (does it mention useful keywords, the product, location, or brand benefits that help search ranking?) and return JSON with exactly two keys:\n\"seo_score\" (integer 0-100) and \"seo_notes\" (string: 3-5 actionable tips to make this testimonial more SEO-valuable in both languages, each on its own line starting with a dash).\n\n{$context}"]],
+                                    );
+                                    $text = '';
+                                    foreach ($response->content as $block) {
+                                        if ($block->type === 'text') { $text = $block->text; break; }
+                                    }
+                                    $data = json_decode(trim($text), true) ?? [];
+                                    $set('_seo_score', (string) ($data['seo_score'] ?? 0));
+                                    $set('_seo_notes', $data['seo_notes'] ?? '');
+                                    Notification::make()->title('✅ SEO analysis complete!')->success()->send();
+                                } catch (\Throwable $e) {
+                                    Notification::make()->title('Analysis failed')->body($e->getMessage())->danger()->send();
+                                }
+                            }),
+                    ]),
+
+                    Placeholder::make('_seo_score_card')
+                        ->label('')
+                        ->content(function ($get) {
+                            $score = (int) ($get('_seo_score') ?? 0);
+                            $notes = trim($get('_seo_notes') ?? '');
+
+                            if ($score === 0 && blank($notes)) {
+                                return new HtmlString('<p style="color:#9ca3af;font-style:italic;font-size:13px;">Click "Analyse with AI" to get the SEO ranking potential score and improvement tips.</p>');
+                            }
+
+                            $color = $score >= 75 ? '#16a34a' : ($score >= 50 ? '#d97706' : '#dc2626');
+                            $label = $score >= 75 ? 'Strong' : ($score >= 50 ? 'Average' : 'Needs Work');
+
+                            $notesHtml = '';
+                            if (!blank($notes)) {
+                                $lines = array_filter(array_map('trim', explode("\n", $notes)));
+                                $items = implode('', array_map(fn($l) => '<li style="margin-bottom:6px;">' . e($l) . '</li>', $lines));
+                                $notesHtml = '<div style="margin-top:14px;"><div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">Improvement Tips</div><ul style="margin:0;padding-left:18px;color:#374151;font-size:13px;line-height:1.6;">' . $items . '</ul></div>';
+                            }
+
+                            return new HtmlString('
+                                <div style="font-family:sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;max-width:600px;">
+                                    <div style="display:flex;align-items:center;gap:16px;">
+                                        <div style="flex-shrink:0;width:64px;height:64px;border-radius:50%;background:' . $color . ';display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700;">' . $score . '</div>
+                                        <div>
+                                            <div style="font-size:20px;font-weight:700;color:' . $color . ';">' . $label . '</div>
+                                            <div style="font-size:12px;color:#6b7280;">AI Ranking Potential Score out of 100</div>
+                                        </div>
+                                    </div>
+                                    ' . $notesHtml . '
+                                </div>
+                            ');
+                        })
+                        ->columnSpanFull(),
+                ]),
+
+            // ── 6. Google Competition ─────────────────────────────────────
+            Section::make('🔍 Google Competition')
+                ->description('See what currently ranks for this product/testimonial topic — so you can highlight points your competitors miss.')
+                ->collapsed()
+                ->schema([
+                    Textarea::make('_competition_json')->dehydrated(false)->hidden(),
+
+                    Select::make('_competition_country')
+                        ->label('Country')
+                        ->dehydrated(false)
+                        ->default('all')
+                        ->options(self::competitionCountryOptions()),
+
+                    Select::make('_competition_lang')
+                        ->label('Language')
+                        ->dehydrated(false)
+                        ->default('all')
+                        ->options(self::competitionLanguageOptions()),
+
+                    \Filament\Schemas\Components\Actions::make([
+                        Action::make('research_testimonial_competition')
+                            ->label('Research Competition')
+                            ->icon('heroicon-o-magnifying-glass')
+                            ->color('gray')
+                            ->action(function ($get, $set) {
+                                $product = trim($get('product') ?? '');
+                                $query   = $product ? ($product . ' leather Oman') : 'handcrafted leather goods Oman';
+                                $queryAr = $product ? ($product . ' جلد عمان') : 'منتجات جلدية يدوية الصنع عمان';
+                                try {
+                                    $results = self::fetchCompetitionData($query, $get('_competition_country') ?? 'all', $get('_competition_lang') ?? 'all', $queryAr);
+                                    $set('_competition_json', json_encode($results));
+                                    if (empty($results)) {
+                                        Notification::make()
+                                            ->title('No results returned.')
+                                            ->body('Check your Serper.dev settings in Business Settings → SEO & Analytics.')
+                                            ->warning()->send();
+                                    }
+                                } catch (\Throwable $e) {
+                                    Notification::make()
+                                        ->title('Research failed')
+                                        ->body($e->getMessage())
+                                        ->danger()->send();
+                                }
+                            }),
+                    ]),
+
+                    Placeholder::make('_competition_preview')
+                        ->label('')
+                        ->content(function ($get) {
+                            $json = $get('_competition_json') ?? '';
+                            if (blank($json)) {
+                                return new HtmlString('<p style="color:#9ca3af;font-style:italic;font-size:13px;">Click "Research Competition" to see what currently ranks for this product.</p>');
+                            }
+                            $items = json_decode($json, true) ?: [];
+                            if (empty($items)) {
+                                return new HtmlString('<p style="color:#9ca3af;font-style:italic;font-size:13px;">No results found for this query.</p>');
+                            }
+                            $cards = '';
+                            foreach ($items as $i => $item) {
+                                $pos     = $i + 1;
+                                $title   = e($item['title']   ?? '');
+                                $url     = e($item['url']     ?? '');
+                                $domain  = e($item['domain']  ?? '');
+                                $snippet = e($item['snippet'] ?? '');
+                                $cards  .= '
+                                    <div style="padding:12px 14px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;">
+                                        <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">#' . $pos . ' &nbsp;·&nbsp; ' . e($item['market'] ?? '') . ' &nbsp;·&nbsp; ' . $domain . '</div>
+                                        <a href="' . $url . '" target="_blank" rel="noopener" style="font-size:15px;color:#1a0dab;text-decoration:none;font-weight:500;line-height:1.3;">' . $title . '</a>
+                                        <div style="font-size:13px;color:#545454;margin-top:5px;line-height:1.5;">' . $snippet . '</div>
+                                    </div>';
+                            }
+                            return new HtmlString('<div style="font-family:arial,sans-serif;display:flex;flex-direction:column;gap:10px;max-width:680px;">' . $cards . '</div>');
+                        })
+                        ->columnSpanFull(),
+                ]),
+
         ]);
     }
 
@@ -304,6 +473,81 @@ class TestimonialResource extends Resource
             'create' => Pages\CreateTestimonial::route('/create'),
             'edit'   => Pages\EditTestimonial::route('/{record}/edit'),
         ];
+    }
+
+    protected static function competitionMarkets(): array
+    {
+        return [
+            'om' => ['label' => '🇴🇲 Oman',         'location' => 'Muscat, Oman'],
+            'ae' => ['label' => '🇦🇪 UAE',          'location' => 'Dubai, United Arab Emirates'],
+            'sa' => ['label' => '🇸🇦 Saudi Arabia', 'location' => 'Riyadh, Saudi Arabia'],
+            'qa' => ['label' => '🇶🇦 Qatar',        'location' => 'Doha, Qatar'],
+            'kw' => ['label' => '🇰🇼 Kuwait',       'location' => 'Kuwait City, Kuwait'],
+            'bh' => ['label' => '🇧🇭 Bahrain',      'location' => 'Manama, Bahrain'],
+        ];
+    }
+
+    protected static function competitionCountryOptions(): array
+    {
+        return ['all' => '🌍 All GCC Countries'] + array_map(fn($m) => $m['label'], self::competitionMarkets());
+    }
+
+    protected static function competitionLanguageOptions(): array
+    {
+        return ['all' => 'English + Arabic', 'en' => 'English only', 'ar' => 'Arabic only'];
+    }
+
+    private static function fetchCompetitionData(string $query, string $countryFilter = 'all', string $langFilter = 'all', string $queryAr = ''): array
+    {
+        $flat = Setting::pluck('value', 'key')->toArray();
+        $key  = $flat['seo.serper_api_key'] ?? config('services.serper.key');
+        if (blank($key)) {
+            throw new \RuntimeException('Serper.dev not configured. Add API Key in Business Settings → SEO & Analytics.');
+        }
+
+        $markets = self::competitionMarkets();
+        if ($countryFilter !== 'all' && isset($markets[$countryFilter])) {
+            $markets = [$countryFilter => $markets[$countryFilter]];
+        }
+
+        $languages = ['en' => 'EN', 'ar' => 'AR'];
+        if ($langFilter !== 'all' && isset($languages[$langFilter])) {
+            $languages = [$langFilter => $languages[$langFilter]];
+        }
+
+        $candidates = [];
+        foreach ($markets as $gl => $market) {
+            foreach ($languages as $hl => $langLabel) {
+                $q = ($hl === 'ar' && $queryAr !== '') ? $queryAr : $query;
+                $response = Http::timeout(10)
+                    ->withHeaders(['X-API-KEY' => $key, 'Content-Type' => 'application/json'])
+                    ->post('https://google.serper.dev/search', [
+                        'q' => $q, 'num' => 3, 'gl' => $gl, 'hl' => $hl, 'location' => $market['location'],
+                    ]);
+                if (!$response->successful()) {
+                    continue;
+                }
+                foreach ($response->json('organic', []) as $item) {
+                    $url = $item['link'] ?? '';
+                    $candidates[] = ['title' => $item['title'] ?? '', 'url' => $url, 'domain' => parse_url($url, PHP_URL_HOST) ?: $url, 'snippet' => $item['snippet'] ?? '', 'market' => $market['label'] . ' · ' . $langLabel];
+                }
+            }
+        }
+
+        $seenDomains = [];
+        $results     = [];
+        foreach ($candidates as $candidate) {
+            if (in_array($candidate['domain'], $seenDomains, true)) {
+                continue;
+            }
+            $seenDomains[] = $candidate['domain'];
+            $results[]     = $candidate;
+            if (count($results) >= 12) {
+                break;
+            }
+        }
+
+        return $results;
     }
 
     private static function fillAiFields($set, array $data): void

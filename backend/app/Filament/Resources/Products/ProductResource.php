@@ -619,13 +619,26 @@ class ProductResource extends Resource
                                 ->schema([
                                     Textarea::make('_competition_json')->dehydrated(false)->hidden(),
 
+                                    Select::make('_competition_country')
+                                        ->label('Country')
+                                        ->dehydrated(false)
+                                        ->default('all')
+                                        ->options(self::competitionCountryOptions()),
+
+                                    Select::make('_competition_lang')
+                                        ->label('Language')
+                                        ->dehydrated(false)
+                                        ->default('all')
+                                        ->options(self::competitionLanguageOptions()),
+
                                     \Filament\Schemas\Components\Actions::make([
                                         Action::make('research_competition_product')
                                             ->label('Research Competition')
                                             ->icon('heroicon-o-magnifying-glass')
                                             ->color('gray')
                                             ->action(function ($get, $set) {
-                                                $query = trim($get('meta_title') ?: $get('name') ?: '');
+                                                $query   = trim($get('meta_title') ?: $get('name') ?: '');
+                                                $queryAr = trim($get('name_ar') ?: '') ?: $query;
                                                 if (blank($query)) {
                                                     \Filament\Notifications\Notification::make()
                                                         ->title('Enter a product name first.')
@@ -634,7 +647,7 @@ class ProductResource extends Resource
                                                     return;
                                                 }
                                                 try {
-                                                    $results = self::fetchCompetitionData($query);
+                                                    $results = self::fetchCompetitionData($query, $get('_competition_country') ?? 'all', $get('_competition_lang') ?? 'all', $queryAr);
                                                     $set('_competition_json', json_encode($results));
                                                     if (empty($results)) {
                                                         \Filament\Notifications\Notification::make()
@@ -760,7 +773,33 @@ class ProductResource extends Resource
         $set('_seo_notes',       $data['seo_notes']        ?? '');
     }
 
-    private static function fetchCompetitionData(string $query): array
+    protected static function competitionMarkets(): array
+    {
+        return [
+            'om' => ['label' => '🇴🇲 Oman',         'location' => 'Muscat, Oman'],
+            'ae' => ['label' => '🇦🇪 UAE',          'location' => 'Dubai, United Arab Emirates'],
+            'sa' => ['label' => '🇸🇦 Saudi Arabia', 'location' => 'Riyadh, Saudi Arabia'],
+            'qa' => ['label' => '🇶🇦 Qatar',        'location' => 'Doha, Qatar'],
+            'kw' => ['label' => '🇰🇼 Kuwait',       'location' => 'Kuwait City, Kuwait'],
+            'bh' => ['label' => '🇧🇭 Bahrain',      'location' => 'Manama, Bahrain'],
+        ];
+    }
+
+    protected static function competitionCountryOptions(): array
+    {
+        return ['all' => '🌍 All GCC Countries'] + array_map(fn($m) => $m['label'], self::competitionMarkets());
+    }
+
+    protected static function competitionLanguageOptions(): array
+    {
+        return [
+            'all' => 'English + Arabic',
+            'en'  => 'English only',
+            'ar'  => 'Arabic only',
+        ];
+    }
+
+    private static function fetchCompetitionData(string $query, string $countryFilter = 'all', string $langFilter = 'all', string $queryAr = ''): array
     {
         $flat = Setting::pluck('value', 'key')->toArray();
         $key  = $flat['seo.serper_api_key'] ?? config('services.serper.key');
@@ -769,24 +808,26 @@ class ProductResource extends Resource
             throw new \RuntimeException('Serper.dev is not configured. Add your API Key in Business Settings → SEO & Analytics.');
         }
 
-        $markets = [
-            'om' => '🇴🇲 Oman',
-            'ae' => '🇦🇪 UAE',
-            'sa' => '🇸🇦 Saudi Arabia',
-            'qa' => '🇶🇦 Qatar',
-            'kw' => '🇰🇼 Kuwait',
-            'bh' => '🇧🇭 Bahrain',
-        ];
+        $markets = self::competitionMarkets();
+        if ($countryFilter !== 'all' && isset($markets[$countryFilter])) {
+            $markets = [$countryFilter => $markets[$countryFilter]];
+        }
 
         $languages = ['en' => 'EN', 'ar' => 'AR'];
+        if ($langFilter !== 'all' && isset($languages[$langFilter])) {
+            $languages = [$langFilter => $languages[$langFilter]];
+        }
 
-        $results   = [];
-        $lastError = null;
-        foreach ($markets as $gl => $label) {
+        $candidates = [];
+        $lastError  = null;
+        foreach ($markets as $gl => $market) {
             foreach ($languages as $hl => $langLabel) {
+                $q = ($hl === 'ar' && $queryAr !== '') ? $queryAr : $query;
                 $response = Http::timeout(10)
                     ->withHeaders(['X-API-KEY' => $key, 'Content-Type' => 'application/json'])
-                    ->post('https://google.serper.dev/search', ['q' => $query, 'num' => 1, 'gl' => $gl, 'hl' => $hl]);
+                    ->post('https://google.serper.dev/search', [
+                        'q' => $q, 'num' => 3, 'gl' => $gl, 'hl' => $hl, 'location' => $market['location'],
+                    ]);
 
                 if (!$response->successful()) {
                     $lastError = $response->json('message') ?? $response->status();
@@ -794,15 +835,29 @@ class ProductResource extends Resource
                 }
 
                 foreach ($response->json('organic', []) as $item) {
-                    $url       = $item['link'] ?? '';
-                    $results[] = [
+                    $url          = $item['link'] ?? '';
+                    $candidates[] = [
                         'title'   => $item['title']   ?? '',
                         'url'     => $url,
                         'domain'  => parse_url($url, PHP_URL_HOST) ?: $url,
                         'snippet' => $item['snippet'] ?? '',
-                        'market'  => $label . ' · ' . $langLabel,
+                        'market'  => $market['label'] . ' · ' . $langLabel,
                     ];
                 }
+            }
+        }
+
+        // Dedupe by domain so the same site doesn't repeat across markets — surfaces different competitors
+        $seenDomains = [];
+        $results     = [];
+        foreach ($candidates as $candidate) {
+            if (in_array($candidate['domain'], $seenDomains, true)) {
+                continue;
+            }
+            $seenDomains[] = $candidate['domain'];
+            $results[]     = $candidate;
+            if (count($results) >= 12) {
+                break;
             }
         }
 

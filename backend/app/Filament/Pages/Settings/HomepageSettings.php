@@ -6,11 +6,14 @@ use App\Enums\NavigationGroupEnum;
 use App\Models\Setting;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -74,21 +77,81 @@ class HomepageSettings extends Page implements HasSchemas
                                 try {
                                     $data = app(\App\Services\AiPostService::class)->generateHomepageWithClaude($theme);
                                     $set('hero.eyebrow',         $data['hero_eyebrow']         ?? '');
+                                    $set('hero.eyebrow_ar',      $data['hero_eyebrow_ar']      ?? '');
                                     $set('hero.headline',        $data['hero_headline']        ?? '');
+                                    $set('hero.headline_ar',     $data['hero_headline_ar']     ?? '');
                                     $set('hero.headline_accent', $data['hero_headline_accent'] ?? '');
+                                    $set('hero.headline_accent_ar', $data['hero_headline_accent_ar'] ?? '');
                                     $set('hero.subtitle',        $data['hero_subtitle']        ?? '');
+                                    $set('hero.subtitle_ar',     $data['hero_subtitle_ar']     ?? '');
                                     $set('hero.cta_primary',     $data['hero_cta_primary']     ?? '');
+                                    $set('hero.cta_primary_ar',  $data['hero_cta_primary_ar']  ?? '');
                                     $set('hero.cta_secondary',   $data['hero_cta_secondary']   ?? '');
+                                    $set('hero.cta_secondary_ar', $data['hero_cta_secondary_ar'] ?? '');
                                     $set('stats.1.value',        $data['stat_1_value']         ?? '');
                                     $set('stats.1.label',        $data['stat_1_label']         ?? '');
+                                    $set('stats.1.label_ar',     $data['stat_1_label_ar']      ?? '');
                                     $set('stats.2.value',        $data['stat_2_value']         ?? '');
                                     $set('stats.2.label',        $data['stat_2_label']         ?? '');
+                                    $set('stats.2.label_ar',     $data['stat_2_label_ar']      ?? '');
                                     $set('stats.3.value',        $data['stat_3_value']         ?? '');
                                     $set('stats.3.label',        $data['stat_3_label']         ?? '');
+                                    $set('stats.3.label_ar',     $data['stat_3_label_ar']      ?? '');
                                     $set('stats.4.value',        $data['stat_4_value']         ?? '');
                                     $set('stats.4.label',        $data['stat_4_label']         ?? '');
+                                    $set('stats.4.label_ar',     $data['stat_4_label_ar']      ?? '');
                                     Notification::make()
                                         ->title('✅ Claude generated your homepage content!')
+                                        ->body('Review all sections, then click Save.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    Notification::make()->title('Generation failed')->body($e->getMessage())->danger()->send();
+                                }
+                            }),
+
+                        Action::make('generate_homepage_openai')
+                            ->label('Generate with OpenAI')
+                            ->icon('heroicon-o-cpu-chip')
+                            ->color('info')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate Homepage Content with OpenAI (GPT-4o)')
+                            ->modalDescription('This will overwrite the hero text and stats bar. You can still adjust before saving. Continue?')
+                            ->modalSubmitActionLabel('Yes, generate')
+                            ->action(function ($get, $set) {
+                                $apiKey = config('services.openai.key');
+                                if (blank($apiKey)) {
+                                    Notification::make()->title('OpenAI API key not set.')->warning()->send();
+                                    return;
+                                }
+                                $theme = trim($get('_ai_hp_prompt') ?: 'General homepage refresh for a premium leather goods brand in Muscat, Oman.');
+                                try {
+                                    $data = app(\App\Services\AiPostService::class)->generateHomepageWithOpenAI($theme);
+                                    $set('hero.eyebrow',         $data['hero_eyebrow']         ?? '');
+                                    $set('hero.eyebrow_ar',      $data['hero_eyebrow_ar']      ?? '');
+                                    $set('hero.headline',        $data['hero_headline']        ?? '');
+                                    $set('hero.headline_ar',     $data['hero_headline_ar']     ?? '');
+                                    $set('hero.headline_accent', $data['hero_headline_accent'] ?? '');
+                                    $set('hero.headline_accent_ar', $data['hero_headline_accent_ar'] ?? '');
+                                    $set('hero.subtitle',        $data['hero_subtitle']        ?? '');
+                                    $set('hero.subtitle_ar',     $data['hero_subtitle_ar']     ?? '');
+                                    $set('hero.cta_primary',     $data['hero_cta_primary']     ?? '');
+                                    $set('hero.cta_primary_ar',  $data['hero_cta_primary_ar']  ?? '');
+                                    $set('hero.cta_secondary',   $data['hero_cta_secondary']   ?? '');
+                                    $set('hero.cta_secondary_ar', $data['hero_cta_secondary_ar'] ?? '');
+                                    $set('stats.1.value',        $data['stat_1_value']         ?? '');
+                                    $set('stats.1.label',        $data['stat_1_label']         ?? '');
+                                    $set('stats.1.label_ar',     $data['stat_1_label_ar']      ?? '');
+                                    $set('stats.2.value',        $data['stat_2_value']         ?? '');
+                                    $set('stats.2.label',        $data['stat_2_label']         ?? '');
+                                    $set('stats.2.label_ar',     $data['stat_2_label_ar']      ?? '');
+                                    $set('stats.3.value',        $data['stat_3_value']         ?? '');
+                                    $set('stats.3.label',        $data['stat_3_label']         ?? '');
+                                    $set('stats.3.label_ar',     $data['stat_3_label_ar']      ?? '');
+                                    $set('stats.4.value',        $data['stat_4_value']         ?? '');
+                                    $set('stats.4.label',        $data['stat_4_label']         ?? '');
+                                    $set('stats.4.label_ar',     $data['stat_4_label_ar']      ?? '');
+                                    Notification::make()
+                                        ->title('✅ OpenAI generated your homepage content!')
                                         ->body('Review all sections, then click Save.')
                                         ->success()->send();
                                 } catch (\Throwable $e) {
@@ -98,51 +161,85 @@ class HomepageSettings extends Page implements HasSchemas
                     ]),
                 ]),
 
-            Section::make('🏠 Hero')
-                ->description('The big headline and text visitors see first when they land on your website.')
-                ->columns(2)
-                ->schema([
-                    TextInput::make('hero.eyebrow')
-                        ->label('Eyebrow Text')
-                        ->placeholder('Muscat · Sultanate of Oman')
-                        ->helperText('Small uppercase text above the headline.')
-                        ->columnSpanFull(),
+            Tabs::make('Homepage Content')
+                ->columnSpanFull()
+                ->tabs([
+                    Tab::make('English')
+                        ->icon('heroicon-o-language')
+                        ->schema([
+                            Section::make('🏠 Hero')
+                                ->description('The big headline and text visitors see first when they land on your website.')
+                                ->columns(2)
+                                ->schema([
+                                    TextInput::make('hero.eyebrow')
+                                        ->label('Eyebrow Text')
+                                        ->placeholder('Muscat · Sultanate of Oman')
+                                        ->helperText('Small uppercase text above the headline.')
+                                        ->columnSpanFull(),
 
-                    TextInput::make('hero.headline')
-                        ->label('Headline — Line 1 (white)')
-                        ->placeholder('Where Leather'),
+                                    TextInput::make('hero.headline')
+                                        ->label('Headline — Line 1 (white)')
+                                        ->placeholder('Where Leather'),
 
-                    TextInput::make('hero.headline_accent')
-                        ->label('Headline — Line 2 (gold italic)')
-                        ->placeholder('Becomes Legacy'),
+                                    TextInput::make('hero.headline_accent')
+                                        ->label('Headline — Line 2 (gold italic)')
+                                        ->placeholder('Becomes Legacy'),
 
-                    Textarea::make('hero.subtitle')
-                        ->label('Subtitle')
-                        ->rows(2)
-                        ->placeholder('Handcrafted premium leather goods for those who appreciate the art of timeless elegance.')
-                        ->columnSpanFull(),
+                                    Textarea::make('hero.subtitle')
+                                        ->label('Subtitle')
+                                        ->rows(2)
+                                        ->placeholder('Handcrafted premium leather goods for those who appreciate the art of timeless elegance.')
+                                        ->columnSpanFull(),
 
-                    TextInput::make('hero.cta_primary')
-                        ->label('Primary Button Label')
-                        ->placeholder('Explore Collection'),
+                                    TextInput::make('hero.cta_primary')
+                                        ->label('Primary Button Label')
+                                        ->placeholder('Explore Collection'),
 
-                    TextInput::make('hero.cta_secondary')
-                        ->label('Secondary Button Label')
-                        ->placeholder('Our Story'),
-                ]),
+                                    TextInput::make('hero.cta_secondary')
+                                        ->label('Secondary Button Label')
+                                        ->placeholder('Our Story'),
+                                ]),
 
-            Section::make('📊 Stats Bar')
-                ->description('The four numbers shown below the hero. Update them as your business grows.')
-                ->columns(4)
-                ->schema([
-                    TextInput::make('stats.1.value')->label('Stat 1 — Value')->placeholder('100%'),
-                    TextInput::make('stats.2.value')->label('Stat 2 — Value')->placeholder('15+'),
-                    TextInput::make('stats.3.value')->label('Stat 3 — Value')->placeholder('50+'),
-                    TextInput::make('stats.4.value')->label('Stat 4 — Value')->placeholder('GCC'),
-                    TextInput::make('stats.1.label')->label('Stat 1 — Label')->placeholder('Handcrafted'),
-                    TextInput::make('stats.2.label')->label('Stat 2 — Label')->placeholder('Years of Excellence'),
-                    TextInput::make('stats.3.label')->label('Stat 3 — Label')->placeholder('Unique Designs'),
-                    TextInput::make('stats.4.label')->label('Stat 4 — Label')->placeholder('Wide Delivery'),
+                            Section::make('📊 Stats Bar')
+                                ->description('The four numbers shown below the hero. Update them as your business grows.')
+                                ->columns(4)
+                                ->schema([
+                                    TextInput::make('stats.1.value')->label('Stat 1 — Value')->placeholder('100%'),
+                                    TextInput::make('stats.2.value')->label('Stat 2 — Value')->placeholder('15+'),
+                                    TextInput::make('stats.3.value')->label('Stat 3 — Value')->placeholder('50+'),
+                                    TextInput::make('stats.4.value')->label('Stat 4 — Value')->placeholder('GCC'),
+                                    TextInput::make('stats.1.label')->label('Stat 1 — Label')->placeholder('Handcrafted'),
+                                    TextInput::make('stats.2.label')->label('Stat 2 — Label')->placeholder('Years of Excellence'),
+                                    TextInput::make('stats.3.label')->label('Stat 3 — Label')->placeholder('Unique Designs'),
+                                    TextInput::make('stats.4.label')->label('Stat 4 — Label')->placeholder('Wide Delivery'),
+                                ]),
+                        ]),
+
+                    Tab::make('Arabic / عربي')
+                        ->icon('heroicon-o-language')
+                        ->schema([
+                            Section::make('🏠 Hero (Arabic)')
+                                ->description('Arabic translations shown to Arabic-speaking visitors.')
+                                ->columns(2)
+                                ->schema(self::arabicFields([
+                                    ['hero.eyebrow_ar', 'Eyebrow Text (Arabic)', 'text', null, true],
+                                    ['hero.headline_ar', 'Headline — Line 1 (Arabic)', 'text'],
+                                    ['hero.headline_accent_ar', 'Headline — Line 2 (Arabic)', 'text'],
+                                    ['hero.subtitle_ar', 'Subtitle (Arabic)', 'textarea', 2, true],
+                                    ['hero.cta_primary_ar', 'Primary Button Label (Arabic)', 'text'],
+                                    ['hero.cta_secondary_ar', 'Secondary Button Label (Arabic)', 'text'],
+                                ])),
+
+                            Section::make('📊 Stats Bar (Arabic)')
+                                ->description('Arabic labels for the stats bar. Values (e.g. 100%, 15+) stay the same in both languages.')
+                                ->columns(4)
+                                ->schema(self::arabicFields([
+                                    ['stats.1.label_ar', 'Stat 1 — Label (Arabic)', 'text'],
+                                    ['stats.2.label_ar', 'Stat 2 — Label (Arabic)', 'text'],
+                                    ['stats.3.label_ar', 'Stat 3 — Label (Arabic)', 'text'],
+                                    ['stats.4.label_ar', 'Stat 4 — Label (Arabic)', 'text'],
+                                ])),
+                        ]),
                 ]),
 
             // ── SEO ───────────────────────────────────────────────────────
@@ -245,17 +342,20 @@ class HomepageSettings extends Page implements HasSchemas
                                     Notification::make()->title('Anthropic API key not set.')->warning()->send();
                                     return;
                                 }
-                                $headline = trim(($get('hero.headline') ?? '') . ' ' . ($get('hero.headline_accent') ?? ''));
-                                $subtitle = $get('hero.subtitle') ?? '';
-                                $eyebrow  = $get('hero.eyebrow')  ?? '';
-                                $context  = "Page: Homepage\nEyebrow: {$eyebrow}\nHeadline: {$headline}\nSubtitle: {$subtitle}";
+                                $headline   = trim(($get('hero.headline') ?? '') . ' ' . ($get('hero.headline_accent') ?? ''));
+                                $subtitle   = $get('hero.subtitle') ?? '';
+                                $eyebrow    = $get('hero.eyebrow')  ?? '';
+                                $headlineAr = trim(($get('hero.headline_ar') ?? '') . ' ' . ($get('hero.headline_accent_ar') ?? ''));
+                                $subtitleAr = $get('hero.subtitle_ar') ?? '';
+                                $eyebrowAr  = $get('hero.eyebrow_ar')  ?? '';
+                                $context    = "Page: Homepage\n[English]\nEyebrow: {$eyebrow}\nHeadline: {$headline}\nSubtitle: {$subtitle}\n\n[Arabic]\nEyebrow: {$eyebrowAr}\nHeadline: {$headlineAr}\nSubtitle: {$subtitleAr}";
                                 try {
                                     $client   = new AnthropicClient(apiKey: $apiKey);
                                     $response = $client->messages->create(
                                         model: 'claude-opus-4-8',
                                         maxTokens: 600,
                                         system: 'You are an SEO expert for Artisan Leather, a premium leather goods brand in Muscat, Oman targeting GCC shoppers. Return only valid JSON, no markdown.',
-                                        messages: [['role' => 'user', 'content' => "Analyse this homepage content for SEO and return JSON with exactly two keys:\n\"seo_score\" (integer 0-100) and \"seo_notes\" (string: 3-5 actionable tips, each on its own line starting with a dash).\n\n{$context}"]],
+                                        messages: [['role' => 'user', 'content' => "Analyse this homepage content (both English and Arabic versions) for SEO and return JSON with exactly two keys:\n\"seo_score\" (integer 0-100) and \"seo_notes\" (string: 3-5 actionable tips covering both languages, each on its own line starting with a dash).\n\n{$context}"]],
                                     );
                                     $text = '';
                                     foreach ($response->content as $block) {
@@ -310,16 +410,32 @@ class HomepageSettings extends Page implements HasSchemas
                 ->schema([
                     Textarea::make('_competition_json')->dehydrated(false)->hidden(),
 
+                    Select::make('_competition_country')
+                        ->label('Country')
+                        ->dehydrated(false)
+                        ->default('all')
+                        ->options(self::competitionCountryOptions()),
+
+                    Select::make('_competition_lang')
+                        ->label('Language')
+                        ->dehydrated(false)
+                        ->default('all')
+                        ->options(self::competitionLanguageOptions()),
+
                     \Filament\Schemas\Components\Actions::make([
                         Action::make('research_homepage_competition')
                             ->label('Research Competition')
                             ->icon('heroicon-o-magnifying-glass')
                             ->color('gray')
                             ->action(function ($get, $set) {
-                                $query = trim(($get('hero.headline') ?? '') . ' ' . ($get('hero.headline_accent') ?? ''));
+                                $query   = trim(($get('hero.headline') ?? '') . ' ' . ($get('hero.headline_accent') ?? ''));
+                                $queryAr = trim(($get('hero.headline_ar') ?? '') . ' ' . ($get('hero.headline_accent_ar') ?? ''));
                                 if (blank($query)) {
                                     Notification::make()->title('Enter a headline first.')->warning()->send();
                                     return;
+                                }
+                                if (blank($queryAr)) {
+                                    $queryAr = $query;
                                 }
                                 try {
                                     $flat = Setting::pluck('value', 'key')->toArray();
@@ -328,28 +444,45 @@ class HomepageSettings extends Page implements HasSchemas
                                         Notification::make()->title('Serper.dev not configured.')->body('Add API Key in Business Settings → SEO & Analytics.')->warning()->send();
                                         return;
                                     }
-                                    $markets = [
-                                        'om' => '🇴🇲 Oman',
-                                        'ae' => '🇦🇪 UAE',
-                                        'sa' => '🇸🇦 Saudi Arabia',
-                                        'qa' => '🇶🇦 Qatar',
-                                        'kw' => '🇰🇼 Kuwait',
-                                        'bh' => '🇧🇭 Bahrain',
-                                    ];
+                                    $markets = self::competitionMarkets();
+                                    $countryFilter = $get('_competition_country') ?? 'all';
+                                    if ($countryFilter !== 'all' && isset($markets[$countryFilter])) {
+                                        $markets = [$countryFilter => $markets[$countryFilter]];
+                                    }
                                     $languages = ['en' => 'EN', 'ar' => 'AR'];
-                                    $results = [];
-                                    foreach ($markets as $gl => $label) {
+                                    $langFilter = $get('_competition_lang') ?? 'all';
+                                    if ($langFilter !== 'all' && isset($languages[$langFilter])) {
+                                        $languages = [$langFilter => $languages[$langFilter]];
+                                    }
+                                    $candidates = [];
+                                    foreach ($markets as $gl => $market) {
                                         foreach ($languages as $hl => $langLabel) {
+                                            $q = $hl === 'ar' ? $queryAr : $query;
                                             $response = Http::timeout(10)
                                                 ->withHeaders(['X-API-KEY' => $key, 'Content-Type' => 'application/json'])
-                                                ->post('https://google.serper.dev/search', ['q' => $query, 'num' => 1, 'gl' => $gl, 'hl' => $hl]);
+                                                ->post('https://google.serper.dev/search', [
+                                                    'q' => $q, 'num' => 3, 'gl' => $gl, 'hl' => $hl, 'location' => $market['location'],
+                                                ]);
                                             if (!$response->successful()) {
                                                 continue;
                                             }
                                             foreach ($response->json('organic', []) as $item) {
                                                 $url = $item['link'] ?? '';
-                                                $results[] = ['title' => $item['title'] ?? '', 'url' => $url, 'domain' => parse_url($url, PHP_URL_HOST) ?: $url, 'snippet' => $item['snippet'] ?? '', 'market' => $label . ' · ' . $langLabel];
+                                                $candidates[] = ['title' => $item['title'] ?? '', 'url' => $url, 'domain' => parse_url($url, PHP_URL_HOST) ?: $url, 'snippet' => $item['snippet'] ?? '', 'market' => $market['label'] . ' · ' . $langLabel];
                                             }
+                                        }
+                                    }
+                                    // Dedupe by domain so the same site doesn't repeat across markets
+                                    $seenDomains = [];
+                                    $results = [];
+                                    foreach ($candidates as $candidate) {
+                                        if (in_array($candidate['domain'], $seenDomains, true)) {
+                                            continue;
+                                        }
+                                        $seenDomains[] = $candidate['domain'];
+                                        $results[] = $candidate;
+                                        if (count($results) >= 12) {
+                                            break;
                                         }
                                     }
                                     $set('_competition_json', json_encode($results));
@@ -388,6 +521,55 @@ class HomepageSettings extends Page implements HasSchemas
                 ]),
 
         ])->statePath('data');
+    }
+
+    protected static function arabicFields(array $specs): array
+    {
+        $fields = [];
+        foreach ($specs as $spec) {
+            [$path, $label, $type] = $spec;
+            $rows           = $spec[3] ?? 3;
+            $columnSpanFull = $spec[4] ?? false;
+
+            $field = $type === 'textarea'
+                ? Textarea::make($path)->rows($rows)
+                : TextInput::make($path);
+
+            $field = $field->label($label)->extraInputAttributes(['dir' => 'rtl']);
+
+            if ($columnSpanFull) {
+                $field = $field->columnSpanFull();
+            }
+
+            $fields[] = $field;
+        }
+        return $fields;
+    }
+
+    protected static function competitionMarkets(): array
+    {
+        return [
+            'om' => ['label' => '🇴🇲 Oman',         'location' => 'Muscat, Oman'],
+            'ae' => ['label' => '🇦🇪 UAE',          'location' => 'Dubai, United Arab Emirates'],
+            'sa' => ['label' => '🇸🇦 Saudi Arabia', 'location' => 'Riyadh, Saudi Arabia'],
+            'qa' => ['label' => '🇶🇦 Qatar',        'location' => 'Doha, Qatar'],
+            'kw' => ['label' => '🇰🇼 Kuwait',       'location' => 'Kuwait City, Kuwait'],
+            'bh' => ['label' => '🇧🇭 Bahrain',      'location' => 'Manama, Bahrain'],
+        ];
+    }
+
+    protected static function competitionCountryOptions(): array
+    {
+        return ['all' => '🌍 All GCC Countries'] + array_map(fn($m) => $m['label'], self::competitionMarkets());
+    }
+
+    protected static function competitionLanguageOptions(): array
+    {
+        return [
+            'all' => 'English + Arabic',
+            'en'  => 'English only',
+            'ar'  => 'Arabic only',
+        ];
     }
 
     protected function getHeaderActions(): array
