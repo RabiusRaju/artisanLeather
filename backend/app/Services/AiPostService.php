@@ -430,26 +430,47 @@ MSG;
     {
         // DB setting takes priority over .env fallback
         $flat = Setting::pluck('value', 'key')->toArray();
-        $key  = $flat['seo.google_cse_key'] ?? config('services.google_cse.key');
-        $cx   = $flat['seo.google_cse_id']  ?? config('services.google_cse.cx');
+        $key  = $flat['seo.serper_api_key'] ?? config('services.serper.key');
 
-        if (blank($key) || blank($cx)) {
+        if (blank($key)) {
             return '';
         }
 
+        $markets = [
+            'om' => 'Oman',
+            'ae' => 'UAE',
+            'sa' => 'Saudi Arabia',
+            'qa' => 'Qatar',
+            'kw' => 'Kuwait',
+            'bh' => 'Bahrain',
+        ];
+
         try {
-            // Cache per query for 2 hours — protects the 100 searches/day free quota
+            // Cache per query for 2 hours — limits API usage
             $items = Cache::remember(
-                'google_cse_' . md5($query),
+                'serper_gcc_' . md5($query),
                 now()->addHours(2),
-                function () use ($key, $cx, $query) {
-                    $response = Http::timeout(8)->get('https://www.googleapis.com/customsearch/v1', [
-                        'key' => $key,
-                        'cx'  => $cx,
-                        'q'   => $query,
-                        'num' => 5,
-                    ]);
-                    return $response->successful() ? $response->json('items', []) : [];
+                function () use ($key, $query, $markets) {
+                    $languages = ['en' => 'EN', 'ar' => 'AR'];
+                    $items = [];
+                    foreach ($markets as $gl => $label) {
+                        foreach ($languages as $hl => $langLabel) {
+                            $response = Http::timeout(8)
+                                ->withHeaders(['X-API-KEY' => $key, 'Content-Type' => 'application/json'])
+                                ->post('https://google.serper.dev/search', ['q' => $query, 'num' => 1, 'gl' => $gl, 'hl' => $hl]);
+                            if (!$response->successful()) {
+                                continue;
+                            }
+                            foreach ($response->json('organic', []) as $item) {
+                                $items[] = [
+                                    'title'   => $item['title']   ?? '',
+                                    'snippet' => $item['snippet'] ?? '',
+                                    'market'  => $label . ' · ' . $langLabel,
+                                ];
+                            }
+                        }
+                    }
+                    return $items;
                 }
             );
 
@@ -460,14 +481,15 @@ MSG;
             $lines = [];
             foreach ($items as $i => $item) {
                 $n       = $i + 1;
-                $title   = $item['title']   ?? '';
-                $snippet = $item['snippet'] ?? '';
-                $lines[] = "{$n}. \"{$title}\" — {$snippet}";
+                $market  = $item['market'];
+                $title   = $item['title'];
+                $snippet = $item['snippet'];
+                $lines[] = "{$n}. [{$market}] \"{$title}\" — {$snippet}";
             }
 
             $list = implode("\n", $lines);
 
-            return "\n\nHere are the current top Google search results for this topic. Use them as competitive research — understand what already exists, then write something more comprehensive, unique, and valuable:\n{$list}\n\nYour content must be noticeably better than what currently ranks: more detailed, more useful, and more specific to the Artisan Leather brand and GCC audience.";
+            return "\n\nHere are the current top Google search results across GCC markets (Oman, UAE, Saudi Arabia, Qatar, Kuwait, Bahrain) for this topic. Use them as competitive research — understand what already exists, then write something more comprehensive, unique, and valuable:\n{$list}\n\nYour content must be noticeably better than what currently ranks: more detailed, more useful, and more specific to the Artisan Leather brand and GCC audience.";
 
         } catch (\Throwable) {
             return ''; // Silently skip if search fails — never break AI generation

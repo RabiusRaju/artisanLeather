@@ -456,7 +456,7 @@ class PostResource extends Resource
                                         $snippet = e($item['snippet'] ?? '');
                                         $cards  .= '
                                             <div style="padding:12px 14px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;">
-                                                <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">#' . $pos . ' &nbsp;·&nbsp; ' . $domain . '</div>
+                                                <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">#' . $pos . ' &nbsp;·&nbsp; ' . e($item['market'] ?? '') . ' &nbsp;·&nbsp; ' . $domain . '</div>
                                                 <a href="' . $url . '" target="_blank" rel="noopener" style="font-size:15px;color:#1a0dab;text-decoration:none;font-weight:500;line-height:1.3;">' . $title . '</a>
                                                 <div style="font-size:13px;color:#545454;margin-top:5px;line-height:1.5;">' . $snippet . '</div>
                                             </div>';
@@ -597,34 +597,53 @@ class PostResource extends Resource
     private static function fetchCompetitionData(string $query): array
     {
         $flat = Setting::pluck('value', 'key')->toArray();
-        $key  = $flat['seo.google_cse_key'] ?? config('services.google_cse.key');
-        $cx   = $flat['seo.google_cse_id']  ?? config('services.google_cse.cx');
+        $key  = $flat['seo.serper_api_key'] ?? config('services.serper.key');
 
-        if (blank($key) || blank($cx)) {
-            throw new \RuntimeException('Google Custom Search is not configured. Add your API Key and Engine ID in Business Settings → SEO & Analytics.');
+        if (blank($key)) {
+            throw new \RuntimeException('Serper.dev is not configured. Add your API Key in Business Settings → SEO & Analytics.');
         }
 
-        $response = Http::timeout(10)->get('https://www.googleapis.com/customsearch/v1', [
-            'key' => $key,
-            'cx'  => $cx,
-            'q'   => $query,
-            'num' => 5,
-        ]);
+        $markets = [
+            'om' => '🇴🇲 Oman',
+            'ae' => '🇦🇪 UAE',
+            'sa' => '🇸🇦 Saudi Arabia',
+            'qa' => '🇶🇦 Qatar',
+            'kw' => '🇰🇼 Kuwait',
+            'bh' => '🇧🇭 Bahrain',
+        ];
 
-        if (!$response->successful()) {
-            throw new \RuntimeException('Google search failed: ' . ($response->json('error.message') ?? $response->status()));
+        $languages = ['en' => 'EN', 'ar' => 'AR'];
+
+        $results   = [];
+        $lastError = null;
+        foreach ($markets as $gl => $label) {
+            foreach ($languages as $hl => $langLabel) {
+            $response = Http::timeout(10)
+                ->withHeaders(['X-API-KEY' => $key, 'Content-Type' => 'application/json'])
+                ->post('https://google.serper.dev/search', ['q' => $query, 'num' => 1, 'gl' => $gl, 'hl' => $hl]);
+
+            if (!$response->successful()) {
+                $lastError = $response->json('message') ?? $response->status();
+                continue;
+            }
+
+            foreach ($response->json('organic', []) as $item) {
+                $url       = $item['link'] ?? '';
+                $results[] = [
+                    'title'   => $item['title']   ?? '',
+                    'url'     => $url,
+                    'domain'  => parse_url($url, PHP_URL_HOST) ?: $url,
+                    'snippet' => $item['snippet'] ?? '',
+                    'market'  => $label . ' · ' . $langLabel,
+                ];
+            }
+            }
         }
 
-        $results = [];
-        foreach ($response->json('items', []) as $item) {
-            $url       = $item['link'] ?? '';
-            $results[] = [
-                'title'   => $item['title']   ?? '',
-                'url'     => $url,
-                'domain'  => parse_url($url, PHP_URL_HOST) ?: $url,
-                'snippet' => $item['snippet'] ?? '',
-            ];
+        if (empty($results) && $lastError) {
+            throw new \RuntimeException('Search failed: ' . $lastError);
         }
+
         return $results;
     }
 

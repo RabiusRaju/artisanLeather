@@ -153,17 +153,12 @@ class BusinessSettings extends Page implements HasSchemas
                         ->placeholder('https://maps.app.goo.gl/...')
                         ->helperText('Shown as a "Find us on Google" link in the footer.'),
 
-                    TextInput::make('seo.google_cse_key')
-                        ->label('Google Custom Search — API Key')
+                    TextInput::make('seo.serper_api_key')
+                        ->label('Serper.dev — API Key')
                         ->password()
                         ->revealable()
-                        ->placeholder('AIzaSy...')
-                        ->helperText('Google Cloud Console → APIs & Services → Credentials → API Key. Used by AI to research competitor content before generating.'),
-
-                    TextInput::make('seo.google_cse_id')
-                        ->label('Google Custom Search — Engine ID (cx)')
-                        ->placeholder('a1b2c3:xyz...')
-                        ->helperText('programmablesearchengine.google.com → your engine → Setup → Search engine ID. Free quota: 100 searches/day.'),
+                        ->placeholder('your serper.dev API key')
+                        ->helperText('serper.dev → Dashboard → API Key. Used by AI to research competitor content before generating.'),
                 ]),
 
         ])->statePath('data');

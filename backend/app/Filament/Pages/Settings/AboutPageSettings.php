@@ -547,18 +547,34 @@ class AboutPageSettings extends Page implements HasSchemas
                                 $query    = $headline ?: 'artisan leather brand about us Oman';
                                 try {
                                     $flat = Setting::pluck('value', 'key')->toArray();
-                                    $key  = $flat['seo.google_cse_key'] ?? config('services.google_cse.key');
-                                    $cx   = $flat['seo.google_cse_id']  ?? config('services.google_cse.cx');
-                                    if (blank($key) || blank($cx)) {
-                                        Notification::make()->title('Google CSE not configured.')->body('Add API Key and Engine ID in Business Settings → SEO & Analytics.')->warning()->send();
+                                    $key  = $flat['seo.serper_api_key'] ?? config('services.serper.key');
+                                    if (blank($key)) {
+                                        Notification::make()->title('Serper.dev not configured.')->body('Add API Key in Business Settings → SEO & Analytics.')->warning()->send();
                                         return;
                                     }
-                                    $response = Http::timeout(10)->get('https://www.googleapis.com/customsearch/v1', ['key' => $key, 'cx' => $cx, 'q' => $query, 'num' => 5]);
-                                    $items = $response->successful() ? $response->json('items', []) : [];
+                                    $markets = [
+                                        'om' => '🇴🇲 Oman',
+                                        'ae' => '🇦🇪 UAE',
+                                        'sa' => '🇸🇦 Saudi Arabia',
+                                        'qa' => '🇶🇦 Qatar',
+                                        'kw' => '🇰🇼 Kuwait',
+                                        'bh' => '🇧🇭 Bahrain',
+                                    ];
+                                    $languages = ['en' => 'EN', 'ar' => 'AR'];
                                     $results = [];
-                                    foreach ($items as $item) {
-                                        $url = $item['link'] ?? '';
-                                        $results[] = ['title' => $item['title'] ?? '', 'url' => $url, 'domain' => parse_url($url, PHP_URL_HOST) ?: $url, 'snippet' => $item['snippet'] ?? ''];
+                                    foreach ($markets as $gl => $label) {
+                                        foreach ($languages as $hl => $langLabel) {
+                                            $response = Http::timeout(10)
+                                                ->withHeaders(['X-API-KEY' => $key, 'Content-Type' => 'application/json'])
+                                                ->post('https://google.serper.dev/search', ['q' => $query, 'num' => 1, 'gl' => $gl, 'hl' => $hl]);
+                                            if (!$response->successful()) {
+                                                continue;
+                                            }
+                                            foreach ($response->json('organic', []) as $item) {
+                                                $url = $item['link'] ?? '';
+                                                $results[] = ['title' => $item['title'] ?? '', 'url' => $url, 'domain' => parse_url($url, PHP_URL_HOST) ?: $url, 'snippet' => $item['snippet'] ?? '', 'market' => $label . ' · ' . $langLabel];
+                                            }
+                                        }
                                     }
                                     $set('_competition_json', json_encode($results));
                                     if (empty($results)) {
@@ -585,7 +601,7 @@ class AboutPageSettings extends Page implements HasSchemas
                             foreach ($items as $i => $item) {
                                 $pos = $i + 1;
                                 $cards .= '<div style="padding:12px 14px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;">
-                                    <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">#' . $pos . ' &nbsp;·&nbsp; ' . e($item['domain'] ?? '') . '</div>
+                                    <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">#' . $pos . ' &nbsp;·&nbsp; ' . e($item['market'] ?? '') . ' &nbsp;·&nbsp; ' . e($item['domain'] ?? '') . '</div>
                                     <a href="' . e($item['url'] ?? '') . '" target="_blank" rel="noopener" style="font-size:15px;color:#1a0dab;text-decoration:none;font-weight:500;line-height:1.3;">' . e($item['title'] ?? '') . '</a>
                                     <div style="font-size:13px;color:#545454;margin-top:5px;line-height:1.5;">' . e($item['snippet'] ?? '') . '</div>
                                 </div>';
