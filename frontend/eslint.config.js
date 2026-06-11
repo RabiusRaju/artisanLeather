@@ -17,5 +17,11 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // This codebase uses the conventional "fetch in useEffect, setState on
+      // resolve" data-fetching pattern throughout (no Suspense/React Compiler).
+      // The new react-compiler-oriented rule flags every instance of it.
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])

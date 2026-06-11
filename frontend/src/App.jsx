@@ -8,7 +8,9 @@ import { CartProvider }      from './context/CartContext'
 import { CurrencyProvider }  from './context/CurrencyContext'
 import { ThemeProvider }     from './context/ThemeContext'
 import { WishlistProvider }  from './context/WishlistContext'
-import { SettingsProvider, useSetting } from './hooks/useSettings'
+import { ToastProvider }     from './context/ToastContext'
+import { SettingsProvider } from './hooks/useSettings'
+import ErrorBoundary         from './components/ErrorBoundary'
 import ThemeSelector        from './components/ThemeSelector'
 import Analytics            from './components/Analytics'
 import Navbar               from './components/Navbar'
@@ -87,6 +89,7 @@ function Layout() {
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <HelmetProvider>
     <BrowserRouter>
       <SettingsProvider>
@@ -95,7 +98,9 @@ export default function App() {
             <WishlistProvider>
               <CurrencyProvider>
                 <CartProvider>
-                  <Layout />
+                  <ToastProvider>
+                    <Layout />
+                  </ToastProvider>
                 </CartProvider>
               </CurrencyProvider>
             </WishlistProvider>
@@ -104,5 +109,6 @@ export default function App() {
       </SettingsProvider>
     </BrowserRouter>
     </HelmetProvider>
+    </ErrorBoundary>
   )
 }

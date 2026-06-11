@@ -40,7 +40,7 @@ export function AuthProvider({ children }) {
   }
 
   const logout = async () => {
-    try { await axios.post(`${API}/auth/logout`, {}, { headers: authHeaders() }) } catch {}
+    try { await axios.post(`${API}/auth/logout`, {}, { headers: authHeaders() }) } catch { /* token cleared client-side regardless */ }
     localStorage.removeItem(TOKEN_KEY)
     setUser(null)
   }
@@ -58,4 +58,5 @@ export function AuthProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook colocated with its provider
 export const useAuth = () => useContext(AuthContext)

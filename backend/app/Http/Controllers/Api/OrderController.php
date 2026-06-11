@@ -139,12 +139,12 @@ class OrderController extends Controller
                 }
             }
 
-            // Send confirmation email to customer (non-blocking)
+            // Queue confirmation emails (non-blocking)
             try {
                 $order->load('items');
-                Mail::to($order->email)->send(new OrderConfirmed($order));
+                Mail::to($order->email)->queue(new OrderConfirmed($order));
                 // Alert admin
-                Mail::to(config('mail.from.address'))->send(new OrderConfirmed($order));
+                Mail::to(config('mail.from.address'))->queue(new OrderConfirmed($order));
             } catch (\Throwable) {
                 // Email failure should not fail the order
             }

@@ -12,7 +12,7 @@ import { useCurrency } from '../context/CurrencyContext'
 function CartItem({ item }) {
   const { removeItem, updateQty } = useCart()
   const { format } = useCurrency()
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isAr = i18n.language === 'ar'
   const name = isAr && item.name_ar ? item.name_ar : item.name
   const key = `${item.id}-${item.colorName}`
@@ -30,7 +30,7 @@ function CartItem({ item }) {
       <Link to={`/product/${item.slug}`} className="flex-shrink-0">
         <div className="w-20 h-20 md:w-24 md:h-24 relative overflow-hidden" style={{ background: item.gradient }}>
           {item.image && (
-            <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
+            <img src={item.image} alt={name} className="absolute inset-0 w-full h-full object-cover" />
           )}
           <div className="absolute top-1.5 left-1.5 w-3 h-3 border-t border-l border-gold/30" />
           <div className="absolute bottom-1.5 right-1.5 w-3 h-3 border-b border-r border-gold/30" />
@@ -48,7 +48,7 @@ function CartItem({ item }) {
               to={`/product/${item.slug}`}
               className="font-serif text-lg text-white hover:text-gold transition-colors duration-300 leading-tight block"
             >
-              {item.name}
+              {name}
             </Link>
             <div className="flex items-center gap-2 mt-1.5">
               <span
@@ -131,7 +131,6 @@ function EmptyCart() {
 export default function CartPage() {
   const { items, subtotal, clearCart, coupon, couponError, couponLoading, applyCoupon, removeCoupon, discount, total: cartTotal } = useCart()
   const { format } = useCurrency()
-  const { t }      = useTranslation()
   const navigate   = useNavigate()
   const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
   const shipping   = 0

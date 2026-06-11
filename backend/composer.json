@@ -9,6 +9,7 @@
         "php": "^8.3",
         "anthropic-ai/sdk": "^0.27.0",
         "filament/filament": "^4.0",
+        "intervention/image-laravel": "^1.5",
         "laravel/framework": "^13.8",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",

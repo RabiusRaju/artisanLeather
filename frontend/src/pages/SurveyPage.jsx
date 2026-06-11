@@ -55,7 +55,7 @@ function MultipleChoice({ question, value = [], onChange }) {
   )
 }
 
-function Rating({ question, value, onChange }) {
+function Rating({ value, onChange }) {
   const [hovered, setHovered] = useState(null)
   const max = 5
   return (
@@ -74,7 +74,7 @@ function Rating({ question, value, onChange }) {
   )
 }
 
-function NPS({ question, value, onChange }) {
+function NPS({ value, onChange }) {
   const [hovered, setHovered] = useState(null)
   return (
     <div>
@@ -99,7 +99,7 @@ function NPS({ question, value, onChange }) {
   )
 }
 
-function YesNo({ question, value, onChange }) {
+function YesNo({ value, onChange }) {
   return (
     <div className="flex gap-4">
       {['Yes', 'No'].map(opt => (
@@ -330,6 +330,10 @@ export default function SurveyPage() {
                     )}
                   </div>
                 </div>
+                {current.image && (
+                  <img src={current.image} alt={current.question}
+                    className="ml-12 mt-4 max-h-72 w-auto rounded-lg border border-white/10 object-cover" />
+                )}
               </div>
 
               <div className="ml-12">

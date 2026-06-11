@@ -8,6 +8,7 @@ import { FaWhatsapp, FaMoneyBillWave, FaUniversity } from 'react-icons/fa'
 import { useCart }     from '../context/CartContext'
 import { useCurrency } from '../context/CurrencyContext'
 import { useAuth }     from '../context/AuthContext'
+import { useToast }    from '../context/ToastContext'
 import { placeOrder }  from '../services/api'
 
 const omanGovernorates = [
@@ -58,6 +59,7 @@ export default function CheckoutPage() {
   const { items, subtotal, clearCart, coupon, discount, total: cartTotal } = useCart()
   const { format, currency } = useCurrency()
   const { user, getLastOrder } = useAuth()
+  const { toast } = useToast()
   const navigate   = useNavigate()
   const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
   const total      = cartTotal
@@ -161,7 +163,7 @@ export default function CheckoutPage() {
       })
     } catch (err) {
       console.error('Order failed:', err)
-      alert('Something went wrong. Please try again or order via WhatsApp.')
+      toast('Something went wrong. Please try again or order via WhatsApp.', { type: 'error' })
       setLoading(false)
     }
   }

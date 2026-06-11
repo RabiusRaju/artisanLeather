@@ -6,6 +6,7 @@ import { useSettings } from '../hooks/useSettings'
 //   text-white → dark brown and border-white → dark border everywhere.
 //   Sections that must stay dark (footer, etc.) get class "dark-section".
 
+// eslint-disable-next-line react-refresh/only-export-components -- theme data colocated with provider
 export const themes = [
   {
     id:      'warm-leather',
@@ -180,4 +181,5 @@ export function ThemeProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook colocated with its provider
 export const useTheme = () => useContext(ThemeContext)
