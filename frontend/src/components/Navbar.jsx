@@ -3,12 +3,13 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { HiMenu, HiX, HiShoppingBag, HiChevronDown, HiUser } from 'react-icons/hi'
+import { HiMenu, HiX, HiShoppingBag, HiChevronDown, HiUser, HiHeart } from 'react-icons/hi'
 import { FaWhatsapp } from 'react-icons/fa'
 import { useCart }     from '../context/CartContext'
 import { useCurrency } from '../context/CurrencyContext'
 import { useAuth }     from '../context/AuthContext'
 import { useTheme }    from '../context/ThemeContext'
+import { useWishlist } from '../context/WishlistContext'
 
 export default function Navbar() {
   const [scrolled,    setScrolled]    = useState(false)
@@ -21,6 +22,7 @@ export default function Navbar() {
   const { totalItems }              = useCart()
   const { currency, currencies, setCurrency } = useCurrency()
   const { user }                    = useAuth()
+  const { productIds: wishlistIds } = useWishlist()
   const { theme }                   = useTheme()
   const isLight                     = theme?.isLight
   const langRef = useRef(null)
@@ -184,6 +186,16 @@ export default function Navbar() {
               className="hidden md:flex items-center gap-2 border border-gold/40 text-gold px-4 py-2 text-xs tracking-widest uppercase hover:bg-gold hover:text-dark transition-all duration-300">
               <FaWhatsapp size={13} /> {t('nav.whatsapp')}
             </a>
+
+            {/* Wishlist */}
+            <Link to="/wishlist" className="relative text-white/50 hover:text-gold transition-colors duration-300 p-1" title={t('nav.wishlist')}>
+              <HiHeart size={20} />
+              {wishlistIds.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gold text-dark text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {wishlistIds.length > 9 ? '9+' : wishlistIds.length}
+                </span>
+              )}
+            </Link>
 
             {/* Account */}
             <Link to={user ? '/account' : '/login'}

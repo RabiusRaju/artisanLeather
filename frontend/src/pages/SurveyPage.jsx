@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import SEO from '../components/SEO'
 import { fetchSurvey, submitSurvey } from '../services/api'
 
@@ -158,6 +159,8 @@ function QuestionInput({ question, value, onChange }) {
 // ── Main Survey Page ──────────────────────────────────────────────────────────
 export default function SurveyPage() {
   const { slug }    = useParams()
+  const { i18n }    = useTranslation()
+  const isAr        = i18n.language?.startsWith('ar')
   const [survey,    setSurvey]    = useState(null)
   const [loading,   setLoading]   = useState(true)
   const [error,     setError]     = useState(null)
@@ -202,10 +205,19 @@ export default function SurveyPage() {
     </div>
   )
 
-  const questions = survey.questions || []
-  const total     = questions.length
-  const current   = questions[step]
-  const progress  = total > 0 ? Math.round(((step) / total) * 100) : 0
+  const questions  = survey.questions || []
+  const total      = questions.length
+  const progress   = total > 0 ? Math.round(((step) / total) * 100) : 0
+
+  const surveyTitle   = (isAr && survey.title_ar)   ? survey.title_ar   : survey.title
+  const surveyDesc    = (isAr && survey.description_ar) ? survey.description_ar : survey.description
+  const thankYouMsg   = (isAr && survey.thank_you_message_ar) ? survey.thank_you_message_ar : survey.thank_you_message
+
+  const current = questions[step] && {
+    ...questions[step],
+    question: (isAr && questions[step].question_ar) ? questions[step].question_ar : questions[step].question,
+    options:  (isAr && questions[step].options_ar?.length) ? questions[step].options_ar : questions[step].options,
+  }
 
   const setAnswer = (qId, val) => setAnswers(a => ({ ...a, [qId]: val }))
 
@@ -243,7 +255,7 @@ export default function SurveyPage() {
         className="text-center max-w-lg">
         <div className="text-6xl mb-6">🙏</div>
         <h1 className="font-serif text-4xl text-white font-light mb-4">Thank You!</h1>
-        <p className="text-white/50 leading-relaxed mb-8">{survey.thank_you_message}</p>
+        <p className="text-white/50 leading-relaxed mb-8">{thankYouMsg}</p>
         {survey.redirect_url ? (
           <a href={survey.redirect_url} className="inline-block px-10 py-4 bg-gold text-dark text-[10px] tracking-[0.35em] uppercase font-bold hover:bg-amber-400 transition-colors duration-300">
             Continue →
@@ -259,7 +271,7 @@ export default function SurveyPage() {
 
   return (
     <div className="min-h-screen bg-dark pb-24">
-      <SEO title={`${survey.title} | Artisan Leather`} description={survey.description || ''} url={`/survey/${slug}`} noIndex />
+      <SEO title={`${surveyTitle} | Artisan Leather`} description={surveyDesc || ''} url={`/survey/${slug}`} noIndex />
 
       {/* Header */}
       <div className="relative pt-32 pb-10 px-6 lg:px-12 border-b border-gold/10 bg-gradient-to-b from-dark-100 to-dark">
@@ -270,8 +282,8 @@ export default function SurveyPage() {
             <span className="text-gold/60">Survey</span>
           </nav>
           <p className="text-gold/60 tracking-[0.4em] uppercase text-[10px] mb-3">Artisan Leather</p>
-          <h1 className="font-serif text-3xl md:text-4xl text-white font-light mb-3">{survey.title}</h1>
-          {survey.description && <p className="text-white/40 text-sm leading-relaxed">{survey.description}</p>}
+          <h1 className="font-serif text-3xl md:text-4xl text-white font-light mb-3">{surveyTitle}</h1>
+          {surveyDesc && <p className="text-white/40 text-sm leading-relaxed">{surveyDesc}</p>}
         </div>
       </div>
 

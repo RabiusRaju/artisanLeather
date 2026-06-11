@@ -6,11 +6,14 @@ use App\Enums\NavigationGroupEnum;
 use App\Models\Setting;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -76,50 +79,70 @@ class AboutPageSettings extends Page implements HasSchemas
 
                                     // Hero
                                     $set('about.hero.eyebrow',         $data['hero_eyebrow']         ?? '');
+                                    $set('about.hero.eyebrow_ar',      $data['hero_eyebrow_ar']      ?? '');
                                     $set('about.hero.headline',        $data['hero_headline']        ?? '');
+                                    $set('about.hero.headline_ar',     $data['hero_headline_ar']     ?? '');
                                     $set('about.hero.headline_accent', $data['hero_headline_accent'] ?? '');
+                                    $set('about.hero.headline_accent_ar', $data['hero_headline_accent_ar'] ?? '');
                                     $set('about.hero.subtitle',        $data['hero_subtitle']        ?? '');
+                                    $set('about.hero.subtitle_ar',     $data['hero_subtitle_ar']     ?? '');
 
                                     // Story
                                     $set('about.story.headline',        $data['story_headline']        ?? '');
+                                    $set('about.story.headline_ar',     $data['story_headline_ar']     ?? '');
                                     $set('about.story.headline_accent', $data['story_headline_accent'] ?? '');
+                                    $set('about.story.headline_accent_ar', $data['story_headline_accent_ar'] ?? '');
                                     $set('about.story.years',           $data['story_years']           ?? '');
                                     $set('about.story.p1',              $data['story_p1']              ?? '');
+                                    $set('about.story.p1_ar',           $data['story_p1_ar']           ?? '');
                                     $set('about.story.p2',              $data['story_p2']              ?? '');
+                                    $set('about.story.p2_ar',           $data['story_p2_ar']           ?? '');
                                     $set('about.story.p3',              $data['story_p3']              ?? '');
+                                    $set('about.story.p3_ar',           $data['story_p3_ar']           ?? '');
 
                                     // Craft Steps
                                     for ($i = 1; $i <= 4; $i++) {
-                                        $set("about.craft.{$i}.num",   $data["craft_{$i}_num"]   ?? "0{$i}");
-                                        $set("about.craft.{$i}.title", $data["craft_{$i}_title"] ?? '');
-                                        $set("about.craft.{$i}.body",  $data["craft_{$i}_body"]  ?? '');
+                                        $set("about.craft.{$i}.num",      $data["craft_{$i}_num"]      ?? "0{$i}");
+                                        $set("about.craft.{$i}.title",    $data["craft_{$i}_title"]    ?? '');
+                                        $set("about.craft.{$i}.title_ar", $data["craft_{$i}_title_ar"] ?? '');
+                                        $set("about.craft.{$i}.body",     $data["craft_{$i}_body"]     ?? '');
+                                        $set("about.craft.{$i}.body_ar",  $data["craft_{$i}_body_ar"]  ?? '');
                                     }
 
                                     // Materials
                                     for ($i = 1; $i <= 3; $i++) {
-                                        $set("about.material.{$i}.name",     $data["material_{$i}_name"]     ?? '');
-                                        $set("about.material.{$i}.subtitle", $data["material_{$i}_subtitle"] ?? '');
-                                        $set("about.material.{$i}.desc",     $data["material_{$i}_desc"]     ?? '');
+                                        $set("about.material.{$i}.name",        $data["material_{$i}_name"]        ?? '');
+                                        $set("about.material.{$i}.name_ar",     $data["material_{$i}_name_ar"]     ?? '');
+                                        $set("about.material.{$i}.subtitle",    $data["material_{$i}_subtitle"]    ?? '');
+                                        $set("about.material.{$i}.subtitle_ar", $data["material_{$i}_subtitle_ar"] ?? '');
+                                        $set("about.material.{$i}.desc",        $data["material_{$i}_desc"]        ?? '');
+                                        $set("about.material.{$i}.desc_ar",     $data["material_{$i}_desc_ar"]     ?? '');
                                     }
 
                                     // Values
                                     $numerals = ['I', 'II', 'III', 'IV'];
                                     for ($i = 1; $i <= 4; $i++) {
-                                        $set("about.value.{$i}.number", $data["value_{$i}_number"] ?? $numerals[$i - 1]);
-                                        $set("about.value.{$i}.title",  $data["value_{$i}_title"]  ?? '');
-                                        $set("about.value.{$i}.desc",   $data["value_{$i}_desc"]   ?? '');
+                                        $set("about.value.{$i}.number",  $data["value_{$i}_number"] ?? $numerals[$i - 1]);
+                                        $set("about.value.{$i}.title",    $data["value_{$i}_title"]    ?? '');
+                                        $set("about.value.{$i}.title_ar", $data["value_{$i}_title_ar"] ?? '');
+                                        $set("about.value.{$i}.desc",     $data["value_{$i}_desc"]     ?? '');
+                                        $set("about.value.{$i}.desc_ar",  $data["value_{$i}_desc_ar"]  ?? '');
                                     }
 
                                     // Timeline
                                     for ($i = 1; $i <= 5; $i++) {
-                                        $set("about.timeline.{$i}.year",  $data["timeline_{$i}_year"]  ?? '');
-                                        $set("about.timeline.{$i}.title", $data["timeline_{$i}_title"] ?? '');
-                                        $set("about.timeline.{$i}.desc",  $data["timeline_{$i}_desc"]  ?? '');
+                                        $set("about.timeline.{$i}.year",     $data["timeline_{$i}_year"]     ?? '');
+                                        $set("about.timeline.{$i}.title",    $data["timeline_{$i}_title"]    ?? '');
+                                        $set("about.timeline.{$i}.title_ar", $data["timeline_{$i}_title_ar"] ?? '');
+                                        $set("about.timeline.{$i}.desc",     $data["timeline_{$i}_desc"]     ?? '');
+                                        $set("about.timeline.{$i}.desc_ar",  $data["timeline_{$i}_desc_ar"]  ?? '');
                                     }
 
                                     // CTA
-                                    $set('about.cta.heading', $data['cta_heading'] ?? '');
-                                    $set('about.cta.text',    $data['cta_text']    ?? '');
+                                    $set('about.cta.heading',    $data['cta_heading']    ?? '');
+                                    $set('about.cta.heading_ar', $data['cta_heading_ar'] ?? '');
+                                    $set('about.cta.text',       $data['cta_text']       ?? '');
+                                    $set('about.cta.text_ar',    $data['cta_text_ar']    ?? '');
 
                                     Notification::make()
                                         ->title('✅ Claude generated your About page!')
@@ -129,8 +152,109 @@ class AboutPageSettings extends Page implements HasSchemas
                                     Notification::make()->title('Generation failed')->body($e->getMessage())->danger()->send();
                                 }
                             }),
+
+                        Action::make('generate_about_openai')
+                            ->label('Generate with OpenAI')
+                            ->icon('heroicon-o-cpu-chip')
+                            ->color('info')
+                            ->requiresConfirmation()
+                            ->modalHeading('Generate About Page Content with OpenAI (GPT-4o)')
+                            ->modalDescription('This will overwrite all About page sections (hero, story, craft steps, materials, values, timeline, CTA). You can still adjust before saving. Continue?')
+                            ->modalSubmitActionLabel('Yes, generate everything')
+                            ->action(function ($get, $set) {
+                                $apiKey = config('services.openai.key');
+                                if (blank($apiKey)) {
+                                    Notification::make()->title('OpenAI API key not set.')->warning()->send();
+                                    return;
+                                }
+                                $theme = trim($get('_ai_about_prompt') ?: 'General About page refresh for a premium leather goods brand in Muscat, Oman — heritage, craftsmanship, authenticity.');
+                                try {
+                                    $data = app(\App\Services\AiPostService::class)->generateAboutPageWithOpenAI($theme);
+
+                                    // Hero
+                                    $set('about.hero.eyebrow',         $data['hero_eyebrow']         ?? '');
+                                    $set('about.hero.eyebrow_ar',      $data['hero_eyebrow_ar']      ?? '');
+                                    $set('about.hero.headline',        $data['hero_headline']        ?? '');
+                                    $set('about.hero.headline_ar',     $data['hero_headline_ar']     ?? '');
+                                    $set('about.hero.headline_accent', $data['hero_headline_accent'] ?? '');
+                                    $set('about.hero.headline_accent_ar', $data['hero_headline_accent_ar'] ?? '');
+                                    $set('about.hero.subtitle',        $data['hero_subtitle']        ?? '');
+                                    $set('about.hero.subtitle_ar',     $data['hero_subtitle_ar']     ?? '');
+
+                                    // Story
+                                    $set('about.story.headline',        $data['story_headline']        ?? '');
+                                    $set('about.story.headline_ar',     $data['story_headline_ar']     ?? '');
+                                    $set('about.story.headline_accent', $data['story_headline_accent'] ?? '');
+                                    $set('about.story.headline_accent_ar', $data['story_headline_accent_ar'] ?? '');
+                                    $set('about.story.years',           $data['story_years']           ?? '');
+                                    $set('about.story.p1',              $data['story_p1']              ?? '');
+                                    $set('about.story.p1_ar',           $data['story_p1_ar']           ?? '');
+                                    $set('about.story.p2',              $data['story_p2']              ?? '');
+                                    $set('about.story.p2_ar',           $data['story_p2_ar']           ?? '');
+                                    $set('about.story.p3',              $data['story_p3']              ?? '');
+                                    $set('about.story.p3_ar',           $data['story_p3_ar']           ?? '');
+
+                                    // Craft Steps
+                                    for ($i = 1; $i <= 4; $i++) {
+                                        $set("about.craft.{$i}.num",      $data["craft_{$i}_num"]      ?? "0{$i}");
+                                        $set("about.craft.{$i}.title",    $data["craft_{$i}_title"]    ?? '');
+                                        $set("about.craft.{$i}.title_ar", $data["craft_{$i}_title_ar"] ?? '');
+                                        $set("about.craft.{$i}.body",     $data["craft_{$i}_body"]     ?? '');
+                                        $set("about.craft.{$i}.body_ar",  $data["craft_{$i}_body_ar"]  ?? '');
+                                    }
+
+                                    // Materials
+                                    for ($i = 1; $i <= 3; $i++) {
+                                        $set("about.material.{$i}.name",        $data["material_{$i}_name"]        ?? '');
+                                        $set("about.material.{$i}.name_ar",     $data["material_{$i}_name_ar"]     ?? '');
+                                        $set("about.material.{$i}.subtitle",    $data["material_{$i}_subtitle"]    ?? '');
+                                        $set("about.material.{$i}.subtitle_ar", $data["material_{$i}_subtitle_ar"] ?? '');
+                                        $set("about.material.{$i}.desc",        $data["material_{$i}_desc"]        ?? '');
+                                        $set("about.material.{$i}.desc_ar",     $data["material_{$i}_desc_ar"]     ?? '');
+                                    }
+
+                                    // Values
+                                    $numerals = ['I', 'II', 'III', 'IV'];
+                                    for ($i = 1; $i <= 4; $i++) {
+                                        $set("about.value.{$i}.number",  $data["value_{$i}_number"] ?? $numerals[$i - 1]);
+                                        $set("about.value.{$i}.title",    $data["value_{$i}_title"]    ?? '');
+                                        $set("about.value.{$i}.title_ar", $data["value_{$i}_title_ar"] ?? '');
+                                        $set("about.value.{$i}.desc",     $data["value_{$i}_desc"]     ?? '');
+                                        $set("about.value.{$i}.desc_ar",  $data["value_{$i}_desc_ar"]  ?? '');
+                                    }
+
+                                    // Timeline
+                                    for ($i = 1; $i <= 5; $i++) {
+                                        $set("about.timeline.{$i}.year",     $data["timeline_{$i}_year"]     ?? '');
+                                        $set("about.timeline.{$i}.title",    $data["timeline_{$i}_title"]    ?? '');
+                                        $set("about.timeline.{$i}.title_ar", $data["timeline_{$i}_title_ar"] ?? '');
+                                        $set("about.timeline.{$i}.desc",     $data["timeline_{$i}_desc"]     ?? '');
+                                        $set("about.timeline.{$i}.desc_ar",  $data["timeline_{$i}_desc_ar"]  ?? '');
+                                    }
+
+                                    // CTA
+                                    $set('about.cta.heading',    $data['cta_heading']    ?? '');
+                                    $set('about.cta.heading_ar', $data['cta_heading_ar'] ?? '');
+                                    $set('about.cta.text',       $data['cta_text']       ?? '');
+                                    $set('about.cta.text_ar',    $data['cta_text_ar']    ?? '');
+
+                                    Notification::make()
+                                        ->title('✅ OpenAI generated your About page!')
+                                        ->body('Review all sections, then click Save.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    Notification::make()->title('Generation failed')->body($e->getMessage())->danger()->send();
+                                }
+                            }),
                     ]),
                 ]),
+
+            Tabs::make('About Page Content')
+                ->columnSpanFull()
+                ->tabs([
+                    Tab::make('English')
+                        ->icon('heroicon-o-language')
+                        ->schema([
 
             // ── Hero ─────────────────────────────────────────────────────
             Section::make('🎯 Page Hero')
@@ -382,6 +506,103 @@ class AboutPageSettings extends Page implements HasSchemas
                         ->columnSpanFull(),
                 ]),
 
+                        ]),
+
+                    Tab::make('Arabic / عربي')
+                        ->icon('heroicon-o-language')
+                        ->schema([
+
+                            Section::make('🎯 Page Hero (Arabic)')
+                                ->columns(2)
+                                ->schema(self::arabicFields([
+                                    ['about.hero.eyebrow_ar', 'Eyebrow Text (Arabic)', 'text', null, true],
+                                    ['about.hero.headline_ar', 'Headline — Line 1 (Arabic)', 'text'],
+                                    ['about.hero.headline_accent_ar', 'Headline — Line 2 (Arabic)', 'text'],
+                                    ['about.hero.subtitle_ar', 'Subtitle (Arabic)', 'text', null, true],
+                                ])),
+
+                            Section::make('📖 Our Story (Arabic)')
+                                ->columns(2)
+                                ->schema(self::arabicFields([
+                                    ['about.story.headline_ar', 'Story Headline — Line 1 (Arabic)', 'text'],
+                                    ['about.story.headline_accent_ar', 'Story Headline — Line 2 (Arabic)', 'text'],
+                                    ['about.story.p1_ar', 'Paragraph 1 (Arabic)', 'textarea', 3, true],
+                                    ['about.story.p2_ar', 'Paragraph 2 (Arabic)', 'textarea', 3, true],
+                                    ['about.story.p3_ar', 'Paragraph 3 (Arabic)', 'textarea', 3, true],
+                                ])),
+
+                            Section::make('🔨 Craft Steps (Arabic)')
+                                ->columns(2)
+                                ->schema(self::arabicFields([
+                                    ['about.craft.1.title_ar', 'Step 1 — Title (Arabic)', 'text'],
+                                    ['about.craft.1.body_ar', 'Step 1 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.craft.2.title_ar', 'Step 2 — Title (Arabic)', 'text'],
+                                    ['about.craft.2.body_ar', 'Step 2 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.craft.3.title_ar', 'Step 3 — Title (Arabic)', 'text'],
+                                    ['about.craft.3.body_ar', 'Step 3 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.craft.4.title_ar', 'Step 4 — Title (Arabic)', 'text'],
+                                    ['about.craft.4.body_ar', 'Step 4 — Description (Arabic)', 'textarea', 2, true],
+                                ])),
+
+                            Section::make('🧵 Materials (Arabic)')
+                                ->columns(2)
+                                ->schema(self::arabicFields([
+                                    ['about.material.1.name_ar', 'Material 1 — Name (Arabic)', 'text'],
+                                    ['about.material.1.subtitle_ar', 'Material 1 — Subtitle (Arabic)', 'text'],
+                                    ['about.material.1.desc_ar', 'Material 1 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.material.2.name_ar', 'Material 2 — Name (Arabic)', 'text'],
+                                    ['about.material.2.subtitle_ar', 'Material 2 — Subtitle (Arabic)', 'text'],
+                                    ['about.material.2.desc_ar', 'Material 2 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.material.3.name_ar', 'Material 3 — Name (Arabic)', 'text'],
+                                    ['about.material.3.subtitle_ar', 'Material 3 — Subtitle (Arabic)', 'text'],
+                                    ['about.material.3.desc_ar', 'Material 3 — Description (Arabic)', 'textarea', 2, true],
+                                ])),
+
+                            Section::make('⚖️ Our Values (Arabic)')
+                                ->columns(2)
+                                ->schema(self::arabicFields([
+                                    ['about.value.1.title_ar', 'Value 1 — Title (Arabic)', 'text'],
+                                    ['about.value.1.desc_ar', 'Value 1 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.value.2.title_ar', 'Value 2 — Title (Arabic)', 'text'],
+                                    ['about.value.2.desc_ar', 'Value 2 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.value.3.title_ar', 'Value 3 — Title (Arabic)', 'text'],
+                                    ['about.value.3.desc_ar', 'Value 3 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.value.4.title_ar', 'Value 4 — Title (Arabic)', 'text'],
+                                    ['about.value.4.desc_ar', 'Value 4 — Description (Arabic)', 'textarea', 2, true],
+                                ])),
+
+                            Section::make('📅 Our Journey (Arabic)')
+                                ->columns(2)
+                                ->schema(self::arabicFields([
+                                    ['about.timeline.1.title_ar', 'Event 1 — Title (Arabic)', 'text'],
+                                    ['about.timeline.1.desc_ar', 'Event 1 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.timeline.2.title_ar', 'Event 2 — Title (Arabic)', 'text'],
+                                    ['about.timeline.2.desc_ar', 'Event 2 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.timeline.3.title_ar', 'Event 3 — Title (Arabic)', 'text'],
+                                    ['about.timeline.3.desc_ar', 'Event 3 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.timeline.4.title_ar', 'Event 4 — Title (Arabic)', 'text'],
+                                    ['about.timeline.4.desc_ar', 'Event 4 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.timeline.5.title_ar', 'Event 5 — Title (Arabic)', 'text'],
+                                    ['about.timeline.5.desc_ar', 'Event 5 — Description (Arabic)', 'textarea', 2, true],
+                                ])),
+
+                            Section::make('💬 Call to Action (Arabic)')
+                                ->columns(1)
+                                ->schema(self::arabicFields([
+                                    ['about.cta.heading_ar', 'Heading (Arabic)', 'text'],
+                                    ['about.cta.text_ar', 'Body Text (Arabic)', 'textarea', 3, true],
+                                ])),
+
+                            Section::make('🔍 SEO (Arabic)')
+                                ->description('Custom Arabic meta title and description for the About page.')
+                                ->schema(self::arabicFields([
+                                    ['about.seo.meta_title_ar', 'SEO Title (Arabic)', 'text', null, true],
+                                    ['about.seo.meta_description_ar', 'SEO Description (Arabic)', 'textarea', 3, true],
+                                ])),
+
+                        ]),
+                ]),
+
             // ── Preview ───────────────────────────────────────────────────
             Section::make('🌐 Website Preview')
                 ->description('Live preview of the About page hero, story, values and CTA as visitors see them.')
@@ -470,19 +691,24 @@ class AboutPageSettings extends Page implements HasSchemas
                                     Notification::make()->title('Anthropic API key not set.')->warning()->send();
                                     return;
                                 }
-                                $headline = trim(($get('about.hero.headline') ?? '') . ' ' . ($get('about.hero.headline_accent') ?? ''));
-                                $subtitle = $get('about.hero.subtitle')  ?? '';
-                                $p1       = $get('about.story.p1')       ?? '';
-                                $p2       = $get('about.story.p2')       ?? '';
-                                $cta      = $get('about.cta.heading')    ?? '';
-                                $context  = "Page: About Us\nHeadline: {$headline}\nSubtitle: {$subtitle}\nBrand story: {$p1} {$p2}\nCTA heading: {$cta}";
+                                $headline   = trim(($get('about.hero.headline') ?? '') . ' ' . ($get('about.hero.headline_accent') ?? ''));
+                                $subtitle   = $get('about.hero.subtitle')  ?? '';
+                                $p1         = $get('about.story.p1')       ?? '';
+                                $p2         = $get('about.story.p2')       ?? '';
+                                $cta        = $get('about.cta.heading')    ?? '';
+                                $headlineAr = trim(($get('about.hero.headline_ar') ?? '') . ' ' . ($get('about.hero.headline_accent_ar') ?? ''));
+                                $subtitleAr = $get('about.hero.subtitle_ar') ?? '';
+                                $p1Ar       = $get('about.story.p1_ar')      ?? '';
+                                $p2Ar       = $get('about.story.p2_ar')      ?? '';
+                                $ctaAr      = $get('about.cta.heading_ar')   ?? '';
+                                $context    = "Page: About Us\n[English]\nHeadline: {$headline}\nSubtitle: {$subtitle}\nBrand story: {$p1} {$p2}\nCTA heading: {$cta}\n\n[Arabic]\nHeadline: {$headlineAr}\nSubtitle: {$subtitleAr}\nBrand story: {$p1Ar} {$p2Ar}\nCTA heading: {$ctaAr}";
                                 try {
                                     $client   = new AnthropicClient(apiKey: $apiKey);
                                     $response = $client->messages->create(
                                         model: 'claude-opus-4-8',
                                         maxTokens: 600,
                                         system: 'You are an SEO expert for Artisan Leather, a premium leather goods brand in Muscat, Oman targeting GCC shoppers. Return only valid JSON, no markdown.',
-                                        messages: [['role' => 'user', 'content' => "Analyse this About page content for SEO and return JSON with exactly two keys:\n\"seo_score\" (integer 0-100) and \"seo_notes\" (string: 3-5 actionable tips, each on its own line starting with a dash).\n\n{$context}"]],
+                                        messages: [['role' => 'user', 'content' => "Analyse this About page content (both English and Arabic versions) for SEO and return JSON with exactly two keys:\n\"seo_score\" (integer 0-100) and \"seo_notes\" (string: 3-5 actionable tips covering both languages, each on its own line starting with a dash).\n\n{$context}"]],
                                     );
                                     $text = '';
                                     foreach ($response->content as $block) {
@@ -537,28 +763,75 @@ class AboutPageSettings extends Page implements HasSchemas
                 ->schema([
                     Textarea::make('_competition_json')->dehydrated(false)->hidden(),
 
+                    Select::make('_competition_country')
+                        ->label('Country')
+                        ->dehydrated(false)
+                        ->default('all')
+                        ->options(self::competitionCountryOptions()),
+
+                    Select::make('_competition_lang')
+                        ->label('Language')
+                        ->dehydrated(false)
+                        ->default('all')
+                        ->options(self::competitionLanguageOptions()),
+
                     \Filament\Schemas\Components\Actions::make([
                         Action::make('research_about_competition')
                             ->label('Research Competition')
                             ->icon('heroicon-o-magnifying-glass')
                             ->color('gray')
                             ->action(function ($get, $set) {
-                                $headline = trim(($get('about.hero.headline') ?? '') . ' ' . ($get('about.hero.headline_accent') ?? ''));
-                                $query    = $headline ?: 'artisan leather brand about us Oman';
+                                $headline   = trim(($get('about.hero.headline') ?? '') . ' ' . ($get('about.hero.headline_accent') ?? ''));
+                                $headlineAr = trim(($get('about.hero.headline_ar') ?? '') . ' ' . ($get('about.hero.headline_accent_ar') ?? ''));
+                                $query      = $headline ?: 'artisan leather brand about us Oman';
+                                $queryAr    = $headlineAr ?: $query;
                                 try {
                                     $flat = Setting::pluck('value', 'key')->toArray();
-                                    $key  = $flat['seo.google_cse_key'] ?? config('services.google_cse.key');
-                                    $cx   = $flat['seo.google_cse_id']  ?? config('services.google_cse.cx');
-                                    if (blank($key) || blank($cx)) {
-                                        Notification::make()->title('Google CSE not configured.')->body('Add API Key and Engine ID in Business Settings → SEO & Analytics.')->warning()->send();
+                                    $key  = $flat['seo.serper_api_key'] ?? config('services.serper.key');
+                                    if (blank($key)) {
+                                        Notification::make()->title('Serper.dev not configured.')->body('Add API Key in Business Settings → SEO & Analytics.')->warning()->send();
                                         return;
                                     }
-                                    $response = Http::timeout(10)->get('https://www.googleapis.com/customsearch/v1', ['key' => $key, 'cx' => $cx, 'q' => $query, 'num' => 5]);
-                                    $items = $response->successful() ? $response->json('items', []) : [];
+                                    $markets = self::competitionMarkets();
+                                    $countryFilter = $get('_competition_country') ?? 'all';
+                                    if ($countryFilter !== 'all' && isset($markets[$countryFilter])) {
+                                        $markets = [$countryFilter => $markets[$countryFilter]];
+                                    }
+                                    $languages = ['en' => 'EN', 'ar' => 'AR'];
+                                    $langFilter = $get('_competition_lang') ?? 'all';
+                                    if ($langFilter !== 'all' && isset($languages[$langFilter])) {
+                                        $languages = [$langFilter => $languages[$langFilter]];
+                                    }
+                                    $candidates = [];
+                                    foreach ($markets as $gl => $market) {
+                                        foreach ($languages as $hl => $langLabel) {
+                                            $q = $hl === 'ar' ? $queryAr : $query;
+                                            $response = Http::timeout(10)
+                                                ->withHeaders(['X-API-KEY' => $key, 'Content-Type' => 'application/json'])
+                                                ->post('https://google.serper.dev/search', [
+                                                    'q' => $q, 'num' => 3, 'gl' => $gl, 'hl' => $hl, 'location' => $market['location'],
+                                                ]);
+                                            if (!$response->successful()) {
+                                                continue;
+                                            }
+                                            foreach ($response->json('organic', []) as $item) {
+                                                $url = $item['link'] ?? '';
+                                                $candidates[] = ['title' => $item['title'] ?? '', 'url' => $url, 'domain' => parse_url($url, PHP_URL_HOST) ?: $url, 'snippet' => $item['snippet'] ?? '', 'market' => $market['label'] . ' · ' . $langLabel];
+                                            }
+                                        }
+                                    }
+                                    // Dedupe by domain so the same site doesn't repeat across markets
+                                    $seenDomains = [];
                                     $results = [];
-                                    foreach ($items as $item) {
-                                        $url = $item['link'] ?? '';
-                                        $results[] = ['title' => $item['title'] ?? '', 'url' => $url, 'domain' => parse_url($url, PHP_URL_HOST) ?: $url, 'snippet' => $item['snippet'] ?? ''];
+                                    foreach ($candidates as $candidate) {
+                                        if (in_array($candidate['domain'], $seenDomains, true)) {
+                                            continue;
+                                        }
+                                        $seenDomains[] = $candidate['domain'];
+                                        $results[] = $candidate;
+                                        if (count($results) >= 12) {
+                                            break;
+                                        }
                                     }
                                     $set('_competition_json', json_encode($results));
                                     if (empty($results)) {
@@ -585,7 +858,7 @@ class AboutPageSettings extends Page implements HasSchemas
                             foreach ($items as $i => $item) {
                                 $pos = $i + 1;
                                 $cards .= '<div style="padding:12px 14px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;">
-                                    <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">#' . $pos . ' &nbsp;·&nbsp; ' . e($item['domain'] ?? '') . '</div>
+                                    <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">#' . $pos . ' &nbsp;·&nbsp; ' . e($item['market'] ?? '') . ' &nbsp;·&nbsp; ' . e($item['domain'] ?? '') . '</div>
                                     <a href="' . e($item['url'] ?? '') . '" target="_blank" rel="noopener" style="font-size:15px;color:#1a0dab;text-decoration:none;font-weight:500;line-height:1.3;">' . e($item['title'] ?? '') . '</a>
                                     <div style="font-size:13px;color:#545454;margin-top:5px;line-height:1.5;">' . e($item['snippet'] ?? '') . '</div>
                                 </div>';
@@ -596,6 +869,55 @@ class AboutPageSettings extends Page implements HasSchemas
                 ]),
 
         ])->statePath('data');
+    }
+
+    protected static function arabicFields(array $specs): array
+    {
+        $fields = [];
+        foreach ($specs as $spec) {
+            [$path, $label, $type] = $spec;
+            $rows           = $spec[3] ?? 3;
+            $columnSpanFull = $spec[4] ?? false;
+
+            $field = $type === 'textarea'
+                ? Textarea::make($path)->rows($rows)
+                : TextInput::make($path);
+
+            $field = $field->label($label)->extraInputAttributes(['dir' => 'rtl']);
+
+            if ($columnSpanFull) {
+                $field = $field->columnSpanFull();
+            }
+
+            $fields[] = $field;
+        }
+        return $fields;
+    }
+
+    protected static function competitionMarkets(): array
+    {
+        return [
+            'om' => ['label' => '🇴🇲 Oman',         'location' => 'Muscat, Oman'],
+            'ae' => ['label' => '🇦🇪 UAE',          'location' => 'Dubai, United Arab Emirates'],
+            'sa' => ['label' => '🇸🇦 Saudi Arabia', 'location' => 'Riyadh, Saudi Arabia'],
+            'qa' => ['label' => '🇶🇦 Qatar',        'location' => 'Doha, Qatar'],
+            'kw' => ['label' => '🇰🇼 Kuwait',       'location' => 'Kuwait City, Kuwait'],
+            'bh' => ['label' => '🇧🇭 Bahrain',      'location' => 'Manama, Bahrain'],
+        ];
+    }
+
+    protected static function competitionCountryOptions(): array
+    {
+        return ['all' => '🌍 All GCC Countries'] + array_map(fn($m) => $m['label'], self::competitionMarkets());
+    }
+
+    protected static function competitionLanguageOptions(): array
+    {
+        return [
+            'all' => 'English + Arabic',
+            'en'  => 'English only',
+            'ar'  => 'Arabic only',
+        ];
     }
 
     protected function getHeaderActions(): array

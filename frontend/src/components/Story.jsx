@@ -1,8 +1,10 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useInView } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 export default function Story() {
+  const { t } = useTranslation()
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
@@ -39,7 +41,7 @@ export default function Story() {
             >
               <div className="font-serif text-5xl text-gradient-gold">15+</div>
               <div className="text-white/40 text-[10px] tracking-[0.3em] uppercase mt-1">
-                Years of Craft
+                {t('home.story.yearsLabel')}
               </div>
             </motion.div>
 
@@ -53,28 +55,24 @@ export default function Story() {
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.9, delay: 0.2 }}
           >
-            <p className="text-gold/70 tracking-[0.5em] uppercase text-[10px] mb-6">Our Story</p>
+            <p className="text-gold/70 tracking-[0.5em] uppercase text-[10px] mb-6">{t('home.story.eyebrow')}</p>
             <h2 className="font-serif text-4xl md:text-5xl text-white font-light leading-tight mb-8">
-              Crafted with Passion,
+              {t('home.story.title1')}
               <br />
-              <span className="italic text-gradient-gold">Built to Last</span>
+              <span className="italic text-gradient-gold">{t('home.story.title2')}</span>
             </h2>
             <div className="w-12 h-px bg-gold mb-8" />
             <p className="text-white/55 leading-relaxed mb-6 text-lg font-light">
-              At Artisan Leather, every piece begins with a single vision — to create
-              something that transcends the ordinary. Founded in the heart of Oman,
-              we source only the finest full-grain leathers from around the world.
+              {t('home.story.p1')}
             </p>
             <p className="text-white/40 leading-relaxed mb-12 font-light">
-              Each stitch is placed by hand. Each edge is burnished to perfection.
-              We believe that luxury is not just in the material — it is in the mastery
-              of those who shape it.
+              {t('home.story.p2')}
             </p>
             <Link
               to="/about"
               className="inline-flex items-center gap-4 text-gold text-xs tracking-[0.3em] uppercase group"
             >
-              <span>Discover Our Heritage</span>
+              <span>{t('common.discoverHeritage')}</span>
               <span className="transition-all duration-300 group-hover:translate-x-2">→</span>
             </Link>
           </motion.div>

@@ -4,8 +4,11 @@ import SEO from '../components/SEO'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '../context/CurrencyContext'
+import { useWishlist } from '../context/WishlistContext'
+import { HiHeart } from 'react-icons/hi'
 import { useProducts }  from '../hooks/useProducts'
 import { useBrands }   from '../hooks/useBrands'
+import { useCategories } from '../hooks/useCategories'
 
 // ── Skeleton card ───────────────────────────────────────────────────────────
 function SkeletonCard() {
@@ -26,10 +29,17 @@ function ProductCard({ product, index }) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-60px' })
   const { format }   = useCurrency()
-  const { i18n }     = useTranslation()
+  const { t, i18n }  = useTranslation()
+  const { toggle: toggleWishlist, isInWishlist } = useWishlist()
   const isAr         = i18n.language === 'ar'
   const name         = isAr && product.name_ar ? product.name_ar : product.name
   const firstImage   = product.images?.[0]?.url
+
+  const handleWishlistClick = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggleWishlist(product.id)
+  }
 
   return (
     <motion.div
@@ -55,7 +65,7 @@ function ProductCard({ product, index }) {
 
           {product.badge && (
             <div className="absolute top-4 left-4 z-10 bg-gold text-dark text-[9px] tracking-[0.25em] uppercase px-3 py-1 font-semibold">
-              {product.badge === 'bestseller' ? 'Bestseller' : 'New'}
+              {product.badge === 'bestseller' ? t('common.bestseller') : t('common.new')}
             </div>
           )}
           {product.brand && (
@@ -63,6 +73,14 @@ function ProductCard({ product, index }) {
               {product.brand.name}
             </div>
           )}
+
+          <button
+            onClick={handleWishlistClick}
+            aria-label="Toggle wishlist"
+            className="absolute bottom-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-dark/70 border border-white/10 backdrop-blur-sm hover:border-gold/40 transition-colors duration-300"
+          >
+            <HiHeart size={14} className={isInWishlist(product.id) ? 'text-gold' : 'text-white/50'} />
+          </button>
 
           <div className="absolute inset-5 border border-dashed border-white/[0.04] pointer-events-none" />
 
@@ -73,7 +91,7 @@ function ProductCard({ product, index }) {
 
           <div className="absolute inset-0 bg-dark/50 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-400">
             <span className="border border-gold text-gold px-6 py-2 text-[10px] tracking-[0.3em] uppercase">
-              View Details
+              {t('product.viewDetails')}
             </span>
             <div className="flex gap-2">
               {product.colors?.slice(0, 3).map((c) => (
@@ -108,8 +126,9 @@ export default function CollectionsPage() {
   const [sortBy,      setSortBy]      = useState('default')
   const [sortOpen,    setSortOpen]    = useState(false)
   const [brandFilter, setBrandFilter] = useState('')
-  const { t }    = useTranslation()
+  const { t } = useTranslation()
   const { brands } = useBrands()
+  const { categories } = useCategories()
 
   const sortOptions = [
     { id: 'default',    label: t('collections.featured') },
@@ -126,8 +145,9 @@ export default function CollectionsPage() {
 
   const { products, loading } = useProducts(apiParams)
 
+  const activeCategory = categories.find(c => c.slug === category)
   const categoryLabel = category
-    ? category.charAt(0).toUpperCase() + category.slice(1)
+    ? (activeCategory?.name || t(`collections.${category}`, { defaultValue: category.charAt(0).toUpperCase() + category.slice(1) }))
     : t('collections.allPieces')
 
   const seoTitle = category
@@ -153,7 +173,7 @@ export default function CollectionsPage() {
         <div className="relative max-w-7xl mx-auto text-center">
           <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-5">
-            Artisan Leather
+            {t('contact.eyebrow')}
           </motion.p>
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -177,10 +197,7 @@ export default function CollectionsPage() {
           <div className="flex flex-wrap gap-2">
             {[
               { id: 'all', label: t('collections.allPieces'), path: '/collections' },
-              { id: 'wallets',     label: t('collections.wallets'),     path: '/collections/wallets' },
-              { id: 'bags',        label: t('collections.bags'),        path: '/collections/bags' },
-              { id: 'belts',       label: t('collections.belts'),       path: '/collections/belts' },
-              { id: 'accessories', label: t('collections.accessories'), path: '/collections/accessories' },
+              ...categories.map(c => ({ id: c.slug, label: c.name, path: `/collections/${c.slug}` })),
             ].map((cat) => {
               const active = (category || 'all') === cat.id
               return (
@@ -202,7 +219,7 @@ export default function CollectionsPage() {
                 className={`px-4 py-1.5 text-[10px] tracking-[0.2em] uppercase transition-all duration-300 ${
                   !brandFilter ? 'bg-gold/20 text-gold border border-gold/40' : 'border border-white/10 text-white/40 hover:border-gold/30 hover:text-gold'
                 }`}>
-                All Collections
+                {t('collections.allBrands')}
               </button>
               {brands.map(b => (
                 <button key={b.id}
@@ -250,7 +267,7 @@ export default function CollectionsPage() {
           </div>
         ) : products.length === 0 ? (
           <div className="py-32 text-center">
-            <p className="text-white/25 text-sm tracking-widest uppercase">No pieces found</p>
+            <p className="text-white/25 text-sm tracking-widest uppercase">{t('collections.noPiecesFound')}</p>
           </div>
         ) : (
           <motion.div key={category + sortBy} initial={{ opacity: 0 }} animate={{ opacity: 1 }}

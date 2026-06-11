@@ -80,4 +80,24 @@ class Product extends Model
     {
         return $this->hasMany(ProductDetail::class)->orderBy('sort_order');
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->where('is_approved', true);
+    }
+
+    public function getAverageRatingAttribute(): float
+    {
+        return round((float) $this->approvedReviews()->avg('rating'), 1);
+    }
+
+    public function getReviewCountAttribute(): int
+    {
+        return $this->approvedReviews()->count();
+    }
 }

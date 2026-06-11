@@ -54,11 +54,11 @@ const inputCls = 'w-full bg-dark border border-white/10 focus:border-gold/50 tex
 const selectCls = inputCls + ' appearance-none cursor-pointer'
 
 export default function CheckoutPage() {
-  const { items, subtotal, clearCart } = useCart()
+  const { items, subtotal, clearCart, coupon, discount, total: cartTotal } = useCart()
   const { format, currency } = useCurrency()
   const navigate   = useNavigate()
   const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
-  const total      = subtotal
+  const total      = cartTotal
 
   const [payment, setPayment] = useState('cod')
   const [loading, setLoading] = useState(false)
@@ -120,6 +120,7 @@ export default function CheckoutPage() {
           quantity:     item.quantity,
           unit_price:   parseFloat(item.price),
         })),
+        coupon_code: coupon?.code || null,
       }
 
       const res = await placeOrder(payload)
@@ -359,6 +360,12 @@ export default function CheckoutPage() {
                     <span className="text-white/45">Subtotal</span>
                     <span className="text-white/70">{format(subtotal)}</span>
                   </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-white/45">Discount {coupon?.code ? `(${coupon.code})` : ''}</span>
+                      <span className="text-green-400">−{format(discount)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-white/45">Shipping</span>
                     <span className="text-gold text-[10px] tracking-wider uppercase">Free</span>

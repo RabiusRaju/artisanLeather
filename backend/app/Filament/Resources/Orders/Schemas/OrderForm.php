@@ -53,6 +53,13 @@ class OrderForm
                 TextInput::make('total_omr')
                     ->required()
                     ->numeric(),
+                TextInput::make('coupon_code')
+                    ->label('Coupon Code')
+                    ->disabled(),
+                TextInput::make('discount_amount')
+                    ->label('Discount (OMR)')
+                    ->numeric()
+                    ->disabled(),
                 Select::make('status')
                     ->options([
             'pending' => 'Pending',

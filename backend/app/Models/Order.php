@@ -12,12 +12,14 @@ class Order extends Model
         'governorate', 'city', 'address', 'notes',
         'payment_method', 'currency_code', 'currency_rate',
         'subtotal_omr', 'total_omr', 'status', 'admin_notes',
+        'coupon_code', 'discount_amount',
     ];
 
     protected $casts = [
-        'currency_rate' => 'decimal:6',
-        'subtotal_omr'  => 'decimal:3',
-        'total_omr'     => 'decimal:3',
+        'currency_rate'    => 'decimal:6',
+        'subtotal_omr'     => 'decimal:3',
+        'total_omr'        => 'decimal:3',
+        'discount_amount'  => 'decimal:3',
     ];
 
     public function items(): HasMany

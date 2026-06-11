@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Mail\OrderConfirmed;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -36,6 +37,7 @@ class OrderController extends Controller
             'items.*.color_hex'    => 'nullable|string',
             'items.*.quantity'     => 'required|integer|min:1|max:999',
             // unit_price is intentionally NOT validated from client — we use DB price below
+            'coupon_code'    => 'nullable|string|max:50',
         ]);
 
         return DB::transaction(function () use ($validated) {
@@ -63,6 +65,23 @@ class OrderController extends Controller
                 return (float) $products[$item['product_id']]->price * $item['quantity'];
             });
 
+            // Validate coupon and calculate discount — never trust client-submitted discount
+            $discountAmount = 0;
+            $couponCode = null;
+
+            if (! empty($validated['coupon_code'])) {
+                $coupon = Coupon::where('code', strtoupper(trim($validated['coupon_code'])))
+                    ->where('is_active', true)
+                    ->first();
+
+                if (! $coupon) {
+                    abort(422, 'Invalid or expired coupon code.');
+                }
+
+                $discountAmount = $coupon->calculateDiscount($subtotal);
+                $couponCode = $coupon->code;
+            }
+
             // Generate unique order number (retry on collision — C-5 partial fix)
             do {
                 $orderNumber = Order::generateOrderNumber();
@@ -82,7 +101,9 @@ class OrderController extends Controller
                 'currency_code' => $validated['currency_code'],
                 'currency_rate' => $validated['currency_rate'],
                 'subtotal_omr'  => round($subtotal, 3),
-                'total_omr'     => round($subtotal, 3),
+                'total_omr'     => round($subtotal - $discountAmount, 3),
+                'coupon_code'   => $couponCode,
+                'discount_amount' => round($discountAmount, 3),
                 'status'        => 'pending',
             ]);
 

@@ -15,6 +15,8 @@ class SettingsController extends Controller
             Setting::pluck('value', 'key')->toArray()
         );
 
+        $locale = strtolower(substr(request()->header('Accept-Language', 'en'), 0, 2));
+
         $safe = [
             // Business
             'business.name'                  => $settings['business.name']             ?? 'Artisan Leather',
@@ -22,7 +24,10 @@ class SettingsController extends Controller
             'business.email'                 => $settings['business.email']             ?? '',
             'business.phone'                 => $settings['business.phone']             ?? '',
             'business.whatsapp'              => $settings['business.whatsapp']          ?? '',
-            'business.address'               => $settings['business.address']           ?? '',
+            'business.address'               => $settings['business.address']           ?? ($locale === 'ar' ? 'مسقط، سلطنة عُمان' : 'Muscat, Sultanate of Oman'),
+            'business.address_2'             => $settings['business.address_2']         ?? '',
+            'business.whatsapp_hours'        => $settings['business.whatsapp_hours']    ?? '',
+            'business.email_response_time'   => $settings['business.email_response_time'] ?? '',
             'business.city'                  => $settings['business.city']              ?? 'Muscat',
 
             // Social
@@ -68,8 +73,12 @@ class SettingsController extends Controller
             'stats.4.label'                  => $settings['stats.4.label']              ?? 'Wide Delivery',
 
             // Footer
-            'footer.tagline'                 => $settings['footer.tagline']             ?? 'Premium handcrafted leather goods. Made in Oman. Delivered across the GCC.',
-            'footer.copyright'               => $settings['footer.copyright']           ?? '© 2025 Artisan Leather · artisanleatherom.com · All rights reserved',
+            'footer.tagline'                 => $settings['footer.tagline']             ?? ($locale === 'ar'
+                ? 'منتجات جلدية فاخرة مصنوعة يدوياً. صُنعت في عُمان. تُوصَّل إلى دول الخليج.'
+                : 'Premium handcrafted leather goods. Made in Oman. Delivered across the GCC.'),
+            'footer.copyright'               => $settings['footer.copyright']           ?? ($locale === 'ar'
+                ? '© 2025 آرتيزان ليذر · artisanleatherom.com · جميع الحقوق محفوظة'
+                : '© 2025 Artisan Leather · artisanleatherom.com · All rights reserved'),
 
             // About — Hero
             'about.hero.eyebrow'             => $settings['about.hero.eyebrow']         ?? 'Muscat · Oman · Est. 2009',
@@ -153,6 +162,14 @@ class SettingsController extends Controller
             'homepage.seo.meta_title'        => $settings['homepage.seo.meta_title']       ?? '',
             'homepage.seo.meta_description'  => $settings['homepage.seo.meta_description'] ?? '',
         ];
+
+        // Expose Arabic (_ar) counterparts for any whitelisted key that has one saved
+        foreach ($safe as $key => $value) {
+            $arKey = $key . '_ar';
+            if (array_key_exists($arKey, $settings)) {
+                $safe[$arKey] = $settings[$arKey];
+            }
+        }
 
         return response()->json(['data' => $safe]);
     }

@@ -1,0 +1,43 @@
+Artisan Leather — Go-Live Readiness Report
+Acting as senior dev + business analyst, here's my assessment across both backend (Laravel) and frontend (React/Vite). Overall: the product is functionally solid (~75-80% ready), but there are several must-fix items before launch and a few business decisions you need to make.
+
+🔴 CRITICAL — Must fix before going live
+#	Issue	Why it matters
+1	APP_DEBUG=true, APP_ENV=local, APP_URL=http://127.0.0.1:8000 in backend .env	Debug mode on a live site leaks stack traces, file paths, DB queries to anyone who triggers an error — a major security hole. Must set APP_DEBUG=false, APP_ENV=production, real domain URL.
+2	Mail driver is log	Order confirmation emails (to customer + you) currently just write to a log file — customers receive nothing. Must configure real SMTP (e.g., your hosting provider's SMTP, or a service like Brevo/SendGrid/Mailgun) before launch.
+3	Privacy Policy & Terms of Service pages don't exist	Footer links to /privacy and /terms but these routes 404. For an e-commerce site taking customer data and orders, this is both a legal requirement (especially GCC consumer protection rules) and a trust signal. Needs real content + pages.
+4	No 404 page / catch-all route	Any mistyped or removed URL shows a blank page instead of a friendly "page not found." Bad for SEO and UX.
+5	API keys exposed in .env (OpenAI key visible, Serper key)	Not a live-site bug per se, but make sure .env is in .gitignore and never committed/pushed publicly. If this repo has ever been pushed to a public GitHub repo with these keys, rotate them now.
+🟠 HIGH PRIORITY — Strongly recommended before/soon after launch
+#	Issue	Why it matters
+6	No online payment gateway — only COD, Bank Transfer, WhatsApp	This is the biggest business decision. For Oman/GCC, consider integrating Thawani (Omani gateway) or PayTabs (region-wide) for card payments. Many customers won't complete an order if they can't pay by card immediately. If COD/bank/WhatsApp is intentional for launch (common for soft-launches), that's fine — but flag it as a "Phase 2" item, not forgotten.
+7	Error handling uses browser alert()	Looks unprofessional and is jarring on mobile. Replace with in-app toast/notification components (you likely already have Framer Motion — a toast component is a small addition).
+8	No global React error boundary	If any single component throws, the whole app can go blank. A simple ErrorBoundary wrapping the app prevents a full white-screen crash.
+9	Database queue/cache (QUEUE_CONNECTION=database, CACHE_STORE=database) + emails sent synchronously	Fine for low order volume, but if an SMTP call hangs, it slows down the customer's checkout request. Recommend queuing emails (Laravel ShouldQueue) — even with the database driver, this decouples email sending from the order response.
+10	9 of 11 blog posts only just got Arabic translations via AI (just done in this session) — review for quality	AI-translated content should be proofread by a native Arabic speaker before public launch, especially for brand voice/terminology consistency.
+11	hreflang tags missing on product/collection/blog pages (only homepage has them)	Affects how Google indexes your Arabic vs English pages — important for SEO in the Oman/GCC market where Arabic search matters.
+12	Sitemap is static/hardcoded	Doesn't include actual products, blog posts, or category pages dynamically — search engines won't discover all your content.
+13	No automated tests beyond Laravel boilerplate	At minimum, add tests for: order placement (incl. stock deduction), checkout validation, contact form. This protects you from a future change accidentally breaking checkout.
+🟡 MEDIUM — Good to have, not blocking
+#	Item	Notes
+14	No coupon/discount/promo code system	Common for launch promotions ("10% off first order"). Worth considering if you plan marketing campaigns.
+15	No product reviews/ratings	Testimonials exist (curated by you), but customer-submitted reviews build trust and SEO (rich snippets).
+16	No wishlist/favorites	Nice for repeat-visit engagement, not essential for launch.
+17	No shipping zones/rates table — delivery cost appears manual/flat	If delivery cost varies by Oman region vs. GCC country, this should be modeled, not hardcoded.
+18	GA4 has no e-commerce events (add-to-cart, begin_checkout, purchase)	You'll get pageviews but won't see conversion funnels or revenue in Analytics — important for measuring marketing ROI from day one.
+19	Order History page has no "view details"/reorder	Minor UX gap for returning customers.
+20	No Redis for cache/queue	Not urgent at current scale; revisit if order volume grows or admin panel feels slow.
+✅ What's Already Solid
+Checkout flow: server-side price/stock validation, DB transactions, stock movement tracking — well built, no shortcuts.
+Auth: Sanctum-based customer accounts + guest checkout, properly separated from Filament admin auth.
+Rate limiting: sensible throttles already on orders, contact form, auth endpoints.
+i18n: English/Arabic fully in sync (you've now completed Home, About, Collections, Contact, Blog), RTL layout switching works.
+Filament admin: comprehensive — Orders, Customers, Products, Categories, Inventory, Finance/HR modules, FAQs, Testimonials, Blog with AI content generation.
+Mobile responsiveness: consistently applied across pages.
+SEO basics: meta tags, OG tags, JSON-LD organization schema, robots.txt, conditional analytics loading via back-office settings — all present.
+My Recommendation — Launch Sequence
+Before launch (non-negotiable): items 1–5 (env hardening, SMTP, legal pages, 404 page, key rotation check).
+Launch decision needed from you: item 6 — payment gateway. Decide if COD/Bank/WhatsApp-only is acceptable for a soft launch, or if you want to wait for Thawani/PayTabs integration (typically 1-2 weeks of work).
+Within first 2 weeks post-launch: items 7–13 (UX polish, SEO completeness, basic tests).
+Phase 2 (based on traction): items 14–20.
+Let me know which of these you'd like me to start on — happy to prioritize based on your launch timeline.

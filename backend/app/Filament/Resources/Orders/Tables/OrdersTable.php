@@ -42,6 +42,14 @@ class OrdersTable
                 TextColumn::make('total_omr')
                     ->numeric()
                     ->sortable(),
+                TextColumn::make('coupon_code')
+                    ->label('Coupon')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('discount_amount')
+                    ->label('Discount')
+                    ->numeric()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
                     ->badge(),
                 TextColumn::make('created_at')

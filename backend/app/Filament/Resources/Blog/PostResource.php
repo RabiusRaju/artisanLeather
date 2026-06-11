@@ -404,13 +404,26 @@ class PostResource extends Resource
                         ->schema([
                             Textarea::make('_competition_json')->dehydrated(false)->hidden(),
 
+                            Select::make('_competition_country')
+                                ->label('Country')
+                                ->dehydrated(false)
+                                ->default('all')
+                                ->options(self::competitionCountryOptions()),
+
+                            Select::make('_competition_lang')
+                                ->label('Language')
+                                ->dehydrated(false)
+                                ->default('all')
+                                ->options(self::competitionLanguageOptions()),
+
                             \Filament\Schemas\Components\Actions::make([
                                 Action::make('research_competition')
                                     ->label('Research Competition')
                                     ->icon('heroicon-o-magnifying-glass')
                                     ->color('gray')
                                     ->action(function ($get, $set) {
-                                        $query = trim($get('meta_title') ?: $get('title') ?: '');
+                                        $query   = trim($get('meta_title') ?: $get('title') ?: '');
+                                        $queryAr = trim($get('title_ar') ?: '') ?: $query;
                                         if (blank($query)) {
                                             \Filament\Notifications\Notification::make()
                                                 ->title('Enter a title first.')
@@ -419,7 +432,7 @@ class PostResource extends Resource
                                             return;
                                         }
                                         try {
-                                            $results = self::fetchCompetitionData($query);
+                                            $results = self::fetchCompetitionData($query, $get('_competition_country') ?? 'all', $get('_competition_lang') ?? 'all', $queryAr);
                                             $set('_competition_json', json_encode($results));
                                             if (empty($results)) {
                                                 \Filament\Notifications\Notification::make()
@@ -456,7 +469,7 @@ class PostResource extends Resource
                                         $snippet = e($item['snippet'] ?? '');
                                         $cards  .= '
                                             <div style="padding:12px 14px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;">
-                                                <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">#' . $pos . ' &nbsp;·&nbsp; ' . $domain . '</div>
+                                                <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">#' . $pos . ' &nbsp;·&nbsp; ' . e($item['market'] ?? '') . ' &nbsp;·&nbsp; ' . $domain . '</div>
                                                 <a href="' . $url . '" target="_blank" rel="noopener" style="font-size:15px;color:#1a0dab;text-decoration:none;font-weight:500;line-height:1.3;">' . $title . '</a>
                                                 <div style="font-size:13px;color:#545454;margin-top:5px;line-height:1.5;">' . $snippet . '</div>
                                             </div>';
@@ -594,37 +607,98 @@ class PostResource extends Resource
         $set('_seo_notes',       $data['seo_notes']         ?? '');
     }
 
-    private static function fetchCompetitionData(string $query): array
+    protected static function competitionMarkets(): array
+    {
+        return [
+            'om' => ['label' => '🇴🇲 Oman',         'location' => 'Muscat, Oman'],
+            'ae' => ['label' => '🇦🇪 UAE',          'location' => 'Dubai, United Arab Emirates'],
+            'sa' => ['label' => '🇸🇦 Saudi Arabia', 'location' => 'Riyadh, Saudi Arabia'],
+            'qa' => ['label' => '🇶🇦 Qatar',        'location' => 'Doha, Qatar'],
+            'kw' => ['label' => '🇰🇼 Kuwait',       'location' => 'Kuwait City, Kuwait'],
+            'bh' => ['label' => '🇧🇭 Bahrain',      'location' => 'Manama, Bahrain'],
+        ];
+    }
+
+    protected static function competitionCountryOptions(): array
+    {
+        return ['all' => '🌍 All GCC Countries'] + array_map(fn($m) => $m['label'], self::competitionMarkets());
+    }
+
+    protected static function competitionLanguageOptions(): array
+    {
+        return [
+            'all' => 'English + Arabic',
+            'en'  => 'English only',
+            'ar'  => 'Arabic only',
+        ];
+    }
+
+    private static function fetchCompetitionData(string $query, string $countryFilter = 'all', string $langFilter = 'all', string $queryAr = ''): array
     {
         $flat = Setting::pluck('value', 'key')->toArray();
-        $key  = $flat['seo.google_cse_key'] ?? config('services.google_cse.key');
-        $cx   = $flat['seo.google_cse_id']  ?? config('services.google_cse.cx');
+        $key  = $flat['seo.serper_api_key'] ?? config('services.serper.key');
 
-        if (blank($key) || blank($cx)) {
-            throw new \RuntimeException('Google Custom Search is not configured. Add your API Key and Engine ID in Business Settings → SEO & Analytics.');
+        if (blank($key)) {
+            throw new \RuntimeException('Serper.dev is not configured. Add your API Key in Business Settings → SEO & Analytics.');
         }
 
-        $response = Http::timeout(10)->get('https://www.googleapis.com/customsearch/v1', [
-            'key' => $key,
-            'cx'  => $cx,
-            'q'   => $query,
-            'num' => 5,
-        ]);
-
-        if (!$response->successful()) {
-            throw new \RuntimeException('Google search failed: ' . ($response->json('error.message') ?? $response->status()));
+        $markets = self::competitionMarkets();
+        if ($countryFilter !== 'all' && isset($markets[$countryFilter])) {
+            $markets = [$countryFilter => $markets[$countryFilter]];
         }
 
-        $results = [];
-        foreach ($response->json('items', []) as $item) {
-            $url       = $item['link'] ?? '';
-            $results[] = [
-                'title'   => $item['title']   ?? '',
-                'url'     => $url,
-                'domain'  => parse_url($url, PHP_URL_HOST) ?: $url,
-                'snippet' => $item['snippet'] ?? '',
-            ];
+        $languages = ['en' => 'EN', 'ar' => 'AR'];
+        if ($langFilter !== 'all' && isset($languages[$langFilter])) {
+            $languages = [$langFilter => $languages[$langFilter]];
         }
+
+        $candidates = [];
+        $lastError  = null;
+        foreach ($markets as $gl => $market) {
+            foreach ($languages as $hl => $langLabel) {
+                $q = ($hl === 'ar' && $queryAr !== '') ? $queryAr : $query;
+                $response = Http::timeout(10)
+                    ->withHeaders(['X-API-KEY' => $key, 'Content-Type' => 'application/json'])
+                    ->post('https://google.serper.dev/search', [
+                        'q' => $q, 'num' => 3, 'gl' => $gl, 'hl' => $hl, 'location' => $market['location'],
+                    ]);
+
+                if (!$response->successful()) {
+                    $lastError = $response->json('message') ?? $response->status();
+                    continue;
+                }
+
+                foreach ($response->json('organic', []) as $item) {
+                    $url          = $item['link'] ?? '';
+                    $candidates[] = [
+                        'title'   => $item['title']   ?? '',
+                        'url'     => $url,
+                        'domain'  => parse_url($url, PHP_URL_HOST) ?: $url,
+                        'snippet' => $item['snippet'] ?? '',
+                        'market'  => $market['label'] . ' · ' . $langLabel,
+                    ];
+                }
+            }
+        }
+
+        // Dedupe by domain so the same site doesn't repeat across markets — surfaces different competitors
+        $seenDomains = [];
+        $results     = [];
+        foreach ($candidates as $candidate) {
+            if (in_array($candidate['domain'], $seenDomains, true)) {
+                continue;
+            }
+            $seenDomains[] = $candidate['domain'];
+            $results[]     = $candidate;
+            if (count($results) >= 12) {
+                break;
+            }
+        }
+
+        if (empty($results) && $lastError) {
+            throw new \RuntimeException('Search failed: ' . $lastError);
+        }
+
         return $results;
     }
 

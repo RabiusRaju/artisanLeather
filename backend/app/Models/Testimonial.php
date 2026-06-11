@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Testimonial extends Model
 {
     protected $fillable = [
-        'quote', 'quote_ar', 'author', 'location', 'product', 'rating', 'is_active', 'sort_order',
+        'quote', 'quote_ar', 'author', 'author_ar', 'location', 'location_ar', 'product', 'product_ar', 'rating', 'is_active', 'sort_order',
     ];
 
     protected $casts = [

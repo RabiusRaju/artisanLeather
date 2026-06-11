@@ -2,8 +2,17 @@ import { Link } from 'react-router-dom'
 import { useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import SEO from '../components/SEO'
 import { usePost } from '../hooks/usePost'
+
+const CATEGORY_KEYS = {
+  '': 'blog.categoryAll',
+  'care-guide': 'blog.categoryCareGuides',
+  'style-tips': 'blog.categoryStyleTips',
+  'leather-knowledge': 'blog.categoryLeatherKnowledge',
+  'news': 'blog.categoryNews',
+}
 
 function Skeleton() {
   return (
@@ -20,6 +29,8 @@ function Skeleton() {
 }
 
 export default function BlogPostPage() {
+  const { t, i18n } = useTranslation()
+  const isAr = i18n.language?.startsWith('ar')
   const { slug } = useParams()
   const { post, loading, error } = usePost(slug)
 
@@ -29,15 +40,17 @@ export default function BlogPostPage() {
     <div className="min-h-screen bg-dark flex items-center justify-center">
       <div className="text-center">
         <p className="text-5xl mb-6">📄</p>
-        <p className="font-serif text-2xl text-white/40 font-light mb-6">Article not found</p>
-        <Link to="/blog" className="text-gold text-sm tracking-widest uppercase">← Back to Journal</Link>
+        <p className="font-serif text-2xl text-white/40 font-light mb-6">{t('blog.notFound')}</p>
+        <Link to="/blog" className="text-gold text-sm tracking-widest uppercase">← {t('blog.journal')}</Link>
       </div>
     </div>
   )
 
   const date = post.published_at
-    ? new Date(post.published_at).toLocaleDateString('en-OM', { day: 'numeric', month: 'long', year: 'numeric' })
+    ? new Date(post.published_at).toLocaleDateString(isAr ? 'ar-OM' : 'en-OM', { day: 'numeric', month: 'long', year: 'numeric' })
     : ''
+
+  const categoryLabel = CATEGORY_KEYS[post.category] ? t(CATEGORY_KEYS[post.category]) : post.category?.replace(/-/g, ' ')
 
   const seoTitle = post.meta_title || `${post.title} | Artisan Leather Blog`
   const seoDesc  = post.meta_description || post.excerpt || 'Read this article on the Artisan Leather blog.'
@@ -89,11 +102,11 @@ export default function BlogPostPage() {
 
           {/* Breadcrumb navigation */}
           <nav className="flex items-center gap-2 text-[10px] tracking-[0.3em] uppercase mb-8">
-            <Link to="/" className="text-white/25 hover:text-gold transition-colors duration-200">Home</Link>
+            <Link to="/" className="text-white/25 hover:text-gold transition-colors duration-200">{t('blog.home')}</Link>
             <span className="text-white/15">›</span>
-            <Link to="/blog" className="text-white/25 hover:text-gold transition-colors duration-200">Journal</Link>
+            <Link to="/blog" className="text-white/25 hover:text-gold transition-colors duration-200">{t('blog.journal')}</Link>
             <span className="text-white/15">›</span>
-            <span className="text-gold/60 truncate max-w-[200px]">{post.category?.replace(/-/g, ' ')}</span>
+            <span className="text-gold/60 truncate max-w-[200px]">{categoryLabel}</span>
           </nav>
 
           <motion.h1
@@ -107,7 +120,7 @@ export default function BlogPostPage() {
             <span>·</span>
             <span>{date}</span>
             <span>·</span>
-            <span>{post.read_time} min read</span>
+            <span>{post.read_time} {t('blog.minRead')}</span>
             {post.tags?.length > 0 && (
               <>
                 <span>·</span>
@@ -166,7 +179,7 @@ export default function BlogPostPage() {
             to="/blog"
             className="inline-flex items-center gap-3 text-white/40 hover:text-gold transition-colors duration-300 text-[10px] tracking-[0.3em] uppercase group">
             <span className="group-hover:-translate-x-1 transition-transform duration-300">←</span>
-            Back to the Journal
+            {t('blog.backToJournal')}
           </Link>
         </div>
       </article>

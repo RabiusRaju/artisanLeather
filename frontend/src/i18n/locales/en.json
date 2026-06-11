@@ -4,7 +4,8 @@
     "story": "Our Story",
     "contact": "Contact",
     "cart": "Cart",
-    "whatsapp": "WhatsApp"
+    "whatsapp": "WhatsApp",
+    "wishlist": "Wishlist"
   },
   "hero": {
     "location": "Muscat · Sultanate of Oman",
@@ -29,7 +30,14 @@
     "wallets": "Wallets",
     "bags": "Bags",
     "belts": "Belts",
-    "accessories": "Accessories"
+    "accessories": "Accessories",
+    "explore": "Explore",
+    "allBrands": "All Collections",
+    "noPiecesFound": "No pieces found",
+    "subtitleWallets": "Slim · Bifold · Card Holders",
+    "subtitleBags": "Totes · Briefcases · Clutches",
+    "subtitleBelts": "Classic · Formal · Casual",
+    "subtitleAccessories": "Keychains · Cardcase · More"
   },
   "product": {
     "addToCart": "Add to Cart",
@@ -146,6 +154,7 @@
     "phoneLabel": "Phone & WhatsApp",
     "emailLabel": "Email",
     "hours": "Working Hours",
+    "formEyebrow": "Send a Message",
     "formTitle": "We'd Love to Hear From You",
     "sendMessage": "Send Message",
     "name": "Full Name",
@@ -167,6 +176,7 @@
     "saturdayHours": "9:00 AM – 9:00 PM",
     "fridayHours": "2:00 PM – 9:00 PM",
     "followAlong": "Follow Along",
+    "fastestResponse": "Fastest Response",
     "topics": {
       "select": "Select a topic…",
       "product": "Product Enquiry",
@@ -191,5 +201,60 @@
     "discoverHeritage": "Discover Our Heritage",
     "startJourney": "Start Your Journey",
     "ownPiece": "Own a Piece of the Craft"
+  },
+  "home": {
+    "story": {
+      "eyebrow": "Our Story",
+      "title1": "Crafted with Passion,",
+      "title2": "Built to Last",
+      "p1": "At Artisan Leather, every piece begins with a single vision — to create something that transcends the ordinary. Founded in the heart of Oman, we source only the finest full-grain leathers from around the world.",
+      "p2": "Each stitch is placed by hand. Each edge is burnished to perfection. We believe that luxury is not just in the material — it is in the mastery of those who shape it.",
+      "yearsLabel": "Years of Craft"
+    },
+    "testimonials": {
+      "eyebrow": "Testimonials",
+      "title": "What Our Clients Say"
+    }
+  },
+  "blog": {
+    "home": "Home",
+    "journal": "Journal",
+    "eyebrow": "The Leather Journal",
+    "title": "Stories & Guides",
+    "subtitle": "Expert advice on leather care, styling and the craft behind every piece we make in Muscat, Oman.",
+    "articles": "Articles",
+    "categories": "Categories",
+    "expertAuthors": "Expert Authors",
+    "categoryAll": "All Articles",
+    "categoryCareGuides": "Care Guides",
+    "categoryStyleTips": "Style Tips",
+    "categoryLeatherKnowledge": "Leather Knowledge",
+    "categoryNews": "News",
+    "readArticle": "Read Article",
+    "minRead": "min read",
+    "filteredBy": "Filtered by",
+    "clear": "Clear",
+    "noArticles": "No articles in this category yet",
+    "viewAllArticles": "View all articles",
+    "article": "article",
+    "articlesCount": "articles",
+    "in": "in",
+    "ctaTitle": "Ready to explore our collection?",
+    "ctaSubtitle": "Every piece is handcrafted in Muscat, Oman.",
+    "notFound": "Article not found",
+    "backToJournal": "Back to the Journal"
+  },
+  "footer": {
+    "collectionsTitle": "Collections",
+    "companyTitle": "Company",
+    "contactTitle": "Contact",
+    "address": "Muscat, Sultanate of Oman",
+    "ourStory": "Our Story",
+    "craftsmanship": "Craftsmanship",
+    "sustainability": "Sustainability",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "tagline": "Premium handcrafted leather goods. Made in Oman. Delivered across the GCC.",
+    "copyright": "© 2025 Artisan Leather · artisanleatherom.com · All rights reserved"
   }
 }
