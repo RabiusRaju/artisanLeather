@@ -1,10 +1,8 @@
-import { useSetting } from '../hooks/useSettings'
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { HiMenu, HiX, HiShoppingBag, HiChevronDown, HiUser, HiHeart } from 'react-icons/hi'
-import { FaWhatsapp } from 'react-icons/fa'
 import { useCart }     from '../context/CartContext'
 import { useCurrency } from '../context/CurrencyContext'
 import { useAuth }     from '../context/AuthContext'
@@ -15,8 +13,7 @@ export default function Navbar() {
   const [scrolled,    setScrolled]    = useState(false)
   const [menuOpen,    setMenuOpen]    = useState(false)
   const [cartBump,    setCartBump]    = useState(false)
-  const [langOpen,    setLangOpen]    = useState(false)
-  const [currOpen,    setCurrOpen]    = useState(false)
+  const [prefsOpen,   setPrefsOpen]   = useState(false)
   const location = useLocation()
   const { t, i18n } = useTranslation()
   const { totalItems }              = useCart()
@@ -25,11 +22,9 @@ export default function Navbar() {
   const { productIds: wishlistIds } = useWishlist()
   const { theme }                   = useTheme()
   const isLight                     = theme?.isLight
-  const langRef = useRef(null)
-  const currRef = useRef(null)
+  const prefsRef = useRef(null)
 
   const isAr = i18n.language === 'ar'
-  const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
 
   const navLinks = [
     { label: t('nav.collections'),                   to: '/collections' },
@@ -60,11 +55,10 @@ export default function Navbar() {
     return () => clearTimeout(t)
   }, [totalItems])
 
-  // Close dropdowns on outside click
+  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
-      if (langRef.current && !langRef.current.contains(e.target)) setLangOpen(false)
-      if (currRef.current && !currRef.current.contains(e.target)) setCurrOpen(false)
+      if (prefsRef.current && !prefsRef.current.contains(e.target)) setPrefsOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -73,7 +67,7 @@ export default function Navbar() {
   const toggleLang = () => {
     const next = isAr ? 'en' : 'ar'
     i18n.changeLanguage(next)
-    setLangOpen(false)
+    setPrefsOpen(false)
   }
 
   return (
@@ -89,9 +83,10 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link to="/" className="flex-shrink-0 flex items-center gap-3">
-            <img src="/logo-icon.png" alt="Artisan Leather" className="h-11 w-11 object-contain" />
-            <span className="hidden lg:block font-serif text-lg tracking-widest text-gold/90 uppercase">
-              Artisan Leather
+            <img src="/logo-icon-transparent.png" alt="Artisan Leather" className="h-14 w-14 lg:h-16 lg:w-16 object-contain" />
+            <span className="hidden lg:block font-serif leading-none">
+              <span className="block text-lg tracking-[0.2em] text-gold/90 uppercase">Artisan</span>
+              <span className="block text-xs tracking-[0.35em] text-gold/60 uppercase mt-1">Leather</span>
             </span>
           </Link>
 
@@ -108,32 +103,38 @@ export default function Navbar() {
           {/* Right side */}
           <div className="flex items-center gap-3 md:gap-4">
 
-            {/* ── Language switcher ── */}
-            <div ref={langRef} className="hidden md:block relative">
+            {/* ── Language + currency preferences ── */}
+            <div ref={prefsRef} className="hidden md:block relative">
               <button
-                onClick={() => { setLangOpen(!langOpen); setCurrOpen(false) }}
+                onClick={() => setPrefsOpen(!prefsOpen)}
                 className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-white/40 hover:text-gold transition-colors px-2 py-1"
               >
                 <span>{isAr ? 'عربي' : 'EN'}</span>
-                <HiChevronDown size={11} className={`transition-transform duration-300 ${langOpen ? 'rotate-180' : ''}`} />
+                <span className="text-white/20">·</span>
+                <span className="font-medium">{currency.code}</span>
+                <HiChevronDown size={11} className={`transition-transform duration-300 ${prefsOpen ? 'rotate-180' : ''}`} />
               </button>
               <AnimatePresence>
-                {langOpen && (
+                {prefsOpen && (
                   <motion.div
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.18 }}
-                    className="absolute top-full mt-2 left-0 bg-dark-100 border border-gold/15 min-w-[120px] z-50"
+                    className="absolute top-full mt-2 right-0 bg-dark-100 border border-gold/15 min-w-[180px] z-50 max-h-96 overflow-y-auto"
                   >
+                    {/* Language */}
+                    <div className="px-4 pt-3 pb-1 text-[9px] tracking-[0.3em] uppercase text-white/25">
+                      {isAr ? 'اللغة' : 'Language'}
+                    </div>
                     {[
                       { code: 'en', label: 'English', native: 'English' },
                       { code: 'ar', label: 'Arabic',  native: 'عربي' },
                     ].map((lang) => (
                       <button
                         key={lang.code}
-                        onClick={() => { i18n.changeLanguage(lang.code); setLangOpen(false) }}
-                        className={`w-full flex items-center justify-between px-4 py-2.5 text-xs hover:text-gold transition-colors ${
+                        onClick={() => { i18n.changeLanguage(lang.code); setPrefsOpen(false) }}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-xs hover:text-gold transition-colors ${
                           i18n.language === lang.code ? 'text-gold' : 'text-white/45'
                         }`}
                       >
@@ -141,34 +142,16 @@ export default function Navbar() {
                         <span className="text-white/30">{lang.native}</span>
                       </button>
                     ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
 
-            {/* ── Currency selector ── */}
-            <div ref={currRef} className="hidden md:block relative">
-              <button
-                onClick={() => { setCurrOpen(!currOpen); setLangOpen(false) }}
-                className="flex items-center gap-1.5 text-xs tracking-[0.15em] text-white/40 hover:text-gold transition-colors px-2 py-1"
-              >
-                <span className="font-medium">{currency.code}</span>
-                <HiChevronDown size={11} className={`transition-transform duration-300 ${currOpen ? 'rotate-180' : ''}`} />
-              </button>
-              <AnimatePresence>
-                {currOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.18 }}
-                    className="absolute top-full mt-2 right-0 bg-dark-100 border border-gold/15 min-w-[170px] z-50 max-h-72 overflow-y-auto"
-                  >
+                    {/* Currency */}
+                    <div className="px-4 pt-3 pb-1 mt-1 border-t border-white/5 text-[9px] tracking-[0.3em] uppercase text-white/25">
+                      {isAr ? 'العملة' : 'Currency'}
+                    </div>
                     {currencies.map((c) => (
                       <button
                         key={c.code}
-                        onClick={() => { setCurrency(c.code); setCurrOpen(false) }}
-                        className={`w-full flex items-center justify-between px-4 py-2.5 text-xs hover:text-gold transition-colors ${
+                        onClick={() => { setCurrency(c.code); setPrefsOpen(false) }}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-xs hover:text-gold transition-colors ${
                           currency.code === c.code ? 'text-gold bg-gold/5' : 'text-white/45'
                         }`}
                       >
@@ -180,12 +163,6 @@ export default function Navbar() {
                 )}
               </AnimatePresence>
             </div>
-
-            {/* WhatsApp */}
-            <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer"
-              className="hidden md:flex items-center gap-2 border border-gold/40 text-gold px-4 py-2 text-xs tracking-widest uppercase hover:bg-gold hover:text-dark transition-all duration-300">
-              <FaWhatsapp size={13} /> {t('nav.whatsapp')}
-            </a>
 
             {/* Wishlist */}
             <Link to="/wishlist" className="relative text-white/50 hover:text-gold transition-colors duration-300 p-1" title={t('nav.wishlist')}>
@@ -280,14 +257,6 @@ export default function Navbar() {
                     {c.code}
                   </button>
                 ))}
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}
-                className="border-t border-white/10 pt-4">
-                <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-3 text-gold text-sm tracking-widest uppercase">
-                  <FaWhatsapp size={18} /> {t('nav.whatsapp')}
-                </a>
               </motion.div>
             </div>
           </motion.div>

@@ -11,7 +11,6 @@ import { WishlistProvider }  from './context/WishlistContext'
 import { ToastProvider }     from './context/ToastContext'
 import { SettingsProvider } from './hooks/useSettings'
 import ErrorBoundary         from './components/ErrorBoundary'
-import ThemeSelector        from './components/ThemeSelector'
 import Analytics            from './components/Analytics'
 import Navbar               from './components/Navbar'
 import Footer               from './components/Footer'
@@ -82,7 +81,6 @@ function Layout() {
       </Suspense>
       {!minimal && <Footer />}
       {!minimal && <WhatsAppButton />}
-      {!minimal && <ThemeSelector />}
     </>
   )
 }

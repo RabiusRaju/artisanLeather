@@ -43,9 +43,9 @@ export default function Footer() {
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-6">
               <img
-                src="/logo-icon.png"
+                src="/logo-icon-transparent.png"
                 alt="Artisan Leather"
-                className="h-10 w-10 object-contain"
+                className="h-12 w-12 object-contain"
               />
               <div>
                 <div className="font-serif text-sm tracking-[0.2em] text-gold uppercase leading-none">

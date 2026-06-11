@@ -17,13 +17,10 @@ export default function WhatsAppButton() {
       transition={{ delay: 2.5, type: 'spring', stiffness: 200 }}
       whileHover={{ scale: 1.08 }}
       whileTap={{ scale: 0.95 }}
-      className="fixed bottom-8 right-8 z-50 bg-[#25D366] text-white flex items-center gap-2.5 px-4 py-3.5 shadow-2xl shadow-black/40 group"
+      className="fixed bottom-8 right-8 z-50 bg-[#25D366] text-white flex items-center justify-center w-14 h-14 rounded-full shadow-2xl shadow-black/40"
       aria-label="Chat on WhatsApp"
     >
-      <FaWhatsapp size={22} />
-      <span className="text-xs font-semibold tracking-wider pr-1 hidden sm:block">
-        WhatsApp
-      </span>
+      <FaWhatsapp size={26} />
     </motion.a>
   )
 }
