@@ -6,9 +6,11 @@ import { HiColorSwatch, HiX } from 'react-icons/hi'
 
 export default function ThemeSelector() {
   const [open, setOpen] = useState(false)
-  const { theme, themes, setTheme } = useTheme()
+  const { theme, themes, setTheme, isLocked } = useTheme()
   const { i18n } = useTranslation()
   const isAr = i18n.language === 'ar'
+
+  if (isLocked) return null
 
   return (
     <>

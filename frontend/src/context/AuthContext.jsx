@@ -48,8 +48,11 @@ export function AuthProvider({ children }) {
   const getMyOrders = () =>
     axios.get(`${API}/auth/orders`, { headers: authHeaders() }).then(r => r.data.data)
 
+  const getLastOrder = () =>
+    axios.get(`${API}/auth/last-order`, { headers: authHeaders() }).then(r => r.data.data)
+
   return (
-    <AuthContext.Provider value={{ user, loading, register, login, logout, getMyOrders }}>
+    <AuthContext.Provider value={{ user, loading, register, login, logout, getMyOrders, getLastOrder }}>
       {children}
     </AuthContext.Provider>
   )

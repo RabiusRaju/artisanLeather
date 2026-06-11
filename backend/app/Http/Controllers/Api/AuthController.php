@@ -86,6 +86,24 @@ class AuthController extends Controller
         return response()->json(['data' => $orders]);
     }
 
+    public function lastOrder(Request $request)
+    {
+        $order = Order::where('email', $request->user()->email)->latest()->first();
+
+        if (! $order) {
+            return response()->json(['data' => null]);
+        }
+
+        return response()->json(['data' => [
+            'first_name'  => $order->first_name,
+            'last_name'   => $order->last_name,
+            'phone'       => $order->phone,
+            'governorate' => $order->governorate,
+            'city'        => $order->city,
+            'address'     => $order->address,
+        ]]);
+    }
+
     private function userData(User $user): array
     {
         return [

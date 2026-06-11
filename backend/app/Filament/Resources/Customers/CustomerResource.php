@@ -6,6 +6,7 @@ use App\Filament\Resources\Customers\RelationManagers;
 use App\Models\Country;
 use App\Models\Customer;
 use App\Models\Governorate;
+use App\Models\User;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
@@ -45,6 +46,28 @@ class CustomerResource extends Resource
             Tabs::make('Customer')->tabs([
 
                 Tab::make('Profile')->icon('heroicon-o-user')->schema([
+                    Section::make('Import from Website Account')
+                        ->description('Pick a registered website account to pre-fill their details below.')
+                        ->visible(fn (string $operation): bool => $operation === 'create')
+                        ->schema([
+                            Select::make('website_account_id')
+                                ->label('Website Account')
+                                ->options(fn () => User::query()->orderBy('name')->get()
+                                    ->mapWithKeys(fn (User $user) => [$user->id => "{$user->name} ({$user->email})"]))
+                                ->searchable()
+                                ->live()
+                                ->dehydrated(false)
+                                ->afterStateUpdated(function ($state, callable $set) {
+                                    $user = User::find($state);
+                                    if (! $user) {
+                                        return;
+                                    }
+                                    $set('name', $user->name);
+                                    $set('email', $user->email);
+                                    $set('phone', $user->phone);
+                                }),
+                        ]),
+
                     Section::make('Personal Details')->schema([
                         TextInput::make('name')->label('Full Name')->required()->columnSpan(2),
                         TextInput::make('name_ar')->label('Name (Arabic)')->columnSpan(1),

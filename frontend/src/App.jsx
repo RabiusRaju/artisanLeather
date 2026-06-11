@@ -31,6 +31,9 @@ const BlogPage          = lazy(() => import('./pages/BlogPage'))
 const BlogPostPage      = lazy(() => import('./pages/BlogPostPage'))
 const SurveyPage        = lazy(() => import('./pages/SurveyPage'))
 const WishlistPage      = lazy(() => import('./pages/WishlistPage'))
+const PrivacyPage       = lazy(() => import('./pages/PrivacyPage'))
+const TermsPage         = lazy(() => import('./pages/TermsPage'))
+const NotFoundPage      = lazy(() => import('./pages/NotFoundPage'))
 
 function RTLSyncer() {
   const { i18n } = useTranslation()
@@ -70,6 +73,9 @@ function Layout() {
           <Route path="/track"                element={<TrackOrderPage />} />
           <Route path="/track/:orderNumber"   element={<TrackOrderPage />} />
           <Route path="/wishlist"             element={<WishlistPage />} />
+          <Route path="/privacy"              element={<PrivacyPage />} />
+          <Route path="/terms"                element={<TermsPage />} />
+          <Route path="*"                     element={<NotFoundPage />} />
         </Routes>
       </Suspense>
       {!minimal && <Footer />}

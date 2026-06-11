@@ -36,6 +36,10 @@ class SettingsController extends Controller
             'social.tiktok'                  => $settings['social.tiktok']              ?? '',
             'social.twitter'                 => $settings['social.twitter']             ?? '',
 
+            // Appearance
+            'theme.default'                  => $settings['theme.default']             ?? 'warm-leather',
+            'theme.lock_theme'                => $settings['theme.lock_theme']           ?? '0',
+
             // Website
             'website.url'                    => $settings['website.url']                ?? 'https://artisanleatherom.com',
             'website.support_email'          => $settings['website.support_email']      ?? '',
