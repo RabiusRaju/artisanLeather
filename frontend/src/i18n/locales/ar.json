@@ -29,7 +29,14 @@
     "wallets": "محافظ",
     "bags": "حقائب",
     "belts": "أحزمة",
-    "accessories": "إكسسوار"
+    "accessories": "إكسسوار",
+    "explore": "استعرض",
+    "allBrands": "كل المجموعات",
+    "noPiecesFound": "لا توجد قطع",
+    "subtitleWallets": "نحيفة · مزدوجة الطي · لحاملات البطاقات",
+    "subtitleBags": "حقائب يد · حقائب عمل · حقائب صغيرة",
+    "subtitleBelts": "كلاسيكية · رسمية · غير رسمية",
+    "subtitleAccessories": "ميداليات مفاتيح · حافظات بطاقات · والمزيد"
   },
   "product": {
     "addToCart": "أضف إلى السلة",
@@ -146,6 +153,7 @@
     "phoneLabel": "الهاتف وواتساب",
     "emailLabel": "البريد الإلكتروني",
     "hours": "أوقات العمل",
+    "formEyebrow": "أرسل رسالة",
     "formTitle": "يسعدنا سماعك",
     "sendMessage": "إرسال الرسالة",
     "name": "الاسم الكامل",
@@ -167,6 +175,7 @@
     "saturdayHours": "9:00 صباحاً – 9:00 مساءً",
     "fridayHours": "2:00 مساءً – 9:00 مساءً",
     "followAlong": "تابعنا",
+    "fastestResponse": "أسرع رد",
     "topics": {
       "select": "اختر الموضوع…",
       "product": "استفسار عن منتج",
@@ -191,5 +200,60 @@
     "discoverHeritage": "اكتشف إرثنا",
     "startJourney": "ابدأ رحلتك",
     "ownPiece": "امتلك قطعة من هذا الفن"
+  },
+  "home": {
+    "story": {
+      "eyebrow": "قصتنا",
+      "title1": "صُنعت بشغف،",
+      "title2": "لتدوم طويلاً",
+      "p1": "في آرتيزان ليذر، تبدأ كل قطعة برؤية واحدة — صنع شيء يتجاوز المألوف. تأسست في قلب عُمان، ونعتمد فقط على أجود أنواع الجلد الطبيعي الكامل من حول العالم.",
+      "p2": "كل غرزة تُخاط يدوياً، وكل حافة تُصقل بإتقان. نؤمن أن الفخامة لا تكمن في الخامة وحدها — بل في براعة من يشكّلها.",
+      "yearsLabel": "سنوات من الحرفية"
+    },
+    "testimonials": {
+      "eyebrow": "آراء العملاء",
+      "title": "ماذا يقول عملاؤنا"
+    }
+  },
+  "blog": {
+    "home": "الرئيسية",
+    "journal": "المجلة",
+    "eyebrow": "مجلة الجلد",
+    "title": "قصص وأدلة",
+    "subtitle": "نصائح من الخبراء حول العناية بالجلد، الأناقة، والحرفية وراء كل قطعة نصنعها في مسقط، عُمان.",
+    "articles": "مقالات",
+    "categories": "فئات",
+    "expertAuthors": "كتّاب خبراء",
+    "categoryAll": "جميع المقالات",
+    "categoryCareGuides": "أدلة العناية",
+    "categoryStyleTips": "نصائح الأناقة",
+    "categoryLeatherKnowledge": "معرفة الجلود",
+    "categoryNews": "أخبار",
+    "readArticle": "قراءة المقال",
+    "minRead": "دقيقة قراءة",
+    "filteredBy": "مُصفّى حسب",
+    "clear": "مسح",
+    "noArticles": "لا توجد مقالات في هذه الفئة بعد",
+    "viewAllArticles": "عرض جميع المقالات",
+    "article": "مقال",
+    "articlesCount": "مقالات",
+    "in": "في",
+    "ctaTitle": "هل أنت مستعد لاستكشاف مجموعتنا؟",
+    "ctaSubtitle": "كل قطعة مصنوعة يدوياً في مسقط، عُمان.",
+    "notFound": "المقال غير موجود",
+    "backToJournal": "العودة إلى المجلة"
+  },
+  "footer": {
+    "collectionsTitle": "المجموعات",
+    "companyTitle": "الشركة",
+    "contactTitle": "اتصل بنا",
+    "address": "مسقط، سلطنة عُمان",
+    "ourStory": "قصتنا",
+    "craftsmanship": "الحرفية",
+    "sustainability": "الاستدامة",
+    "privacyPolicy": "سياسة الخصوصية",
+    "termsOfService": "شروط الخدمة",
+    "tagline": "منتجات جلدية فاخرة مصنوعة يدوياً. صُنعت في عُمان. تُوصَّل إلى دول الخليج.",
+    "copyright": "© 2025 آرتيزان ليذر · artisanleatherom.com · جميع الحقوق محفوظة"
   }
 }

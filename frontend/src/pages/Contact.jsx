@@ -1,38 +1,12 @@
 import { useSetting } from '../hooks/useSettings'
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { FaWhatsapp, FaInstagram, FaFacebook } from 'react-icons/fa'
 import { HiChevronDown, HiCheckCircle } from 'react-icons/hi'
 import SEO from '../components/SEO'
+import { useFaqs } from '../hooks/useFaqs'
 import axios from 'axios'
-
-// ── FAQ data ───────────────────────────────────────────────────────────────
-const faqs = [
-  {
-    q: 'Do you ship internationally?',
-    a: 'Yes. We deliver across all GCC countries — Oman, UAE, Saudi Arabia, Kuwait, Bahrain, and Qatar — with complimentary shipping on every order. International shipping beyond the GCC is available on request.',
-  },
-  {
-    q: 'Can I customise or monogram my order?',
-    a: 'Absolutely. We offer debossed monogramming on most pieces (initials or a short name). Custom colour and stitching options are also available for orders above OMR 100. Contact us via WhatsApp to discuss.',
-  },
-  {
-    q: 'How long does delivery take?',
-    a: 'Standard orders within Oman: 3–5 business days. GCC delivery: 5–7 business days. All orders are gift-wrapped in our signature black box at no extra charge.',
-  },
-  {
-    q: 'What is your return and exchange policy?',
-    a: 'We accept returns within 14 days of delivery for unused items in their original packaging. Monogrammed or custom pieces are non-refundable. Exchanges are always welcome.',
-  },
-  {
-    q: 'How do I care for my leather piece?',
-    a: 'Full grain and vegetable-tanned leather thrive with minimal intervention. Wipe clean with a dry cloth and apply a quality beeswax conditioner every 6–12 months. Avoid prolonged exposure to sunlight or water.',
-  },
-  {
-    q: 'Are your leathers ethically sourced?',
-    a: 'Yes. We source from tanneries that meet European ethical and environmental standards. Our vegetable-tanned leathers use no harmful chemicals — only natural plant-based tanning agents.',
-  },
-]
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 function FAQItem({ item, index }) {
@@ -53,7 +27,7 @@ function FAQItem({ item, index }) {
         className="w-full flex items-center justify-between py-5 text-left group"
       >
         <span className="font-serif text-lg text-white/80 group-hover:text-gold transition-colors duration-300 pr-8 leading-snug">
-          {item.q}
+          {item.question}
         </span>
         <HiChevronDown
           size={15}
@@ -69,7 +43,7 @@ function FAQItem({ item, index }) {
             transition={{ duration: 0.35, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <p className="text-white/45 text-sm font-light leading-relaxed pb-6 pr-8">{item.a}</p>
+            <p className="text-white/45 text-sm font-light leading-relaxed pb-6 pr-8">{item.answer}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -79,6 +53,7 @@ function FAQItem({ item, index }) {
 
 // ── Contact form with success state ───────────────────────────────────────
 function ContactForm() {
+  const { t } = useTranslation()
   const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
   const [form, setForm]       = useState({ name: '', email: '', phone: '', subject: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
@@ -112,8 +87,8 @@ function ContactForm() {
       animate={isInView ? { opacity: 1, x: 0 } : {}}
       transition={{ duration: 0.8, delay: 0.2 }}
     >
-      <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-3">Send a Message</p>
-      <h2 className="font-serif text-3xl text-white font-light mb-8">We'd Love to Hear From You</h2>
+      <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-3">{t('contact.formEyebrow')}</p>
+      <h2 className="font-serif text-3xl text-white font-light mb-8">{t('contact.formTitle')}</h2>
 
       <AnimatePresence mode="wait">
         {submitted ? (
@@ -124,10 +99,9 @@ function ContactForm() {
             className="border border-gold/20 bg-gold/5 px-8 py-12 text-center"
           >
             <HiCheckCircle size={40} className="text-gold mx-auto mb-4" />
-            <h3 className="font-serif text-2xl text-white mb-3">Message Received</h3>
+            <h3 className="font-serif text-2xl text-white mb-3">{t('contact.successTitle')}</h3>
             <p className="text-white/45 font-light text-sm leading-relaxed">
-              Thank you, {form.name.split(' ')[0] || 'friend'}. We will be in touch within 24 hours.
-              <br />For urgent enquiries, please reach us on WhatsApp.
+              {t('contact.thankYou')} {form.name.split(' ')[0] || ''}. {t('contact.successDesc')}
             </p>
             <a
               href={`https://wa.me/${waNumber}`}
@@ -135,7 +109,7 @@ function ContactForm() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 mt-8 border border-[#25D366]/50 text-[#25D366] px-7 py-3 text-[10px] tracking-[0.3em] uppercase hover:bg-[#25D366] hover:text-white transition-all duration-300"
             >
-              <FaWhatsapp size={14} /> Open WhatsApp
+              <FaWhatsapp size={14} /> {t('contact.openWhatsApp')}
             </a>
           </motion.div>
         ) : (
@@ -150,7 +124,7 @@ function ContactForm() {
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-[9px] tracking-[0.35em] uppercase text-white/35 mb-2">
-                  Full Name <span className="text-gold">*</span>
+                  {t('contact.name')} <span className="text-gold">*</span>
                 </label>
                 <input
                   name="name"
@@ -164,7 +138,7 @@ function ContactForm() {
               </div>
               <div>
                 <label className="block text-[9px] tracking-[0.35em] uppercase text-white/35 mb-2">
-                  Email Address <span className="text-gold">*</span>
+                  {t('contact.email')} <span className="text-gold">*</span>
                 </label>
                 <input
                   name="email"
@@ -182,7 +156,7 @@ function ContactForm() {
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-[9px] tracking-[0.35em] uppercase text-white/35 mb-2">
-                  Phone (optional)
+                  {t('contact.phone')}
                 </label>
                 <input
                   name="phone"
@@ -195,7 +169,7 @@ function ContactForm() {
               </div>
               <div>
                 <label className="block text-[9px] tracking-[0.35em] uppercase text-white/35 mb-2">
-                  Subject
+                  {t('contact.subject')}
                 </label>
                 <select
                   name="subject"
@@ -203,12 +177,12 @@ function ContactForm() {
                   onChange={handleChange}
                   className="w-full bg-dark-100 border border-white/10 focus:border-gold/50 text-white/70 px-4 py-3.5 text-sm outline-none transition-colors duration-300 appearance-none cursor-pointer"
                 >
-                  <option value="">Select a topic…</option>
-                  <option value="product">Product Enquiry</option>
-                  <option value="custom">Custom / Monogram Order</option>
-                  <option value="shipping">Shipping & Delivery</option>
-                  <option value="return">Return or Exchange</option>
-                  <option value="other">Other</option>
+                  <option value="">{t('contact.topics.select')}</option>
+                  <option value="product">{t('contact.topics.product')}</option>
+                  <option value="custom">{t('contact.topics.custom')}</option>
+                  <option value="shipping">{t('contact.topics.shipping')}</option>
+                  <option value="return">{t('contact.topics.return')}</option>
+                  <option value="other">{t('contact.topics.other')}</option>
                 </select>
               </div>
             </div>
@@ -216,7 +190,7 @@ function ContactForm() {
             {/* Message */}
             <div>
               <label className="block text-[9px] tracking-[0.35em] uppercase text-white/35 mb-2">
-                Message <span className="text-gold">*</span>
+                {t('contact.message')} <span className="text-gold">*</span>
               </label>
               <textarea
                 name="message"
@@ -224,7 +198,7 @@ function ContactForm() {
                 rows={5}
                 value={form.message}
                 onChange={handleChange}
-                placeholder="Tell us how we can help…"
+                placeholder="…"
                 className="w-full bg-dark-100 border border-white/10 focus:border-gold/50 text-white placeholder-white/15 px-4 py-3.5 text-sm outline-none transition-colors duration-300 resize-none"
               />
             </div>
@@ -234,7 +208,7 @@ function ContactForm() {
               disabled={loading}
               className="w-full py-4 bg-gold text-dark text-[10px] tracking-[0.35em] uppercase font-bold hover:bg-gold-300 active:scale-[0.99] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {loading ? 'Sending…' : 'Send Message'}
+              {loading ? t('contact.sending') : t('contact.sendMessage')}
             </button>
           </motion.form>
         )}
@@ -245,10 +219,16 @@ function ContactForm() {
 
 // ── Page ───────────────────────────────────────────────────────────────────
 export default function Contact() {
+  const { t } = useTranslation()
   const waNumber  = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
   const instagram = useSetting('social.instagram', '')
   const facebook  = useSetting('social.facebook', '')
   const email     = useSetting('business.email', 'info@artisanleatherom.com')
+  const address   = useSetting('business.address', t('footer.address'))
+  const addressLine2 = useSetting('business.address_2', '')
+  const whatsappHours = useSetting('business.whatsapp_hours', '')
+  const emailReplyTime = useSetting('business.email_response_time', '')
+  const { faqs } = useFaqs()
 
   const infoRef = useRef(null)
   const waRef   = useRef(null)
@@ -279,7 +259,7 @@ export default function Contact() {
             animate={{ opacity: 1, y: 0 }}
             className="text-gold/60 tracking-[0.6em] uppercase text-[10px] mb-8"
           >
-            Artisan Leather
+            {t('contact.eyebrow')}
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
@@ -287,9 +267,9 @@ export default function Contact() {
             transition={{ delay: 0.15 }}
             className="font-serif text-5xl md:text-7xl text-white font-light leading-[1.05] mb-8"
           >
-            Let's Start
+            {t('contact.headline1')}
             <br />
-            <span className="text-gradient-gold italic">a Conversation</span>
+            <span className="text-gradient-gold italic">{t('contact.headline2')}</span>
           </motion.h1>
           <motion.div
             initial={{ scaleX: 0 }}
@@ -303,7 +283,7 @@ export default function Contact() {
             transition={{ delay: 0.65 }}
             className="text-white/40 text-lg font-light"
           >
-            Whether it's a question, a custom order, or just curiosity — we're here.
+            {t('contact.sub')}
           </motion.p>
         </div>
       </section>
@@ -320,30 +300,30 @@ export default function Contact() {
             transition={{ duration: 0.8 }}
             className="space-y-0"
           >
-            <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-3">Find Us</p>
-            <h2 className="font-serif text-3xl text-white font-light mb-12">Contact Information</h2>
+            <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-3">{t('contact.findUs')}</p>
+            <h2 className="font-serif text-3xl text-white font-light mb-12">{t('contact.info')}</h2>
 
             {/* Info items */}
             {[
               {
-                label: 'Location',
-                value: 'Muscat, Sultanate of Oman',
-                sub: 'Al Khuwair District',
+                label: t('contact.location'),
+                value: address,
+                sub: addressLine2,
                 link: null,
               },
               {
-                label: 'Phone & WhatsApp',
+                label: t('contact.phoneLabel'),
                 value: `+${waNumber}`,
-                sub: 'Available 9am – 9pm GST',
+                sub: whatsappHours,
                 link: `https://wa.me/${waNumber}`,
               },
               {
-                label: 'Email',
+                label: t('contact.emailLabel'),
                 value: email,
-                sub: 'We reply within 24 hours',
+                sub: emailReplyTime,
                 link: `mailto:${email}`,
               },
-            ].map((item, i) => (
+            ].filter(item => item.value).map((item, i) => (
               <motion.div
                 key={item.label}
                 initial={{ opacity: 0, y: 16 }}
@@ -364,14 +344,14 @@ export default function Contact() {
                   ) : (
                     <p className="font-serif text-xl text-white">{item.value}</p>
                   )}
-                  <p className="text-white/30 text-xs font-light mt-1">{item.sub}</p>
+                  {item.sub && <p className="text-white/30 text-xs font-light mt-1">{item.sub}</p>}
                 </div>
               </motion.div>
             ))}
 
             {/* Socials */}
             <div className="pt-10">
-              <p className="text-[9px] tracking-[0.4em] uppercase text-white/30 mb-6">Follow Along</p>
+              <p className="text-[9px] tracking-[0.4em] uppercase text-white/30 mb-6">{t('contact.followAlong')}</p>
               <div className="flex gap-4 flex-wrap">
                 <a
                   href={`https://wa.me/${waNumber}`}
@@ -406,11 +386,11 @@ export default function Contact() {
 
             {/* Hours */}
             <div className="pt-10 border-t border-white/7 mt-10">
-              <p className="text-[9px] tracking-[0.4em] uppercase text-white/30 mb-5">Working Hours</p>
+              <p className="text-[9px] tracking-[0.4em] uppercase text-white/30 mb-5">{t('contact.hours')}</p>
               <div className="space-y-2.5">
                 {[
-                  { days: 'Saturday – Thursday', hours: '9:00 AM – 9:00 PM' },
-                  { days: 'Friday',              hours: '2:00 PM – 9:00 PM' },
+                  { days: t('contact.saturday'), hours: t('contact.saturdayHours') },
+                  { days: t('contact.friday'),   hours: t('contact.fridayHours') },
                 ].map((row) => (
                   <div key={row.days} className="flex justify-between text-sm">
                     <span className="text-white/40 font-light">{row.days}</span>
@@ -435,12 +415,12 @@ export default function Contact() {
           className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8"
         >
           <div className="text-center md:text-left">
-            <p className="text-[9px] tracking-[0.5em] uppercase text-gold/50 mb-3">Fastest Response</p>
+            <p className="text-[9px] tracking-[0.5em] uppercase text-gold/50 mb-3">{t('contact.fastestResponse')}</p>
             <h2 className="font-serif text-3xl md:text-4xl text-white font-light mb-3">
-              Prefer to Chat Directly?
+              {t('contact.chatTitle')}
             </h2>
             <p className="text-white/40 font-light text-sm">
-              Our team is on WhatsApp daily. Get a reply in minutes, not hours.
+              {t('contact.chatDesc')}
             </p>
           </div>
           <a
@@ -450,7 +430,7 @@ export default function Contact() {
             className="flex-shrink-0 flex items-center gap-3 bg-[#25D366] text-white px-10 py-4 text-[10px] tracking-[0.35em] uppercase font-bold hover:bg-[#1da851] active:scale-[0.98] transition-all duration-300 shadow-lg shadow-[#25D366]/20"
           >
             <FaWhatsapp size={18} />
-            Open WhatsApp
+            {t('contact.openWhatsAppBtn')}
           </a>
         </motion.div>
       </section>
@@ -464,8 +444,8 @@ export default function Contact() {
           transition={{ duration: 0.7 }}
           className="text-center mb-16"
         >
-          <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-4">Common Questions</p>
-          <h2 className="font-serif text-4xl text-white font-light">Frequently Asked</h2>
+          <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-4">{t('contact.faqEyebrow')}</p>
+          <h2 className="font-serif text-4xl text-white font-light">{t('contact.faq')}</h2>
           <div className="w-14 h-px bg-gold mx-auto mt-6" />
         </motion.div>
 

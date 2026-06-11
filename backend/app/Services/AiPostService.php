@@ -34,6 +34,16 @@ PROMPT;
         return $this->callOpenAI($this->buildPostMessage($prompt, $category), $filePaths);
     }
 
+    public function translatePostToArabicWithOpenAI(string $title, string $excerpt, string $content): array
+    {
+        return $this->callOpenAI($this->buildPostTranslationMessage($title, $excerpt, $content));
+    }
+
+    public function translatePostToArabicWithClaude(string $title, string $excerpt, string $content): array
+    {
+        return $this->callClaude($this->buildPostTranslationMessage($title, $excerpt, $content));
+    }
+
     // ── Products ───────────────────────────────────────────────────────────
 
     public function generateProductWithClaude(string $prompt, array $filePaths = []): array
@@ -236,6 +246,27 @@ Return a single JSON object with exactly these keys:
 }
 
 category hint: {$category}
+MSG;
+    }
+
+    private function buildPostTranslationMessage(string $title, string $excerpt, string $content): string
+    {
+        return <<<MSG
+Translate the following English blog post into formal but approachable Gulf Arabic. Preserve all HTML tags and structure in the content exactly as given — only translate the text.
+
+Title: "{$title}"
+
+Excerpt: "{$excerpt}"
+
+Content (HTML):
+{$content}
+
+Return a single JSON object with exactly these keys:
+{
+  "title_ar": "Arabic translation of the title",
+  "excerpt_ar": "Arabic translation of the excerpt",
+  "content_ar": "Arabic translation of the content, same HTML structure"
+}
 MSG;
     }
 

@@ -1,11 +1,13 @@
 import { useRef, useState, useEffect } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { fetchTestimonials } from '../services/api'
 
 const FALLBACK = [
   {
     id: 1,
     quote: 'The most exquisite wallet I have ever owned. The leather is buttery smooth and the craftsmanship is simply unmatched. Worth every Baisa.',
+    quote_ar: 'إنها أروع محفظة امتلكتها على الإطلاق. الجلد ناعم كالحرير والحرفية لا مثيل لها. تستحق كل بيسة.',
     author: 'Mohammed Al Rashidi',
     location: 'Muscat, Oman',
     rating: 5,
@@ -13,6 +15,7 @@ const FALLBACK = [
   {
     id: 2,
     quote: 'I gifted an Artisan Leather bag to my wife for our anniversary. She was speechless. The quality speaks before the price.',
+    quote_ar: 'أهديت زوجتي حقيبة من آرتيزان ليذر بمناسبة ذكرى زواجنا، فأُصيبت بالذهول. الجودة تتحدث عن نفسها قبل السعر.',
     author: 'Khalid Al Harthi',
     location: 'Dubai, UAE',
     rating: 5,
@@ -20,6 +23,7 @@ const FALLBACK = [
   {
     id: 3,
     quote: 'These are not just leather goods — they are heirlooms in the making. I have had my belt for three years and it only looks better with age.',
+    quote_ar: 'هذه ليست مجرد منتجات جلدية، بل قطع أثرية في طور التكوين. أمتلك حزامي منذ ثلاث سنوات وهو يزداد جمالاً مع الوقت.',
     author: 'Salim Al Balushi',
     location: 'Salalah, Oman',
     rating: 5,
@@ -48,6 +52,8 @@ export default function Testimonials() {
   const [current, setCurrent]           = useState(0)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true })
+  const { t: translate, i18n } = useTranslation()
+  const isAr = i18n.language?.startsWith('ar')
 
   useEffect(() => {
     fetchTestimonials()
@@ -65,6 +71,9 @@ export default function Testimonials() {
   const next = () => setCurrent(c => (c === testimonials.length - 1 ? 0 : c + 1))
 
   const t = testimonials[current] ?? testimonials[0]
+  const quote = (isAr && t.quote_ar) ? t.quote_ar : t.quote
+  const author = (isAr && t.author_ar) ? t.author_ar : t.author
+  const location = (isAr && t.location_ar) ? t.location_ar : t.location
 
   return (
     <section ref={ref} className="py-24 bg-dark-100">
@@ -76,8 +85,8 @@ export default function Testimonials() {
           transition={{ duration: 0.7 }}
           className="mb-16"
         >
-          <p className="text-gold/70 tracking-[0.5em] uppercase text-[10px] mb-4">Testimonials</p>
-          <h2 className="font-serif text-4xl text-white font-light">What Our Clients Say</h2>
+          <p className="text-gold/70 tracking-[0.5em] uppercase text-[10px] mb-4">{translate('home.testimonials.eyebrow')}</p>
+          <h2 className="font-serif text-4xl text-white font-light">{translate('home.testimonials.title')}</h2>
           <div className="w-16 h-px bg-gold mx-auto mt-6" />
         </motion.div>
 
@@ -94,16 +103,16 @@ export default function Testimonials() {
               <div className="font-serif text-6xl text-gold/30 leading-none mb-4 select-none">"</div>
 
               <p className="font-serif text-xl md:text-2xl text-white/75 font-light italic leading-relaxed mb-8 max-w-2xl mx-auto">
-                {t.quote}
+                {quote}
               </p>
 
               <div className="w-8 h-px bg-gold/50 mx-auto mb-5" />
 
               <Stars rating={t.rating ?? 5} />
 
-              <p className="text-white font-medium tracking-wide text-sm">{t.author}</p>
-              {t.location && (
-                <p className="text-white/35 text-xs tracking-wide mt-1.5">{t.location}</p>
+              <p className="text-white font-medium tracking-wide text-sm">{author}</p>
+              {location && (
+                <p className="text-white/35 text-xs tracking-wide mt-1.5">{location}</p>
               )}
             </motion.div>
           </AnimatePresence>

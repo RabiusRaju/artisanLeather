@@ -68,7 +68,14 @@ class BusinessSettings extends Page implements HasSchemas
                         ->default('Asia/Muscat')
                         ->required()
                         ->helperText('Controls how dates & times are displayed and entered throughout the admin panel.'),
-                    Textarea::make('business.address')->label('Full Address')->rows(2)->columnSpanFull(),
+                    Textarea::make('business.address')->label('Full Address (English)')->rows(2)->columnSpanFull(),
+                    Textarea::make('business.address_ar')->label('Full Address (Arabic)')->rows(2)->extraAttributes(['dir' => 'rtl'])->columnSpanFull(),
+                    TextInput::make('business.address_2')->label('Address Line 2 / District (English)')->placeholder('Al Khuwair District'),
+                    TextInput::make('business.address_2_ar')->label('Address Line 2 / District (Arabic)')->extraInputAttributes(['dir' => 'rtl'])->placeholder('حي الخوير'),
+                    TextInput::make('business.whatsapp_hours')->label('WhatsApp Availability Note (English)')->placeholder('Available 9am – 9pm GST'),
+                    TextInput::make('business.whatsapp_hours_ar')->label('WhatsApp Availability Note (Arabic)')->extraInputAttributes(['dir' => 'rtl'])->placeholder('متاح من 9 صباحاً حتى 9 مساءً'),
+                    TextInput::make('business.email_response_time')->label('Email Response Time (English)')->placeholder('We reply within 24 hours'),
+                    TextInput::make('business.email_response_time_ar')->label('Email Response Time (Arabic)')->extraInputAttributes(['dir' => 'rtl'])->placeholder('نرد خلال 24 ساعة'),
                 ]),
 
             Section::make('📱 Social Media')
@@ -107,13 +114,24 @@ class BusinessSettings extends Page implements HasSchemas
                 ->columns(1)
                 ->schema([
                     Textarea::make('footer.tagline')
-                        ->label('Brand Tagline')
+                        ->label('Brand Tagline (English)')
                         ->rows(2)
                         ->placeholder('Premium handcrafted leather goods. Made in Oman. Delivered across the GCC.'),
 
+                    Textarea::make('footer.tagline_ar')
+                        ->label('Brand Tagline (Arabic)')
+                        ->rows(2)
+                        ->extraAttributes(['dir' => 'rtl'])
+                        ->placeholder('منتجات جلدية فاخرة مصنوعة يدوياً. صُنعت في عُمان. تُوصَّل إلى دول الخليج.'),
+
                     TextInput::make('footer.copyright')
-                        ->label('Copyright Line')
+                        ->label('Copyright Line (English)')
                         ->placeholder('© 2025 Artisan Leather · artisanleatherom.com · All rights reserved'),
+
+                    TextInput::make('footer.copyright_ar')
+                        ->label('Copyright Line (Arabic)')
+                        ->extraAttributes(['dir' => 'rtl'])
+                        ->placeholder('© 2025 آرتيزان ليذر · artisanleatherom.com · جميع الحقوق محفوظة'),
                 ]),
 
             Section::make('🔍 SEO & Analytics')

@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\SurveyController;
 use App\Http\Controllers\Api\TestimonialController;
+use App\Http\Controllers\Api\FaqController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
@@ -27,6 +28,7 @@ Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
     Route::post('/surveys/{slug}/respond', [SurveyController::class, 'respond']);
     Route::get('/settings',              [SettingsController::class, 'index']);
     Route::get('/testimonials',          [TestimonialController::class, 'index']);
+    Route::get('/faqs',                  [FaqController::class, 'index']);
     Route::get('/track/{orderNumber}', [TrackOrderController::class, 'show'])->middleware('throttle:20,1');
     Route::post('/orders',           [OrderController::class, 'store'])->middleware('throttle:10,1');
     Route::post('/contact',          [ContactController::class, 'store'])->middleware('throttle:5,1');

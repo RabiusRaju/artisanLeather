@@ -42,6 +42,8 @@ class PostController extends Controller
             'title_ar'        => $post->title_ar,
             'slug'            => $post->slug,
             'excerpt'         => $isAr && $post->excerpt_ar ? $post->excerpt_ar : $post->excerpt,
+            'excerpt_en'      => $post->excerpt,
+            'excerpt_ar'      => $post->excerpt_ar,
             'featured_image'  => $post->featured_image
                 ? (str_starts_with($post->featured_image, 'http')
                     ? $post->featured_image

@@ -159,6 +159,25 @@ class TestimonialResource extends Resource
                         ->placeholder('Heritage Bifold Wallet')
                         ->helperText('Optional — for your reference only.')
                         ->columnSpan(1),
+
+                    TextInput::make('author_ar')
+                        ->label('Name (Arabic, optional)')
+                        ->placeholder('محمد الراشدي')
+                        ->extraInputAttributes(['dir' => 'rtl'])
+                        ->columnSpan(1),
+
+                    TextInput::make('location_ar')
+                        ->label('City / Country (Arabic, optional)')
+                        ->placeholder('مسقط، عُمان')
+                        ->extraInputAttributes(['dir' => 'rtl'])
+                        ->columnSpan(1),
+
+                    TextInput::make('product_ar')
+                        ->label('Product Purchased (Arabic, optional)')
+                        ->placeholder('محفظة هيريتدج القابلة للطي')
+                        ->extraInputAttributes(['dir' => 'rtl'])
+                        ->helperText('Optional — for your reference only.')
+                        ->columnSpan(1),
                 ]),
 
             // ── 3. Rating + Visibility ────────────────────────────────────

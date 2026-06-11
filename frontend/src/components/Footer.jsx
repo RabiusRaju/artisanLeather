@@ -1,35 +1,38 @@
 import { useSetting } from '../hooks/useSettings'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { FaInstagram, FaWhatsapp, FaFacebook, FaGoogle } from 'react-icons/fa'
 
 const linkGroups = [
   {
-    title: 'Collections',
+    titleKey: 'footer.collectionsTitle',
     links: [
-      { label: 'Wallets', to: '/collections/wallets' },
-      { label: 'Bags', to: '/collections/bags' },
-      { label: 'Belts', to: '/collections/belts' },
-      { label: 'Accessories', to: '/collections/accessories' },
+      { labelKey: 'collections.wallets', to: '/collections/wallets' },
+      { labelKey: 'collections.bags', to: '/collections/bags' },
+      { labelKey: 'collections.belts', to: '/collections/belts' },
+      { labelKey: 'collections.accessories', to: '/collections/accessories' },
     ],
   },
   {
-    title: 'Company',
+    titleKey: 'footer.companyTitle',
     links: [
-      { label: 'Our Story', to: '/about' },
-      { label: 'Craftsmanship', to: '/about#craftsmanship' },
-      { label: 'Sustainability', to: '/about#sustainability' },
-      { label: 'Contact', to: '/contact' },
+      { labelKey: 'footer.ourStory', to: '/about' },
+      { labelKey: 'footer.craftsmanship', to: '/about#craftsmanship' },
+      { labelKey: 'footer.sustainability', to: '/about#sustainability' },
+      { labelKey: 'nav.contact', to: '/contact' },
     ],
   },
 ]
 
 export default function Footer() {
+  const { t, i18n } = useTranslation()
+  const isAr = i18n.language?.startsWith('ar')
   const waNumber  = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
   const instagram = useSetting('social.instagram', '')
   const facebook  = useSetting('social.facebook', '')
   const email     = useSetting('business.email', 'info@artisanleatherom.com')
-  const tagline       = useSetting('footer.tagline',        'Premium handcrafted leather goods. Made in Oman. Delivered across the GCC.')
-  const copyright     = useSetting('footer.copyright',      '© 2025 Artisan Leather · artisanleatherom.com · All rights reserved')
+  const tagline       = useSetting('footer.tagline',        t('footer.tagline'))
+  const copyright     = useSetting('footer.copyright',      t('footer.copyright'))
   const googleBusiness = useSetting('seo.google_business',  '')
 
   return (
@@ -104,18 +107,18 @@ export default function Footer() {
 
           {/* Link columns */}
           {linkGroups.map((group) => (
-            <div key={group.title}>
+            <div key={group.titleKey}>
               <h4 className="text-white text-[10px] tracking-[0.35em] uppercase mb-7">
-                {group.title}
+                {t(group.titleKey)}
               </h4>
               <ul className="space-y-3.5">
                 {group.links.map((link) => (
-                  <li key={link.label}>
+                  <li key={link.labelKey}>
                     <Link
                       to={link.to}
                       className="text-white/35 hover:text-gold text-sm font-light transition-colors duration-300"
                     >
-                      {link.label}
+                      {t(link.labelKey)}
                     </Link>
                   </li>
                 ))}
@@ -125,9 +128,9 @@ export default function Footer() {
 
           {/* Contact column */}
           <div>
-            <h4 className="text-white text-[10px] tracking-[0.35em] uppercase mb-7">Contact</h4>
+            <h4 className="text-white text-[10px] tracking-[0.35em] uppercase mb-7">{t('footer.contactTitle')}</h4>
             <ul className="space-y-3.5 text-white/35 text-sm font-light">
-              <li>Muscat, Sultanate of Oman</li>
+              <li>{t('footer.address')}</li>
               <li>
                 <a
                   href={`https://wa.me/${waNumber}`}
@@ -148,10 +151,20 @@ export default function Footer() {
               </li>
               <li className="pt-3">
                 <div className="flex gap-2">
-                  <button className="border border-white/15 hover:border-gold/40 text-white/40 hover:text-gold px-3 py-1 text-[10px] tracking-wider transition-all duration-300">
+                  <button
+                    onClick={() => i18n.changeLanguage('en')}
+                    className={`border px-3 py-1 text-[10px] tracking-wider transition-all duration-300 ${
+                      !isAr ? 'border-gold/40 text-gold' : 'border-white/15 text-white/40 hover:border-gold/40 hover:text-gold'
+                    }`}
+                  >
                     EN
                   </button>
-                  <button className="border border-white/15 hover:border-gold/40 text-white/40 hover:text-gold px-3 py-1 text-[10px] tracking-wider transition-all duration-300">
+                  <button
+                    onClick={() => i18n.changeLanguage('ar')}
+                    className={`border px-3 py-1 text-[10px] tracking-wider transition-all duration-300 ${
+                      isAr ? 'border-gold/40 text-gold' : 'border-white/15 text-white/40 hover:border-gold/40 hover:text-gold'
+                    }`}
+                  >
                     عربي
                   </button>
                 </div>
@@ -167,10 +180,10 @@ export default function Footer() {
           </p>
           <div className="flex gap-6">
             <Link to="/privacy" className="text-white/20 hover:text-gold/60 text-xs transition-colors">
-              Privacy Policy
+              {t('footer.privacyPolicy')}
             </Link>
             <Link to="/terms" className="text-white/20 hover:text-gold/60 text-xs transition-colors">
-              Terms of Service
+              {t('footer.termsOfService')}
             </Link>
           </div>
         </div>

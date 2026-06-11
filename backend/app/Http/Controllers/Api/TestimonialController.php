@@ -16,9 +16,17 @@ class TestimonialController extends Controller
         $testimonials = Testimonial::active()->ordered()->get()->map(fn($t) => [
             'id'       => $t->id,
             'quote'    => ($isAr && $t->quote_ar) ? $t->quote_ar : $t->quote,
-            'author'   => $t->author,
-            'location' => $t->location,
-            'product'  => $t->product,
+            'quote_en' => $t->quote,
+            'quote_ar' => $t->quote_ar,
+            'author'   => ($isAr && $t->author_ar) ? $t->author_ar : $t->author,
+            'author_en' => $t->author,
+            'author_ar' => $t->author_ar,
+            'location' => ($isAr && $t->location_ar) ? $t->location_ar : $t->location,
+            'location_en' => $t->location,
+            'location_ar' => $t->location_ar,
+            'product'  => ($isAr && $t->product_ar) ? $t->product_ar : $t->product,
+            'product_en' => $t->product,
+            'product_ar' => $t->product_ar,
             'rating'   => $t->rating,
         ]);
 
