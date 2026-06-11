@@ -41,3 +41,21 @@ Launch decision needed from you: item 6 — payment gateway. Decide if COD/Bank/
 Within first 2 weeks post-launch: items 7–13 (UX polish, SEO completeness, basic tests).
 Phase 2 (based on traction): items 14–20.
 Let me know which of these you'd like me to start on — happy to prioritize based on your launch timeline.
+
+
+⚠️ Pre-existing issues found (not caused by recent work)
+
+Product image WebP conversion is silently broken — app/Observers/ProductImageObserver.php calls Intervention\Image\Laravel\Facades\Image, but intervention/image is not in composer.json/vendor. Every product image upload throws a caught exception (logged, e.g. ProductImage WebP conversion failed: Class ... not found) and falls back to keeping the original file un-converted. Functionally images still display fine, but the WebP optimization never runs.
+
+Fix: composer require intervention/image-laravel (or remove the observer logic if WebP conversion isn't needed).
+
+Frontend lint debt — 29 errors / 4 warnings, all pre-existing (none from recent edits):
+
+react-hooks/set-state-in-effect in Navbar.jsx, AuthContext.jsx, WishlistContext.jsx, usePost.js, WishlistPage.jsx, ReviewsSection-type component
+react-refresh/only-export-components in AuthContext.jsx, CartContext.jsx, CurrencyContext.jsx, ThemeContext.jsx, WishlistContext.jsx
+Unused vars: App.jsx (useSetting), TrackOrderPage.jsx (t), SurveyPage.jsx (unused question param in Rating/NPS/YesNo)
+AuthContext.jsx:43 empty block statement
+These don't break the build (Vite build ≠ ESLint), but are worth cleaning up at some point.
+
+
+APP_ENV=production / APP_DEBUG=false in local .env — fine if intentional, but means error pages won't show stack traces during local debugging.

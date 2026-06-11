@@ -73,6 +73,15 @@
   ::-webkit-scrollbar-thumb  { background: #3A2A12; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #C9A84C; }
 
+  /* Hide scrollbar for horizontally-scrollable rows (e.g. category highlights) */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Selection colour */
   ::selection {
     background: rgba(201, 168, 76, 0.25);

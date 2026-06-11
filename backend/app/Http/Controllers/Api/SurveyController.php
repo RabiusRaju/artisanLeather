@@ -53,6 +53,7 @@ class SurveyController extends Controller
                     'question'    => $q->question,
                     'question_ar' => $q->question_ar,
                     'description' => $q->description,
+                    'image'       => $q->image_path ? asset('storage/' . $q->image_path) : null,
                     'options'     => $q->options,
                     'options_ar'  => $q->options_ar,
                     'is_required' => $q->is_required,

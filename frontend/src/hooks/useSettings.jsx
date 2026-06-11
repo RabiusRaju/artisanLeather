@@ -28,6 +28,7 @@ export function SettingsProvider({ children }) {
 
 // Returns the settings map, with `${key}_ar` values swapped into `key`
 // when the active language is Arabic (and a non-empty translation exists).
+// eslint-disable-next-line react-refresh/only-export-components -- hook colocated with its provider
 export function useSettings() {
   const settings = useContext(SettingsContext)
   const { i18n } = useTranslation()
@@ -47,6 +48,7 @@ export function useSettings() {
 }
 
 // Convenience helper — get a single (already-localized) setting with fallback.
+// eslint-disable-next-line react-refresh/only-export-components -- hook colocated with its provider
 export function useSetting(key, fallback = '') {
   const settings = useSettings()
   return settings[key] || fallback

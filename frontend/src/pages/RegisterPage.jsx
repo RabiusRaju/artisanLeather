@@ -43,7 +43,7 @@ export default function RegisterPage() {
         className="w-full max-w-md">
         <div className="text-center mb-10">
           <Link to="/">
-            <img src="/logo-icon.png" alt="Artisan Leather" className="h-14 w-14 mx-auto mb-4" />
+            <img src="/logo-icon-transparent.png" alt="Artisan Leather" className="h-14 w-14 mx-auto mb-4" />
           </Link>
           <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-2">Join Us</p>
           <h1 className="font-serif text-3xl text-white font-light">Create Account</h1>

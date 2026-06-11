@@ -9,7 +9,7 @@ class SurveyQuestion extends Model
 {
     protected $fillable = [
         'survey_id','sort_order','type','question','question_ar',
-        'description','options','options_ar','is_required','settings',
+        'description','image_path','options','options_ar','is_required','settings',
     ];
 
     protected $casts = [

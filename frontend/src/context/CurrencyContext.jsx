@@ -67,4 +67,5 @@ export function CurrencyProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook colocated with its provider
 export const useCurrency = () => useContext(CurrencyContext)

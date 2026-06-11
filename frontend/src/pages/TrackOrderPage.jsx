@@ -26,7 +26,7 @@ const STATUS_LABELS = {
 }
 
 export default function TrackOrderPage() {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isAr = i18n.language === 'ar'
 
   const [orderNum, setOrderNum] = useState('')

@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { useSettings } from '../hooks/useSettings'
 
 // ── Theme definitions ──────────────────────────────────────────────────────
 // isLight: true → CSS class "theme-light" is added to <html>, which flips
 //   text-white → dark brown and border-white → dark border everywhere.
 //   Sections that must stay dark (footer, etc.) get class "dark-section".
 
+// eslint-disable-next-line react-refresh/only-export-components -- theme data colocated with provider
 export const themes = [
   {
     id:      'warm-leather',
@@ -132,10 +134,19 @@ const STORAGE_KEY = 'al_theme'
 const ThemeContext = createContext(null)
 
 export function ThemeProvider({ children }) {
+  const settings = useSettings()
+  const isLocked = settings['theme.lock_theme'] === '1' || settings['theme.lock_theme'] === true
+  const hasUserOverride = !!localStorage.getItem(STORAGE_KEY)
+
   const [theme, setThemeState] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
     return themes.find(t => t.id === saved) || themes[0]
   })
+
+  // The theme actually shown: the admin-configured default overrides the
+  // visitor's own pick when the theme is locked, or before they've chosen one.
+  const backendDefault = themes.find(t => t.id === settings['theme.default'])
+  const activeTheme = (isLocked || !hasUserOverride) && backendDefault ? backendDefault : theme
 
   const applyTheme = (t) => {
     const root = document.documentElement
@@ -151,13 +162,11 @@ export function ThemeProvider({ children }) {
     }
   }
 
-  // Apply CSS variables to :root whenever theme changes
-  useEffect(() => { applyTheme(theme) }, [theme])
-
-  // Apply on first render
-  useEffect(() => { applyTheme(theme) }, [])
+  // Apply CSS variables to :root whenever the active theme changes
+  useEffect(() => { applyTheme(activeTheme) }, [activeTheme])
 
   const setTheme = (id) => {
+    if (isLocked) return
     const found = themes.find(t => t.id === id)
     if (found) {
       setThemeState(found)
@@ -166,10 +175,11 @@ export function ThemeProvider({ children }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, themes, setTheme }}>
+    <ThemeContext.Provider value={{ theme: activeTheme, themes, setTheme, isLocked }}>
       {children}
     </ThemeContext.Provider>
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook colocated with its provider
 export const useTheme = () => useContext(ThemeContext)

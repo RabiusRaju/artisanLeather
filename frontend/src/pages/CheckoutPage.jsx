@@ -1,12 +1,14 @@
 import SEO from '../components/SEO'
 import { useSetting } from '../hooks/useSettings'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { HiArrowLeft, HiLockClosed } from 'react-icons/hi'
 import { FaWhatsapp, FaMoneyBillWave, FaUniversity } from 'react-icons/fa'
 import { useCart }     from '../context/CartContext'
 import { useCurrency } from '../context/CurrencyContext'
+import { useAuth }     from '../context/AuthContext'
+import { useToast }    from '../context/ToastContext'
 import { placeOrder }  from '../services/api'
 
 const omanGovernorates = [
@@ -56,6 +58,8 @@ const selectCls = inputCls + ' appearance-none cursor-pointer'
 export default function CheckoutPage() {
   const { items, subtotal, clearCart, coupon, discount, total: cartTotal } = useCart()
   const { format, currency } = useCurrency()
+  const { user, getLastOrder } = useAuth()
+  const { toast } = useToast()
   const navigate   = useNavigate()
   const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
   const total      = cartTotal
@@ -68,6 +72,34 @@ export default function CheckoutPage() {
   })
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
+
+  // Pre-fill checkout details for signed-in customers
+  useEffect(() => {
+    if (!user) return
+
+    const [firstName, ...rest] = (user.name || '').split(' ')
+    setForm((f) => ({
+      ...f,
+      firstName: f.firstName || firstName || '',
+      lastName:  f.lastName  || rest.join(' '),
+      email:     f.email     || user.email || '',
+      phone:     f.phone     || user.phone || '',
+    }))
+
+    getLastOrder().then((last) => {
+      if (!last) return
+      setForm((f) => ({
+        ...f,
+        firstName:   f.firstName   || last.first_name   || '',
+        lastName:    f.lastName    || last.last_name    || '',
+        phone:       f.phone       || last.phone        || '',
+        governorate: f.governorate || last.governorate  || '',
+        city:        f.city        || last.city         || '',
+        address:     f.address     || last.address      || '',
+      }))
+    }).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   // If cart is empty, redirect back
   if (items.length === 0) {
@@ -131,7 +163,7 @@ export default function CheckoutPage() {
       })
     } catch (err) {
       console.error('Order failed:', err)
-      alert('Something went wrong. Please try again or order via WhatsApp.')
+      toast('Something went wrong. Please try again or order via WhatsApp.', { type: 'error' })
       setLoading(false)
     }
   }

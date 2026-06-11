@@ -298,6 +298,15 @@ class SurveyResource extends Resource
                                         ->placeholder('Optional additional context for respondents')
                                         ->columnSpanFull(),
 
+                                    FileUpload::make('image_path')
+                                        ->label('Product Image (optional)')
+                                        ->helperText('Shown above the question so respondents know which product you mean.')
+                                        ->image()
+                                        ->disk('public')
+                                        ->directory('surveys')
+                                        ->imageEditor()
+                                        ->columnSpanFull(),
+
                                     // Options — shown only for choice types
                                     TagsInput::make('options')
                                         ->label('Answer Options (press Enter after each)')

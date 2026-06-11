@@ -47,6 +47,7 @@ Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
         Route::post('/auth/logout',  [AuthController::class, 'logout']);
         Route::get('/auth/me',       [AuthController::class, 'me']);
         Route::get('/auth/orders',   [AuthController::class, 'orders']);
+        Route::get('/auth/last-order', [AuthController::class, 'lastOrder']);
 
         Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
 

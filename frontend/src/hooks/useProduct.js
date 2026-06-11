@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { fetchProduct } from '../services/api'
 
 export function useProduct(identifier) {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
+  const { i18n } = useTranslation()
 
   useEffect(() => {
     if (!identifier) return
@@ -18,7 +20,7 @@ export function useProduct(identifier) {
       .catch(err => { if (!cancelled) { setError(err); setLoading(false) } })
 
     return () => { cancelled = true }
-  }, [identifier])
+  }, [identifier, i18n.language])
 
   return { product, loading, error }
 }

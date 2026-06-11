@@ -8,8 +8,9 @@ import { CartProvider }      from './context/CartContext'
 import { CurrencyProvider }  from './context/CurrencyContext'
 import { ThemeProvider }     from './context/ThemeContext'
 import { WishlistProvider }  from './context/WishlistContext'
-import { SettingsProvider, useSetting } from './hooks/useSettings'
-import ThemeSelector        from './components/ThemeSelector'
+import { ToastProvider }     from './context/ToastContext'
+import { SettingsProvider } from './hooks/useSettings'
+import ErrorBoundary         from './components/ErrorBoundary'
 import Analytics            from './components/Analytics'
 import Navbar               from './components/Navbar'
 import Footer               from './components/Footer'
@@ -31,6 +32,9 @@ const BlogPage          = lazy(() => import('./pages/BlogPage'))
 const BlogPostPage      = lazy(() => import('./pages/BlogPostPage'))
 const SurveyPage        = lazy(() => import('./pages/SurveyPage'))
 const WishlistPage      = lazy(() => import('./pages/WishlistPage'))
+const PrivacyPage       = lazy(() => import('./pages/PrivacyPage'))
+const TermsPage         = lazy(() => import('./pages/TermsPage'))
+const NotFoundPage      = lazy(() => import('./pages/NotFoundPage'))
 
 function RTLSyncer() {
   const { i18n } = useTranslation()
@@ -70,17 +74,20 @@ function Layout() {
           <Route path="/track"                element={<TrackOrderPage />} />
           <Route path="/track/:orderNumber"   element={<TrackOrderPage />} />
           <Route path="/wishlist"             element={<WishlistPage />} />
+          <Route path="/privacy"              element={<PrivacyPage />} />
+          <Route path="/terms"                element={<TermsPage />} />
+          <Route path="*"                     element={<NotFoundPage />} />
         </Routes>
       </Suspense>
       {!minimal && <Footer />}
       {!minimal && <WhatsAppButton />}
-      {!minimal && <ThemeSelector />}
     </>
   )
 }
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <HelmetProvider>
     <BrowserRouter>
       <SettingsProvider>
@@ -89,7 +96,9 @@ export default function App() {
             <WishlistProvider>
               <CurrencyProvider>
                 <CartProvider>
-                  <Layout />
+                  <ToastProvider>
+                    <Layout />
+                  </ToastProvider>
                 </CartProvider>
               </CurrencyProvider>
             </WishlistProvider>
@@ -98,5 +107,6 @@ export default function App() {
       </SettingsProvider>
     </BrowserRouter>
     </HelmetProvider>
+    </ErrorBoundary>
   )
 }

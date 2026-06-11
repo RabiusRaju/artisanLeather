@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import SEO from '../components/SEO'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
@@ -6,9 +6,18 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '../context/CurrencyContext'
 import { useWishlist } from '../context/WishlistContext'
 import { HiHeart } from 'react-icons/hi'
+import { PiWalletThin, PiHandbagThin, PiBeltThin, PiSparkleThin } from 'react-icons/pi'
 import { useProducts }  from '../hooks/useProducts'
 import { useBrands }   from '../hooks/useBrands'
 import { useCategories } from '../hooks/useCategories'
+
+// Fallback icons for known categories when no image is set
+const CATEGORY_ICONS = {
+  wallets:     PiWalletThin,
+  bags:        PiHandbagThin,
+  belts:       PiBeltThin,
+  accessories: PiSparkleThin,
+}
 
 // ── Skeleton card ───────────────────────────────────────────────────────────
 function SkeletonCard() {
@@ -125,10 +134,23 @@ export default function CollectionsPage() {
   const { category }  = useParams()
   const [sortBy,      setSortBy]      = useState('default')
   const [sortOpen,    setSortOpen]    = useState(false)
+  const [brandOpen,   setBrandOpen]   = useState(false)
   const [brandFilter, setBrandFilter] = useState('')
+  const sortRef  = useRef(null)
+  const brandRef = useRef(null)
   const { t } = useTranslation()
   const { brands } = useBrands()
   const { categories } = useCategories()
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false)
+      if (brandRef.current && !brandRef.current.contains(e.target)) setBrandOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const sortOptions = [
     { id: 'default',    label: t('collections.featured') },
@@ -191,51 +213,81 @@ export default function CollectionsPage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-12">
-        {/* Filter + Sort bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-14">
-          {/* Category tabs */}
-          <div className="flex flex-wrap gap-2">
-            {[
-              { id: 'all', label: t('collections.allPieces'), path: '/collections' },
-              ...categories.map(c => ({ id: c.slug, label: c.name, path: `/collections/${c.slug}` })),
-            ].map((cat) => {
-              const active = (category || 'all') === cat.id
-              return (
-                <Link key={cat.id} to={cat.path}
-                  className={`px-5 py-2 text-[10px] tracking-[0.25em] uppercase transition-all duration-300 ${
-                    active ? 'bg-gold text-dark font-semibold' : 'border border-white/15 text-white/50 hover:border-gold/40 hover:text-gold'
-                  }`}>
-                  {cat.label}
-                </Link>
-              )
-            })}
-          </div>
-
-          {/* Brand / Collection filter (only shows when brands exist) */}
-          {brands.length > 0 && (
-            <div className="flex flex-wrap gap-2 w-full">
-              <button
-                onClick={() => setBrandFilter('')}
-                className={`px-4 py-1.5 text-[10px] tracking-[0.2em] uppercase transition-all duration-300 ${
-                  !brandFilter ? 'bg-gold/20 text-gold border border-gold/40' : 'border border-white/10 text-white/40 hover:border-gold/30 hover:text-gold'
+        {/* Category highlights */}
+        <div className="flex gap-6 overflow-x-auto pb-2 mb-10 -mx-6 px-6 lg:mx-0 lg:px-0 scrollbar-hide snap-x snap-mandatory justify-center">
+          {[
+            { id: 'all', label: t('collections.allPieces'), path: '/collections', image: null },
+            ...categories.map(c => ({ id: c.slug, label: c.name, path: `/collections/${c.slug}`, image: c.image })),
+          ].map((cat) => {
+            const active = (category || 'all') === cat.id
+            const Icon = CATEGORY_ICONS[cat.id]
+            return (
+              <Link key={cat.id} to={cat.path}
+                className="flex flex-col items-center gap-2.5 flex-shrink-0 snap-start group">
+                <span className={`relative w-16 h-16 lg:w-20 lg:h-20 rounded-full p-[3px] transition-colors duration-300 ${
+                  active ? 'bg-gold' : 'bg-white/10 group-hover:bg-gold/40'
                 }`}>
-                {t('collections.allBrands')}
+                  <span className="flex items-center justify-center w-full h-full rounded-full bg-dark overflow-hidden border-2 border-dark">
+                    {cat.id === 'all' ? (
+                      <img src="/logo-icon-transparent.png" alt="" className="w-2/3 h-2/3 object-contain" />
+                    ) : cat.image ? (
+                      <img src={cat.image} alt="" className="w-full h-full object-cover" />
+                    ) : Icon ? (
+                      <Icon className="w-2/5 h-2/5 text-gold/70" />
+                    ) : (
+                      <span className="font-serif text-xl text-gold/70">{cat.label.charAt(0)}</span>
+                    )}
+                  </span>
+                </span>
+                <span className={`text-[9px] tracking-[0.2em] uppercase transition-colors duration-300 whitespace-nowrap ${
+                  active ? 'text-gold' : 'text-white/45 group-hover:text-gold'
+                }`}>
+                  {cat.label}
+                </span>
+              </Link>
+            )
+          })}
+        </div>
+
+        {/* Brand filter + Sort bar */}
+        <div className="flex items-center justify-between gap-4 mb-14 pb-6 border-b border-white/5">
+          {/* Brand / Collection filter (only shows when brands exist) */}
+          {brands.length > 0 ? (
+            <div ref={brandRef} className="relative">
+              <button onClick={() => setBrandOpen(!brandOpen)}
+                className="flex items-center gap-3 border border-white/15 hover:border-gold/30 text-white/50 hover:text-gold px-5 py-2 text-[10px] tracking-[0.25em] uppercase transition-all duration-300">
+                {brandFilter ? brands.find(b => b.slug === brandFilter)?.name : t('collections.allBrands')}
+                <span className={`transition-transform duration-300 ${brandOpen ? 'rotate-180' : ''}`}>▾</span>
               </button>
-              {brands.map(b => (
-                <button key={b.id}
-                  onClick={() => setBrandFilter(brandFilter === b.slug ? '' : b.slug)}
-                  className={`px-4 py-1.5 text-[10px] tracking-[0.2em] uppercase transition-all duration-300 ${
-                    brandFilter === b.slug ? 'bg-gold/20 text-gold border border-gold/40' : 'border border-white/10 text-white/40 hover:border-gold/30 hover:text-gold'
-                  }`}>
-                  {b.logo && <img src={b.logo} alt="" className="inline w-3 h-3 rounded-full mr-1.5 object-cover" />}
-                  {b.name}
-                </button>
-              ))}
+              <AnimatePresence>
+                {brandOpen && (
+                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
+                    className="absolute left-0 top-full mt-2 w-60 bg-dark-100 border border-gold/15 z-30 max-h-80 overflow-y-auto">
+                    <button onClick={() => { setBrandFilter(''); setBrandOpen(false) }}
+                      className={`w-full text-left px-5 py-3 text-[10px] tracking-[0.25em] uppercase transition-colors duration-200 ${
+                        !brandFilter ? 'text-gold bg-gold/5' : 'text-white/40 hover:text-gold hover:bg-white/5'
+                      }`}>
+                      {t('collections.allBrands')}
+                    </button>
+                    {brands.map(b => (
+                      <button key={b.id}
+                        onClick={() => { setBrandFilter(b.slug); setBrandOpen(false) }}
+                        className={`w-full flex items-center gap-2.5 text-left px-5 py-3 text-[10px] tracking-[0.25em] uppercase transition-colors duration-200 ${
+                          brandFilter === b.slug ? 'text-gold bg-gold/5' : 'text-white/40 hover:text-gold hover:bg-white/5'
+                        }`}>
+                        {b.logo && <img src={b.logo} alt="" className="w-4 h-4 rounded-full object-cover flex-shrink-0" />}
+                        <span className="truncate">{b.name}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          )}
+          ) : <div />}
 
           {/* Sort */}
-          <div className="relative">
+          <div ref={sortRef} className="relative">
             <button onClick={() => setSortOpen(!sortOpen)}
               className="flex items-center gap-3 border border-white/15 hover:border-gold/30 text-white/50 hover:text-gold px-5 py-2 text-[10px] tracking-[0.25em] uppercase transition-all duration-300">
               {sortOptions.find(s => s.id === sortBy)?.label}
