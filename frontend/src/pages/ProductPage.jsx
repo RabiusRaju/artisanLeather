@@ -1,16 +1,19 @@
 import { useSetting } from '../hooks/useSettings'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import SEO from '../components/SEO'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { FaWhatsapp } from 'react-icons/fa'
-import { HiChevronDown, HiArrowLeft, HiCheckCircle } from 'react-icons/hi'
+import { HiChevronDown, HiArrowLeft, HiCheckCircle, HiHeart, HiStar } from 'react-icons/hi'
 import { useProduct }   from '../hooks/useProduct'
 import { useProducts }  from '../hooks/useProducts'
 import { useCart }      from '../context/CartContext'
 import { useCurrency }  from '../context/CurrencyContext'
+import { useWishlist }  from '../context/WishlistContext'
+import { useAuth }      from '../context/AuthContext'
+import { fetchProductReviews, submitReview } from '../services/api'
 
 // ── Accordion item ─────────────────────────────────────────────────────────
 function AccordionItem({ title, children, defaultOpen = false }) {
@@ -89,6 +92,157 @@ function RelatedCard({ product, index }) {
   )
 }
 
+// ── Star rating display ─────────────────────────────────────────────────────
+function StarRating({ rating, size = 14, onSelect }) {
+  return (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <button
+          key={i}
+          type="button"
+          disabled={!onSelect}
+          onClick={() => onSelect && onSelect(i)}
+          className={onSelect ? 'cursor-pointer' : 'cursor-default'}
+        >
+          <HiStar
+            size={size}
+            className={i <= Math.round(rating) ? 'text-gold' : 'text-white/15'}
+          />
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── Reviews section ─────────────────────────────────────────────────────────
+function ReviewsSection({ product }) {
+  const { user } = useAuth()
+  const [reviews, setReviews]   = useState([])
+  const [summary, setSummary]   = useState({ average_rating: product.average_rating, review_count: product.review_count })
+  const [loading, setLoading]   = useState(true)
+  const [rating, setRating]     = useState(5)
+  const [title, setTitle]       = useState('')
+  const [comment, setComment]   = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [feedback, setFeedback] = useState(null)
+
+  const loadReviews = () => {
+    setLoading(true)
+    fetchProductReviews(product.id)
+      .then((res) => {
+        setReviews(res.data.data)
+        setSummary(res.data.summary)
+      })
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadReviews()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setFeedback(null)
+    try {
+      const res = await submitReview(product.id, { rating, title, comment })
+      setFeedback({ type: 'success', message: res.data.message })
+      setTitle('')
+      setComment('')
+      setRating(5)
+    } catch (err) {
+      setFeedback({ type: 'error', message: err.response?.data?.message || 'Something went wrong.' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <section className="mt-28 pt-16 border-t border-gold/10">
+      <div className="mb-12">
+        <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-3">Feedback</p>
+        <h2 className="font-serif text-3xl text-white font-light mb-3">Customer Reviews</h2>
+        <div className="flex items-center gap-3">
+          <StarRating rating={summary.average_rating} size={16} />
+          <span className="text-white/60 text-sm">
+            {summary.average_rating > 0 ? summary.average_rating.toFixed(1) : '—'}
+          </span>
+          <span className="text-white/30 text-xs">
+            ({summary.review_count} {summary.review_count === 1 ? 'review' : 'reviews'})
+          </span>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-12">
+        {/* Review list */}
+        <div className="lg:col-span-2 space-y-6">
+          {loading ? (
+            <p className="text-white/30 text-sm">Loading reviews…</p>
+          ) : reviews.length === 0 ? (
+            <p className="text-white/30 text-sm">No reviews yet. Be the first to share your thoughts.</p>
+          ) : (
+            reviews.map((r) => (
+              <div key={r.id} className="border-b border-white/5 pb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <StarRating rating={r.rating} />
+                  <span className="text-white/25 text-[10px] tracking-wider uppercase">{r.created_at}</span>
+                </div>
+                {r.title && <p className="text-white text-sm font-medium mb-1">{r.title}</p>}
+                {r.comment && <p className="text-white/50 text-sm font-light leading-relaxed mb-2">{r.comment}</p>}
+                <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase">{r.user_name}</p>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Review form */}
+        <div className="border border-white/8 p-6 h-fit">
+          <h3 className="font-serif text-lg text-white mb-4">Write a Review</h3>
+          {!user ? (
+            <p className="text-white/40 text-sm font-light">
+              Please <Link to="/login" className="text-gold hover:underline">sign in</Link> to write a review.
+            </p>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <p className="text-[9px] tracking-[0.3em] uppercase text-white/30 mb-2">Your Rating</p>
+                <StarRating rating={rating} size={20} onSelect={setRating} />
+              </div>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Title (optional)"
+                className="w-full bg-transparent border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:border-gold/40 focus:outline-none"
+              />
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Share your thoughts (optional)"
+                rows={4}
+                className="w-full bg-transparent border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:border-gold/40 focus:outline-none resize-none"
+              />
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full py-3 bg-gold text-dark text-[10px] tracking-[0.3em] uppercase font-bold hover:bg-gold-300 transition-all duration-300 disabled:opacity-50"
+              >
+                {submitting ? '…' : 'Submit Review'}
+              </button>
+              {feedback && (
+                <p className={`text-xs ${feedback.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                  {feedback.message}
+                </p>
+              )}
+            </form>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Loading skeleton ────────────────────────────────────────────────────────
 function ProductSkeleton() {
   return (
@@ -126,6 +280,8 @@ export default function ProductPage() {
   const { t, i18n }   = useTranslation()
   const isAr           = i18n.language === 'ar'
   const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
+  const { toggle: toggleWishlistItem, isInWishlist } = useWishlist()
+  const [wishlistBusy, setWishlistBusy] = useState(false)
 
   // Fetch related (same category)
   const { products: related } = useProducts(
@@ -165,6 +321,16 @@ export default function ProductPage() {
     })
     setToastVisible(true)
     setTimeout(() => setToastVisible(false), 2800)
+  }
+
+  const handleWishlistToggle = async () => {
+    if (wishlistBusy) return
+    setWishlistBusy(true)
+    try {
+      await toggleWishlistItem(product.id)
+    } finally {
+      setWishlistBusy(false)
+    }
   }
 
   const waMessage = encodeURIComponent(
@@ -378,15 +544,38 @@ export default function ProductPage() {
               )}
             </div>
 
-            {/* Name */}
-            <h1 className="font-serif text-4xl md:text-5xl text-white font-light leading-tight mb-3">
-              {productName}
-            </h1>
+            {/* Name + wishlist */}
+            <div className="flex items-start justify-between gap-4 mb-3">
+              <h1 className="font-serif text-4xl md:text-5xl text-white font-light leading-tight">
+                {productName}
+              </h1>
+              <button
+                onClick={handleWishlistToggle}
+                disabled={wishlistBusy}
+                aria-label="Toggle wishlist"
+                className="flex-shrink-0 mt-2 w-10 h-10 flex items-center justify-center border border-white/10 hover:border-gold/40 transition-colors duration-300 disabled:opacity-50"
+              >
+                <HiHeart
+                  size={18}
+                  className={isInWishlist(product.id) ? 'text-gold' : 'text-white/40'}
+                />
+              </button>
+            </div>
 
             {/* Tagline */}
-            <p className="font-serif text-lg text-white/40 italic font-light mb-6">
+            <p className="font-serif text-lg text-white/40 italic font-light mb-4">
               {productTagline}
             </p>
+
+            {/* Average rating */}
+            {product.review_count > 0 && (
+              <div className="flex items-center gap-2 mb-6">
+                <StarRating rating={product.average_rating} size={14} />
+                <span className="text-white/40 text-xs">
+                  {product.average_rating.toFixed(1)} ({product.review_count})
+                </span>
+              </div>
+            )}
 
             {/* Divider + price */}
             <div className="flex items-center gap-6 mb-8">
@@ -507,6 +696,9 @@ export default function ProductPage() {
             </div>
           </motion.div>
         </div>
+
+        {/* ── Reviews ──────────────────────────────────────── */}
+        <ReviewsSection product={product} />
 
         {/* ── Related products ─────────────────────────────── */}
         {relatedProducts.length > 0 && (

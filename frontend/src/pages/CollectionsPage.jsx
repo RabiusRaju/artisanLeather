@@ -4,6 +4,8 @@ import SEO from '../components/SEO'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '../context/CurrencyContext'
+import { useWishlist } from '../context/WishlistContext'
+import { HiHeart } from 'react-icons/hi'
 import { useProducts }  from '../hooks/useProducts'
 import { useBrands }   from '../hooks/useBrands'
 import { useCategories } from '../hooks/useCategories'
@@ -28,9 +30,16 @@ function ProductCard({ product, index }) {
   const isInView = useInView(ref, { once: true, margin: '-60px' })
   const { format }   = useCurrency()
   const { t, i18n }  = useTranslation()
+  const { toggle: toggleWishlist, isInWishlist } = useWishlist()
   const isAr         = i18n.language === 'ar'
   const name         = isAr && product.name_ar ? product.name_ar : product.name
   const firstImage   = product.images?.[0]?.url
+
+  const handleWishlistClick = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggleWishlist(product.id)
+  }
 
   return (
     <motion.div
@@ -64,6 +73,14 @@ function ProductCard({ product, index }) {
               {product.brand.name}
             </div>
           )}
+
+          <button
+            onClick={handleWishlistClick}
+            aria-label="Toggle wishlist"
+            className="absolute bottom-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-dark/70 border border-white/10 backdrop-blur-sm hover:border-gold/40 transition-colors duration-300"
+          >
+            <HiHeart size={14} className={isInWishlist(product.id) ? 'text-gold' : 'text-white/50'} />
+          </button>
 
           <div className="absolute inset-5 border border-dashed border-white/[0.04] pointer-events-none" />
 

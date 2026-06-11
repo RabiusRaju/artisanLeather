@@ -34,6 +34,8 @@ class ProductResource extends JsonResource
             'badge'       => $this->badge,
             'is_featured' => $this->is_featured,
             'in_stock'    => $this->in_stock,
+            'average_rating' => $this->average_rating,
+            'review_count'   => $this->review_count,
 
             // SEO fields — custom if set, otherwise null (frontend falls back gracefully)
             'meta_title'       => $this->meta_title ?: null,

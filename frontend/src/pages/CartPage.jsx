@@ -1,9 +1,10 @@
+import { useState } from 'react'
 import { useSetting } from '../hooks/useSettings'
 import SEO from '../components/SEO'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { HiTrash, HiShoppingBag, HiArrowLeft } from 'react-icons/hi'
+import { HiTrash, HiShoppingBag, HiArrowLeft, HiTag, HiX } from 'react-icons/hi'
 import { FaWhatsapp } from 'react-icons/fa'
 import { useCart }     from '../context/CartContext'
 import { useCurrency } from '../context/CurrencyContext'
@@ -128,13 +129,25 @@ function EmptyCart() {
 }
 
 export default function CartPage() {
-  const { items, subtotal, clearCart } = useCart()
+  const { items, subtotal, clearCart, coupon, couponError, couponLoading, applyCoupon, removeCoupon, discount, total: cartTotal } = useCart()
   const { format } = useCurrency()
   const { t }      = useTranslation()
   const navigate   = useNavigate()
   const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
   const shipping   = 0
-  const total      = subtotal + shipping
+  const total      = cartTotal + shipping
+  const [couponInput, setCouponInput] = useState('')
+
+  const handleApplyCoupon = async (e) => {
+    e.preventDefault()
+    if (!couponInput.trim()) return
+    try {
+      await applyCoupon(couponInput.trim())
+      setCouponInput('')
+    } catch {
+      // error message shown via couponError
+    }
+  }
 
   // WhatsApp order message
   const waLines   = items.map((i) => `• ${i.name} (${i.colorName}) × ${i.quantity} — OMR ${(i.price * i.quantity).toFixed(3)}`).join('\n')
@@ -222,11 +235,53 @@ export default function CartPage() {
                   ))}
                 </div>
 
+                {/* Coupon code */}
+                <div className="border-t border-white/8 pt-5 mb-5">
+                  {coupon ? (
+                    <div className="flex items-center justify-between bg-gold/10 border border-gold/20 px-3 py-2.5">
+                      <div className="flex items-center gap-2 text-gold text-xs">
+                        <HiTag size={14} />
+                        <span className="font-medium tracking-wider">{coupon.code}</span>
+                        <span className="text-white/40">applied</span>
+                      </div>
+                      <button onClick={removeCoupon} className="text-white/30 hover:text-red-400 transition-colors">
+                        <HiX size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        onChange={(e) => setCouponInput(e.target.value)}
+                        placeholder="Coupon code"
+                        className="flex-1 min-w-0 bg-transparent border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:border-gold/40 focus:outline-none uppercase tracking-wider"
+                      />
+                      <button
+                        type="submit"
+                        disabled={couponLoading}
+                        className="px-4 py-2.5 border border-gold/40 text-gold text-[10px] tracking-[0.2em] uppercase hover:bg-gold hover:text-dark transition-all duration-300 disabled:opacity-50 flex-shrink-0"
+                      >
+                        {couponLoading ? '…' : 'Apply'}
+                      </button>
+                    </form>
+                  )}
+                  {couponError && (
+                    <p className="text-red-400 text-xs mt-2">{couponError}</p>
+                  )}
+                </div>
+
                 <div className="border-t border-white/8 pt-5 space-y-3 mb-6">
                   <div className="flex justify-between text-sm">
                     <span className="text-white/45">Subtotal</span>
                     <span className="text-white/70">{format(subtotal)}</span>
                   </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-white/45">Discount</span>
+                      <span className="text-green-400">−{format(discount)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-white/45">Shipping</span>
                     <span className="text-gold text-[10px] tracking-wider uppercase">Free</span>

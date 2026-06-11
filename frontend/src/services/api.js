@@ -5,10 +5,16 @@ const api = axios.create({
   headers: { 'Accept': 'application/json' },
 })
 
-// Attach language header from localStorage on every request
+// Attach language header + auth token from localStorage on every request
 api.interceptors.request.use((config) => {
   const lang = localStorage.getItem('i18nextLng') || 'en'
   config.headers['Accept-Language'] = lang.startsWith('ar') ? 'ar' : 'en'
+
+  const token = localStorage.getItem('al_token')
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`
+  }
+
   return config
 })
 
@@ -28,3 +34,15 @@ export const submitSurvey     = (slug, data, token) => api.post(`/surveys/${slug
 export const fetchSettings      = ()            => api.get('/settings')
 export const fetchTestimonials  = ()            => api.get('/testimonials')
 export const fetchFaqs          = ()            => api.get('/faqs')
+
+// Coupons
+export const validateCoupon = (code, subtotal) => api.post('/coupons/validate', { code, subtotal })
+
+// Reviews
+export const fetchProductReviews = (productId, params = {}) => api.get(`/products/${productId}/reviews`, { params })
+export const submitReview        = (productId, data)        => api.post(`/products/${productId}/reviews`, data)
+
+// Wishlist
+export const fetchWishlist = ()           => api.get('/wishlist')
+export const toggleWishlist = (productId) => api.post(`/wishlist/${productId}`)
+export const syncWishlist  = (productIds) => api.post('/wishlist/sync', { product_ids: productIds })
