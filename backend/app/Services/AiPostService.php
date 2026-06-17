@@ -327,12 +327,21 @@ Return a single JSON object with exactly these keys:
     "SEO alt text for image 4 (e.g. Heritage Bifold Wallet Cognac Brown Detail Close-Up | Artisan Leather Oman)",
     "SEO alt text for image 5 (e.g. Heritage Bifold Wallet Handcrafted Oman Lifestyle | Artisan Leather Oman)",
     "SEO alt text for image 6 (e.g. Heritage Bifold Wallet Gift Packaging | Artisan Leather Oman)"
+  ],
+  "image_file_names": [
+    "front-exterior",
+    "open-interior",
+    "card-slots-detail",
+    "side-profile",
+    "back-exterior",
+    "lifestyle"
   ]
 }
 
 Rules for details: 4–6 items, each specific and factual — dimensions, slot counts, material grades, closures, certifications. Not marketing copy.
 Rules for colors: list the 2–4 most likely colors for this product type with accurate hex codes.
 Rules for image_alt_texts: always 6 items, written as if describing real photos from different angles — even if images haven't been uploaded yet. Under 100 chars each.
+Rules for image_file_names: always exactly 6 items. Each item is a 2–4 word kebab-case suffix describing ONLY the view/angle/content of that image — NOT the product name (e.g. "front-exterior", "open-interior", "card-slots-detail", "stitching-closeup", "back-view", "lifestyle-hand"). If reference images are attached, look at each image IN ORDER and describe what you actually see. If no images are attached, suggest the 6 most useful photography angles for this product type. Use only lowercase letters and hyphens — no spaces, no numbers.
 MSG;
     }
 

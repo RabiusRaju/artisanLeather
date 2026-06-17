@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -363,7 +364,11 @@ class ProductResource extends Resource
                                                 })
                                                 ->columnSpanFull(),
 
-                                            FileUpload::make('url')
+                                            // Hidden field holds the persisted storage path.
+                                            // FilePond never sees it, so there's no "Loading" loop for external/existing URLs.
+                                            Hidden::make('url'),
+
+                                            FileUpload::make('upload')
                                                 ->label('Upload / Replace Image')
                                                 ->image()
                                                 ->directory('products')
@@ -377,7 +382,7 @@ class ProductResource extends Resource
                                                     'mimes' => 'Only JPG, PNG or WebP images are accepted.',
                                                 ])
                                                 ->fetchFileInformation(false)
-                                                ->required(fn ($record) => $record === null)
+                                                ->required(fn ($record, $get) => $record === null && empty($get('url')))
                                                 ->helperText('Upload a JPG, PNG or WebP image (max 5 MB). Images are auto-converted to WebP.')
                                                 ->getUploadedFileNameForStorageUsing(function (\Livewire\Features\SupportFileUploads\TemporaryUploadedFile $file, $get): string {
                                                     $name = trim((string) ($get('recommended_name') ?? ''));
@@ -427,6 +432,10 @@ class ProductResource extends Resource
                                         ->collapsible()
                                         ->itemLabel(fn(array $state): ?string => $state['label'] ?? 'Image')
                                         ->mutateRelationshipDataBeforeCreateUsing(function (array $data): ?array {
+                                            if (!empty($data['upload'])) {
+                                                $data['url'] = $data['upload'];
+                                            }
+                                            unset($data['upload']);
                                             if (empty($data['url'])) {
                                                 Log::warning('ProductImage create skipped — empty url', ['data' => $data]);
                                                 return null;
@@ -435,6 +444,10 @@ class ProductResource extends Resource
                                             return $data;
                                         })
                                         ->mutateRelationshipDataBeforeSaveUsing(function (array $data): array {
+                                            if (!empty($data['upload'])) {
+                                                $data['url'] = $data['upload'];
+                                            }
+                                            unset($data['upload']);
                                             Log::info('ProductImage saving', ['url' => $data['url'] ?? null, 'label' => $data['label'] ?? null]);
                                             return $data;
                                         }),
@@ -828,10 +841,12 @@ class ProductResource extends Resource
                 $mime = mime_content_type($absPath) ?: '';
                 if (!str_starts_with($mime, 'image/')) continue; // skip PDFs / text
 
-                $ext         = strtolower(pathinfo($origName, PATHINFO_EXTENSION) ?: pathinfo($absPath, PATHINFO_EXTENSION) ?: 'jpg');
-                $productSlug = Str::slug($data['name'] ?? 'product');
-                $seoName     = $productSlug . '-' . ($imgIndex + 1); // e.g. heritage-bifold-wallet-1
-                $stored      = 'products/' . $seoName . '_' . Str::random(8) . '.' . $ext;
+                $ext          = strtolower(pathinfo($origName, PATHINFO_EXTENSION) ?: pathinfo($absPath, PATHINFO_EXTENSION) ?: 'jpg');
+                $productSlug  = Str::slug($data['name'] ?? 'product');
+                $fileNames    = array_values($data['image_file_names'] ?? []);
+                $viewSuffix   = isset($fileNames[$imgIndex]) ? Str::slug($fileNames[$imgIndex]) : 'view-' . ($imgIndex + 1);
+                $seoName      = $productSlug . '-' . $viewSuffix; // e.g. heritage-bifold-wallet-front-exterior
+                $stored       = 'products/' . $seoName . '_' . Str::random(8) . '.' . $ext;
 
                 Storage::disk('public')->put($stored, file_get_contents($absPath));
 
