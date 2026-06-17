@@ -20,6 +20,7 @@ use App\Services\AiPostService;
 use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Filament\Schemas\Components\Grid;
@@ -82,7 +83,7 @@ class ProductResource extends Resource
                             ->color('warning')
                             ->requiresConfirmation()
                             ->modalHeading('Generate with Claude AI')
-                            ->modalDescription('This will overwrite all text fields (name, description, care, shipping, SEO…). Continue?')
+                            ->modalDescription('This will overwrite all text fields, bullet points, colors, and will populate the Images tab with your reference images. Continue?')
                             ->modalSubmitActionLabel('Yes, generate')
                             ->action(function ($get, $set) {
                                 $prompt = $get('ai_prompt');
@@ -92,14 +93,15 @@ class ProductResource extends Resource
                                         ->warning()->send();
                                     return;
                                 }
-                                $filePaths = self::resolveAiFilePaths($get('ai_attachments') ?? []);
+                                $rawAttachments = $get('ai_attachments') ?? [];
+                                $filePaths = self::resolveAiFilePaths($rawAttachments);
                                 try {
                                     $data = app(AiPostService::class)->generateProductWithClaude($prompt, $filePaths);
-                                    self::fillAiFields($set, $data);
+                                    self::fillAiFields($set, $get, $data, $rawAttachments);
                                     $set('ai_attachments', []);
                                     \Filament\Notifications\Notification::make()
                                         ->title('✅ Claude generated your product copy!')
-                                        ->body('Review all tabs before saving.')
+                                        ->body('Images tab pre-filled — review all tabs before saving.')
                                         ->success()->send();
                                 } catch (\Throwable $e) {
                                     \Filament\Notifications\Notification::make()
@@ -115,7 +117,7 @@ class ProductResource extends Resource
                             ->color('info')
                             ->requiresConfirmation()
                             ->modalHeading('Generate with OpenAI (GPT-4o)')
-                            ->modalDescription('This will overwrite all text fields (name, description, care, shipping, SEO…). Continue?')
+                            ->modalDescription('This will overwrite all text fields, bullet points, colors, and will populate the Images tab with your reference images. Continue?')
                             ->modalSubmitActionLabel('Yes, generate')
                             ->action(function ($get, $set) {
                                 $prompt = $get('ai_prompt');
@@ -125,14 +127,15 @@ class ProductResource extends Resource
                                         ->warning()->send();
                                     return;
                                 }
-                                $filePaths = self::resolveAiFilePaths($get('ai_attachments') ?? []);
+                                $rawAttachments = $get('ai_attachments') ?? [];
+                                $filePaths = self::resolveAiFilePaths($rawAttachments);
                                 try {
                                     $data = app(AiPostService::class)->generateProductWithOpenAI($prompt, $filePaths);
-                                    self::fillAiFields($set, $data);
+                                    self::fillAiFields($set, $get, $data, $rawAttachments);
                                     $set('ai_attachments', []);
                                     \Filament\Notifications\Notification::make()
                                         ->title('✅ OpenAI generated your product copy!')
-                                        ->body('Review all tabs before saving.')
+                                        ->body('Images tab pre-filled — review all tabs before saving.')
                                         ->success()->send();
                                 } catch (\Throwable $e) {
                                     \Filament\Notifications\Notification::make()
@@ -313,7 +316,7 @@ class ProductResource extends Resource
                         ->icon('heroicon-o-photo')
                         ->schema([
                             Section::make('Product Images')
-                                ->description('Upload up to 6 images (max 5 MB each · JPG / PNG / WebP). After uploading, click ✏️ Edit to crop, rotate, adjust brightness, contrast and saturation. Images are auto-converted to WebP.')
+                                ->description('Upload up to 6 images (max 5 MB each · JPG / PNG / WebP). Images are automatically converted to WebP and resized to 1200px. Add a view label and alt text for each image.')
                                 ->schema([
                                     Repeater::make('images')
                                         ->relationship()
@@ -323,10 +326,12 @@ class ProductResource extends Resource
                                             // Works for both local paths AND external URLs (Unsplash, etc.)
                                             Placeholder::make('image_preview')
                                                 ->label('Current Image')
-                                                ->content(function ($record): HtmlString {
-                                                    $url = $record?->url;
+                                                ->content(function ($record, $get): HtmlString {
+                                                    // For existing DB records use the model url;
+                                                    // for new items pre-filled by Generate, fall back to the url field state.
+                                                    $url = $record?->url ?? $get('url');
 
-                                                    if (!$url) {
+                                                    if (!$url || str_starts_with($url, 'livewire-tmp/')) {
                                                         return new HtmlString(
                                                             '<p style="color:#9ca3af;font-size:0.8rem;padding:8px 0">
                                                                 No image yet — upload one below.
@@ -334,10 +339,15 @@ class ProductResource extends Resource
                                                         );
                                                     }
 
-                                                    // External URL → use as-is; local path → resolve via disk
                                                     $src = str_starts_with($url, 'http')
                                                         ? $url
                                                         : Storage::disk('public')->url($url);
+
+                                                    $badge = $record?->exists
+                                                        ? '<strong style="color:#d4af37;display:block;margin-bottom:4px;">✓ Image saved</strong>
+                                                           Upload a new file below to replace this image.'
+                                                        : '<strong style="color:#f59e0b;display:block;margin-bottom:4px;">⏳ Ready to save</strong>
+                                                           This image will be saved when you click Save.';
 
                                                     return new HtmlString(
                                                         '<div style="display:flex;align-items:center;gap:16px;margin-bottom:4px;">
@@ -345,14 +355,9 @@ class ProductResource extends Resource
                                                                  style="height:160px;width:160px;object-fit:cover;
                                                                         border-radius:4px;border:1px solid rgba(201,168,76,0.25);"
                                                                  alt="Product image preview" />
-                                                            <div style="font-size:0.75rem;color:#9ca3af;line-height:1.6;">
-                                                                <strong style="color:#d4af37;display:block;margin-bottom:4px;">
-                                                                    ✓ Image saved
-                                                                </strong>
-                                                                Upload a new file below to replace this image.<br>
-                                                                The editor will open after upload so you can<br>
-                                                                crop, rotate and fine-tune before saving.
-                                                            </div>
+                                                            <div style="font-size:0.75rem;color:#9ca3af;line-height:1.6;">'
+                                                                . $badge .
+                                                           '</div>
                                                          </div>'
                                                     );
                                                 })
@@ -361,37 +366,6 @@ class ProductResource extends Resource
                                             FileUpload::make('url')
                                                 ->label('Upload / Replace Image')
                                                 ->image()
-
-                                                // ── Built-in image editor ──────────────────
-                                                ->imageEditor()
-
-                                                // Mode 3 = Crop + Fine-tune (brightness, contrast, saturation, warmth)
-                                                ->imageEditorMode(3)
-
-                                                // Aspect ratio presets the editor offers
-                                                ->imageEditorAspectRatioOptions([
-                                                    null,    // Free / no fixed ratio
-                                                    '1:1',   // Square — catalogue card
-                                                    '4:5',   // Portrait — product detail
-                                                    '3:4',   // Portrait — standard product
-                                                    '16:9',  // Landscape — banner / hero
-                                                ])
-
-                                                // Editor popup size (larger = more comfortable editing)
-                                                ->imageEditorViewportWidth(1100)
-                                                ->imageEditorViewportHeight(700)
-
-                                                // Dark fill for any transparent PNG areas
-                                                ->imageEditorEmptyFillColor('#120D05')
-
-                                                // ── Auto-resize output ─────────────────────
-                                                // Resize to max 1200px (observer converts to WebP after save)
-                                                ->automaticallyResizeImagesMode('cover')
-                                                ->automaticallyResizeImagesToWidth(1200)
-                                                ->automaticallyResizeImagesToHeight(1200)
-                                                ->automaticallyUpscaleImagesWhenResizing(false)
-
-                                                // ── Upload settings ────────────────────────
                                                 ->directory('products')
                                                 ->disk('public')
                                                 ->visibility('public')
@@ -402,8 +376,22 @@ class ProductResource extends Resource
                                                     'max'   => 'Image must be smaller than 5 MB.',
                                                     'mimes' => 'Only JPG, PNG or WebP images are accepted.',
                                                 ])
-                                                ->helperText('💡 Tip: After uploading, click the ✏️ pencil icon to open the editor — crop, rotate, adjust brightness/contrast/saturation.')
-                                                ->required()
+                                                ->fetchFileInformation(false)
+                                                ->required(fn ($record) => $record === null)
+                                                ->helperText('Upload a JPG, PNG or WebP image (max 5 MB). Images are auto-converted to WebP.')
+                                                ->getUploadedFileNameForStorageUsing(function (\Livewire\Features\SupportFileUploads\TemporaryUploadedFile $file, $get): string {
+                                                    $name = trim((string) ($get('recommended_name') ?? ''));
+                                                    $ext  = $file->guessExtension() ?: 'jpg';
+                                                    $base = $name !== '' ? Str::slug($name) : Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+                                                    return ($base ?: 'image') . '_' . Str::random(8) . '.' . $ext;
+                                                })
+                                                ->columnSpanFull(),
+
+                                            TextInput::make('recommended_name')
+                                                ->label('Recommended File Name')
+                                                ->placeholder('e.g. heritage-bifold-front')
+                                                ->helperText('Optional: set a custom filename for this image (no extension needed). Used when uploading.')
+                                                ->maxLength(100)
                                                 ->columnSpanFull(),
 
                                             Select::make('label')
@@ -437,7 +425,19 @@ class ProductResource extends Resource
                                         ->reorderable()
                                         ->reorderableWithDragAndDrop()
                                         ->collapsible()
-                                        ->itemLabel(fn(array $state): ?string => $state['label'] ?? 'Image'),
+                                        ->itemLabel(fn(array $state): ?string => $state['label'] ?? 'Image')
+                                        ->mutateRelationshipDataBeforeCreateUsing(function (array $data): ?array {
+                                            if (empty($data['url'])) {
+                                                Log::warning('ProductImage create skipped — empty url', ['data' => $data]);
+                                                return null;
+                                            }
+                                            Log::info('ProductImage creating', ['url' => $data['url'], 'label' => $data['label'] ?? null]);
+                                            return $data;
+                                        })
+                                        ->mutateRelationshipDataBeforeSaveUsing(function (array $data): array {
+                                            Log::info('ProductImage saving', ['url' => $data['url'] ?? null, 'label' => $data['label'] ?? null]);
+                                            return $data;
+                                        }),
                                 ]),
                         ]),
 
@@ -740,17 +740,25 @@ class ProductResource extends Resource
     private static function resolveAiFilePaths(mixed $files): array
     {
         $paths = [];
-        foreach ((array) $files as $relativePath) {
-            if (blank($relativePath)) continue;
-            $abs = Storage::disk('local')->path($relativePath);
-            if (file_exists($abs)) {
-                $paths[] = $abs;
+        foreach ((array) $files as $file) {
+            if (blank($file)) continue;
+            if ($file instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                // getRealPath() returns the actual absolute path in livewire-tmp storage
+                $abs = $file->getRealPath();
+                if ($abs && file_exists($abs)) {
+                    $paths[] = $abs;
+                }
+            } elseif (is_string($file)) {
+                $abs = Storage::disk('local')->path($file);
+                if (file_exists($abs)) {
+                    $paths[] = $abs;
+                }
             }
         }
         return $paths;
     }
 
-    private static function fillAiFields($set, array $data): void
+    private static function fillAiFields($set, $get, array $data, array $rawAiAttachments = []): void
     {
         $set('name',             $data['name']             ?? '');
         $set('name_ar',          $data['name_ar']          ?? '');
@@ -771,6 +779,101 @@ class ProductResource extends Resource
         $set('meta_description', $data['meta_description'] ?? '');
         $set('_seo_score',       (string) ($data['seo_score'] ?? 0));
         $set('_seo_notes',       $data['seo_notes']        ?? '');
+
+        // Bullet points (details repeater)
+        if (!empty($data['details']) && is_array($data['details'])) {
+            $set('details', array_values(array_map(fn ($d, $i) => [
+                'detail'     => $d['detail']    ?? '',
+                'detail_ar'  => $d['detail_ar'] ?? '',
+                'sort_order' => $i,
+            ], $data['details'], array_keys($data['details']))));
+        }
+
+        // Colors repeater
+        if (!empty($data['colors']) && is_array($data['colors'])) {
+            $set('colors', array_values(array_map(fn ($c, $i) => [
+                'name'       => $c['name']    ?? '',
+                'name_ar'    => $c['name_ar'] ?? '',
+                'hex'        => $c['hex']     ?? '#8B4513',
+                'sort_order' => $i,
+            ], $data['colors'], array_keys($data['colors']))));
+        }
+
+        // ── Auto-populate Images tab from reference images ──────────────────────
+        // Each attachment is either a TemporaryUploadedFile (still in livewire-tmp)
+        // or a string path on the local disk. Copy images to public/products/ so
+        // they appear in the Repeater preview immediately and get saved on form submit.
+        if (!empty($rawAiAttachments)) {
+            $altTexts  = array_values($data['image_alt_texts'] ?? []);
+            $newImages = [];
+            $imgIndex  = 0;
+
+            foreach ($rawAiAttachments as $attachment) {
+                if (blank($attachment)) continue;
+
+                $absPath  = null;
+                $origName = '';
+
+                if ($attachment instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                    // getRealPath() returns the real absolute path in livewire-tmp storage
+                    $absPath  = $attachment->getRealPath();
+                    $origName = $attachment->getClientOriginalName(); // '20260612_235927.jpg'
+                } elseif (is_string($attachment)) {
+                    $absPath  = Storage::disk('local')->path($attachment);
+                    $origName = basename($attachment);
+                }
+
+                if (!$absPath || !file_exists($absPath)) continue;
+
+                $mime = mime_content_type($absPath) ?: '';
+                if (!str_starts_with($mime, 'image/')) continue; // skip PDFs / text
+
+                $ext         = strtolower(pathinfo($origName, PATHINFO_EXTENSION) ?: pathinfo($absPath, PATHINFO_EXTENSION) ?: 'jpg');
+                $productSlug = Str::slug($data['name'] ?? 'product');
+                $seoName     = $productSlug . '-' . ($imgIndex + 1); // e.g. heritage-bifold-wallet-1
+                $stored      = 'products/' . $seoName . '_' . Str::random(8) . '.' . $ext;
+
+                Storage::disk('public')->put($stored, file_get_contents($absPath));
+
+                Log::info('AI image copied to public', ['stored' => $stored, 'orig' => $origName]);
+
+                $newImages[] = [
+                    'url'              => $stored,
+                    'recommended_name' => $seoName,
+                    'label'            => null,
+                    'sort_order'       => $imgIndex + 1,
+                    'alt_text'         => $altTexts[$imgIndex] ?? '',
+                ];
+                $imgIndex++;
+            }
+
+            if (!empty($newImages)) {
+                $set('images', $newImages);
+                Log::info('Images tab populated', ['count' => count($newImages)]);
+            } else {
+                Log::warning('fillAiFields: no images copied', ['attachments_count' => count($rawAiAttachments)]);
+            }
+            return;
+        }
+
+        // ── Alt texts for already-saved images (no reference images attached) ──
+        if (!empty($data['image_alt_texts']) && is_array($data['image_alt_texts'])) {
+            $currentImages = $get('images') ?? [];
+            if (!empty($currentImages)) {
+                $altTexts = array_values($data['image_alt_texts']);
+                $updated  = [];
+                $i = 0;
+                // Preserve original UUID keys so the relationship Repeater state stays intact
+                foreach ($currentImages as $key => $img) {
+                    if (empty($img['alt_text']) && isset($altTexts[$i])) {
+                        $img['alt_text'] = $altTexts[$i];
+                    }
+                    $updated[$key] = $img;
+                    $i++;
+                }
+                $set('images', $updated);
+            }
+        }
     }
 
     protected static function competitionMarkets(): array
