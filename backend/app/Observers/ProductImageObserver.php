@@ -9,18 +9,26 @@ class ProductImageObserver
 {
     public function created(ProductImage $image): void
     {
-        $this->processImage($image);
+        $id = $image->id;
+        app()->terminating(fn() => $this->deferredProcess($id));
     }
 
     public function updated(ProductImage $image): void
     {
         if ($image->isDirty('url')) {
-            $this->processImage($image);
+            $id = $image->id;
+            app()->terminating(fn() => $this->deferredProcess($id));
         }
     }
 
-    private function processImage(ProductImage $image): void
+    private function deferredProcess(int $id): void
     {
+        $image = ProductImage::find($id);
+        if (!$image) return;
+
+        set_time_limit(120);
+        ini_set('memory_limit', '512M');
+
         $webpPath = WebpConverter::convert($image->url, 'public', 1200);
 
         if ($webpPath !== $image->url) {
