@@ -240,6 +240,52 @@ class HomepageSettings extends Page implements HasSchemas
                                     ['stats.4.label_ar', 'Stat 4 — Label (Arabic)', 'text'],
                                 ])),
                         ]),
+
+                    Tab::make('Preview')
+                        ->icon('heroicon-o-eye')
+                        ->schema([
+                            Section::make('🌐 Website Preview')
+                                ->description('Live preview of how the homepage hero and stats bar look to visitors.')
+                                ->schema([
+                                    Placeholder::make('_homepage_preview')
+                                        ->label('')
+                                        ->content(function ($get) {
+                                            $eyebrow  = e($get('hero.eyebrow')          ?: 'Muscat · Sultanate of Oman');
+                                            $line1    = e($get('hero.headline')          ?: 'Where Leather');
+                                            $line2    = e($get('hero.headline_accent')   ?: 'Becomes Legacy');
+                                            $subtitle = e($get('hero.subtitle')          ?: 'Handcrafted premium leather goods for those who appreciate timeless elegance.');
+                                            $cta1     = e($get('hero.cta_primary')       ?: 'Explore Collection');
+                                            $cta2     = e($get('hero.cta_secondary')     ?: 'Our Story');
+
+                                            $stats = '';
+                                            for ($i = 1; $i <= 4; $i++) {
+                                                $val   = e($get("stats.{$i}.value") ?: '—');
+                                                $label = e($get("stats.{$i}.label") ?: "Stat {$i}");
+                                                $stats .= '<div style="text-align:center;padding:16px 8px;background:#1a1208;">
+                                                    <div style="font-size:22px;font-weight:700;color:#d4af37;">' . $val . '</div>
+                                                    <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:4px;text-transform:uppercase;letter-spacing:.06em;">' . $label . '</div>
+                                                </div>';
+                                            }
+
+                                            return new HtmlString('
+                                                <div style="max-width:680px;">
+                                                    <div style="background:linear-gradient(135deg,#0d0a04,#1c1408);border-radius:12px 12px 0 0;padding:44px 40px;font-family:Georgia,serif;">
+                                                        <div style="font-size:10px;letter-spacing:.55em;text-transform:uppercase;color:rgba(212,175,55,0.6);margin-bottom:18px;">' . $eyebrow . '</div>
+                                                        <div style="font-size:34px;font-weight:300;color:#fff;line-height:1.2;margin-bottom:2px;">' . $line1 . '</div>
+                                                        <div style="font-size:34px;font-weight:300;color:#d4af37;font-style:italic;line-height:1.2;margin-bottom:20px;">' . $line2 . '</div>
+                                                        <p style="color:rgba(255,255,255,0.5);font-size:13px;line-height:1.7;margin:0 0 28px;max-width:460px;">' . $subtitle . '</p>
+                                                        <div style="display:flex;gap:12px;">
+                                                            <div style="background:#d4af37;color:#0d0a04;font-size:11px;font-weight:700;padding:10px 22px;border-radius:4px;letter-spacing:.06em;">' . $cta1 . '</div>
+                                                            <div style="border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:11px;padding:10px 22px;border-radius:4px;letter-spacing:.06em;">' . $cta2 . '</div>
+                                                        </div>
+                                                    </div>
+                                                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#2a1f0e;border-radius:0 0 12px 12px;overflow:hidden;">' . $stats . '</div>
+                                                </div>
+                                            ');
+                                        })
+                                        ->columnSpanFull(),
+                                ]),
+                        ]),
                 ]),
 
             // ── SEO ───────────────────────────────────────────────────────
@@ -273,50 +319,6 @@ class HomepageSettings extends Page implements HasSchemas
                                     <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com</div>
                                     <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
                                     <div style="font-size:13px;color:#545454;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
-                                </div>
-                            ');
-                        })
-                        ->columnSpanFull(),
-                ]),
-
-            // ── Preview ───────────────────────────────────────────────────
-            Section::make('🌐 Website Preview')
-                ->description('Live preview of how the homepage hero looks to visitors.')
-                ->collapsed()
-                ->schema([
-                    Placeholder::make('_homepage_preview')
-                        ->label('')
-                        ->content(function ($get) {
-                            $eyebrow  = e($get('hero.eyebrow')          ?: 'Muscat · Sultanate of Oman');
-                            $line1    = e($get('hero.headline')          ?: 'Where Leather');
-                            $line2    = e($get('hero.headline_accent')   ?: 'Becomes Legacy');
-                            $subtitle = e($get('hero.subtitle')          ?: 'Handcrafted premium leather goods for those who appreciate timeless elegance.');
-                            $cta1     = e($get('hero.cta_primary')       ?: 'Explore Collection');
-                            $cta2     = e($get('hero.cta_secondary')     ?: 'Our Story');
-
-                            $stats = '';
-                            for ($i = 1; $i <= 4; $i++) {
-                                $val   = e($get("stats.{$i}.value") ?: '—');
-                                $label = e($get("stats.{$i}.label") ?: "Stat {$i}");
-                                $stats .= '<div style="text-align:center;padding:16px 8px;background:#1a1208;">
-                                    <div style="font-size:22px;font-weight:700;color:#d4af37;">' . $val . '</div>
-                                    <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:4px;text-transform:uppercase;letter-spacing:.06em;">' . $label . '</div>
-                                </div>';
-                            }
-
-                            return new HtmlString('
-                                <div style="max-width:680px;">
-                                    <div style="background:linear-gradient(135deg,#0d0a04,#1c1408);border-radius:12px 12px 0 0;padding:44px 40px;font-family:Georgia,serif;">
-                                        <div style="font-size:10px;letter-spacing:.55em;text-transform:uppercase;color:rgba(212,175,55,0.6);margin-bottom:18px;">' . $eyebrow . '</div>
-                                        <div style="font-size:34px;font-weight:300;color:#fff;line-height:1.2;margin-bottom:2px;">' . $line1 . '</div>
-                                        <div style="font-size:34px;font-weight:300;color:#d4af37;font-style:italic;line-height:1.2;margin-bottom:20px;">' . $line2 . '</div>
-                                        <p style="color:rgba(255,255,255,0.5);font-size:13px;line-height:1.7;margin:0 0 28px;max-width:460px;">' . $subtitle . '</p>
-                                        <div style="display:flex;gap:12px;">
-                                            <div style="background:#d4af37;color:#0d0a04;font-size:11px;font-weight:700;padding:10px 22px;border-radius:4px;letter-spacing:.06em;">' . $cta1 . '</div>
-                                            <div style="border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:11px;padding:10px 22px;border-radius:4px;letter-spacing:.06em;">' . $cta2 . '</div>
-                                        </div>
-                                    </div>
-                                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#2a1f0e;border-radius:0 0 12px 12px;overflow:hidden;">' . $stats . '</div>
                                 </div>
                             ');
                         })
