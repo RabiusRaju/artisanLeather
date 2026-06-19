@@ -54,7 +54,13 @@ class SurveyController extends Controller
                     'question_ar' => $q->question_ar,
                     'description' => $q->description,
                     'image'       => $q->image_path ? asset('storage/' . $q->image_path) : null,
-                    'options'     => $q->options,
+                    'options'     => $q->type === 'image_choice' && is_array($q->options)
+                        ? array_map(fn($opt) => [
+                            'label'    => $opt['label']    ?? '',
+                            'label_ar' => $opt['label_ar'] ?? '',
+                            'image'    => !empty($opt['image']) ? asset('storage/' . $opt['image']) : null,
+                        ], $q->options)
+                        : $q->options,
                     'options_ar'  => $q->options_ar,
                     'is_required' => $q->is_required,
                     'settings'    => $q->settings ?? [],
