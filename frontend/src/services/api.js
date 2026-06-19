@@ -15,6 +15,11 @@ api.interceptors.request.use((config) => {
     config.headers['Authorization'] = `Bearer ${token}`
   }
 
+  const staffPin = localStorage.getItem('al_survey_staff_pin')
+  if (staffPin) {
+    config.headers['X-Staff-Pin'] = staffPin
+  }
+
   return config
 })
 
@@ -31,6 +36,7 @@ export const fetchSurvey      = (slug)        => api.get(`/surveys/${slug}`)
 export const submitSurvey     = (slug, data, token) => api.post(`/surveys/${slug}/respond`, data, {
   headers: token ? { 'X-Survey-Token': token } : {}
 })
+export const verifyStaffPin   = (pin)         => api.post('/surveys/staff-unlock', { pin })
 export const fetchSettings      = ()            => api.get('/settings')
 export const fetchTestimonials  = ()            => api.get('/testimonials')
 export const fetchFaqs          = ()            => api.get('/faqs')
