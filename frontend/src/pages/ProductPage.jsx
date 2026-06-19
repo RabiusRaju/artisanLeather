@@ -274,6 +274,16 @@ export default function ProductPage() {
   const [activeColor, setActiveColor]   = useState(0)
   const [quantity, setQuantity]         = useState(1)
   const [toastVisible, setToastVisible] = useState(false)
+  const [isZooming, setIsZooming]       = useState(false)
+  const [zoomPos, setZoomPos]           = useState({ x: 50, y: 50 })
+
+  const handleImageMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    setZoomPos({
+      x: ((e.clientX - rect.left) / rect.width) * 100,
+      y: ((e.clientY - rect.top) / rect.height) * 100,
+    })
+  }
 
   const { addItem }    = useCart()
   const { format }     = useCurrency()
@@ -448,8 +458,11 @@ export default function ProductPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.35 }}
-                className="aspect-square relative overflow-hidden"
+                className="aspect-square relative overflow-hidden lg:cursor-zoom-in"
                 style={{ background: 'linear-gradient(160deg, #2A1A08, #1A1008)' }}
+                onMouseEnter={() => setIsZooming(true)}
+                onMouseLeave={() => setIsZooming(false)}
+                onMouseMove={handleImageMouseMove}
               >
                 {/* Product photo */}
                 {product.images?.[activeImage] && (
@@ -457,6 +470,19 @@ export default function ProductPage() {
                     src={product.images?.[activeImage]?.url}
                     alt={`${product.name} - view ${activeImage + 1}`}
                     className="absolute inset-0 w-full h-full object-cover"
+                  />
+                )}
+
+                {/* Zoom layer — follows cursor, desktop only */}
+                {product.images?.[activeImage] && isZooming && (
+                  <div
+                    className="absolute inset-0 hidden lg:block pointer-events-none"
+                    style={{
+                      backgroundImage: `url(${product.images[activeImage].url})`,
+                      backgroundSize: '220%',
+                      backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+                      backgroundRepeat: 'no-repeat',
+                    }}
                   />
                 )}
 
