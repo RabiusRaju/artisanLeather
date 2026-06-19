@@ -91,6 +91,7 @@ class SettingsController extends Controller
             'about.hero.subtitle'            => $settings['about.hero.subtitle']        ?? 'Sixteen years of craft. One unwavering standard.',
 
             // About — Story
+            'about.story.image'              => !empty($settings['about.story.image']) ? asset('storage/' . $settings['about.story.image']) : null,
             'about.story.headline'           => $settings['about.story.headline']           ?? 'Born from a Love',
             'about.story.headline_accent'    => $settings['about.story.headline_accent']    ?? 'of the Craft',
             'about.story.years'              => $settings['about.story.years']              ?? '16+',

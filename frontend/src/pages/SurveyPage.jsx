@@ -113,6 +113,35 @@ function YesNo({ value, onChange }) {
   )
 }
 
+function ImageChoice({ question, value, onChange }) {
+  const opts = question.options || []
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      {opts.map((opt, i) => {
+        const selected = value === opt.label
+        return (
+          <button key={i} type="button" onClick={() => onChange(opt.label)}
+            className={`group relative rounded-lg overflow-hidden border-2 transition-all duration-200 text-left
+              ${selected ? 'border-gold' : 'border-white/10 hover:border-gold/40'}`}>
+            {opt.image ? (
+              <img src={opt.image} alt={opt.label} className="w-full h-32 object-cover" />
+            ) : (
+              <div className="w-full h-32 bg-dark-100 flex items-center justify-center text-white/20 text-xs">No image</div>
+            )}
+            <div className={`px-3 py-2 text-xs text-center transition-colors duration-200
+              ${selected ? 'bg-gold text-dark font-bold' : 'bg-dark-100 text-white/70'}`}>
+              {opt.label}
+            </div>
+            {selected && (
+              <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gold flex items-center justify-center text-dark text-xs font-bold">✓</div>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 function Dropdown({ question, value, onChange }) {
   const opts = question.options || []
   return (
@@ -150,6 +179,7 @@ function QuestionInput({ question, value, onChange }) {
     case 'nps':             return <NPS {...props} />
     case 'yes_no':          return <YesNo {...props} />
     case 'dropdown':        return <Dropdown {...props} />
+    case 'image_choice':    return <ImageChoice {...props} />
     case 'text_short':      return <TextInput {...props} />
     case 'text_long':       return <TextAreaInput {...props} />
     default:                return null
@@ -216,7 +246,9 @@ export default function SurveyPage() {
   const current = questions[step] && {
     ...questions[step],
     question: (isAr && questions[step].question_ar) ? questions[step].question_ar : questions[step].question,
-    options:  (isAr && questions[step].options_ar?.length) ? questions[step].options_ar : questions[step].options,
+    options: questions[step].type === 'image_choice'
+      ? (questions[step].options || []).map(o => ({ ...o, label: (isAr && o.label_ar) ? o.label_ar : o.label }))
+      : ((isAr && questions[step].options_ar?.length) ? questions[step].options_ar : questions[step].options),
   }
 
   const setAnswer = (qId, val) => setAnswers(a => ({ ...a, [qId]: val }))

@@ -31,7 +31,12 @@ class SurveyQuestion extends Model
 
     public function isChoiceType(): bool
     {
-        return in_array($this->type, ['single_choice', 'multiple_choice', 'yes_no', 'dropdown']);
+        return in_array($this->type, ['single_choice', 'multiple_choice', 'yes_no', 'dropdown', 'image_choice']);
+    }
+
+    public function isImageChoiceType(): bool
+    {
+        return $this->type === 'image_choice';
     }
 
     public function isRatingType(): bool

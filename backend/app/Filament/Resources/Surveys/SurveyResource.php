@@ -5,6 +5,7 @@ use App\Filament\Resources\Surveys\Pages;
 use App\Models\Survey;
 use App\Models\SurveyAnswer;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -61,6 +62,7 @@ class SurveyResource extends Resource
             'text_long'       => '📄 Long Text (paragraph)',
             'yes_no'          => '✅ Yes / No',
             'dropdown'        => '📋 Dropdown Select',
+            'image_choice'    => '🖼️ Image Choice (pick one, shown as pictures)',
         ];
 
         return $schema->schema([
@@ -321,6 +323,65 @@ class SurveyResource extends Resource
                                         ->visible(fn($get) => in_array($get('type'), ['single_choice','multiple_choice','dropdown']))
                                         ->columnSpanFull(),
 
+                                    // Image choice options — one image + label per choice (e.g. leather colour swatches)
+                                    Repeater::make('image_options')
+                                        ->label('Image Options')
+                                        ->helperText('Upload one image per choice (e.g. a photo or swatch for each leather colour). This is what respondents will see and tap.')
+                                        ->visible(fn($get) => $get('type') === 'image_choice')
+                                        ->afterStateHydrated(function ($component, $get) {
+                                            $options = $get('options');
+                                            if ($get('type') !== 'image_choice' || !is_array($options) || !is_array($options[0] ?? null)) {
+                                                return;
+                                            }
+                                            $component->state($options);
+                                        })
+                                        ->schema([
+                                            // Hidden field holds the persisted storage path.
+                                            // FilePond never sees it, so there's no "Loading / Waiting for size" loop
+                                            // for images that are already saved (same fix as the product images tab).
+                                            Hidden::make('image'),
+
+                                            Placeholder::make('image_preview')
+                                                ->label('Current Image')
+                                                ->content(function ($get): HtmlString {
+                                                    $img = $get('image');
+                                                    if (!is_string($img) || $img === '') {
+                                                        return new HtmlString('<p style="color:#9ca3af;font-size:0.75rem;">No image yet — upload one below.</p>');
+                                                    }
+                                                    $src = Storage::disk('public')->url($img);
+                                                    return new HtmlString('<img src="' . e($src) . '" style="height:80px;width:80px;object-fit:cover;border-radius:6px;border:1px solid rgba(201,168,76,0.25);" />');
+                                                })
+                                                ->columnSpanFull(),
+
+                                            FileUpload::make('upload')
+                                                ->label('Upload / Replace Image')
+                                                ->image()
+                                                ->disk('public')
+                                                ->directory('surveys/options')
+                                                ->imageEditor()
+                                                ->fetchFileInformation(false)
+                                                ->required(fn($get) => empty($get('image')))
+                                                ->columnSpan(1),
+
+                                            TextInput::make('label')
+                                                ->label('Label (English)')
+                                                ->required()
+                                                ->placeholder('e.g. Cognac')
+                                                ->columnSpan(1),
+
+                                            TextInput::make('label_ar')
+                                                ->label('Label (Arabic)')
+                                                ->placeholder('كونياك')
+                                                ->columnSpan(1),
+                                        ])
+                                        ->columns(3)
+                                        ->addActionLabel('＋ Add Image Option')
+                                        ->reorderable()
+                                        ->reorderableWithDragAndDrop()
+                                        ->minItems(2)
+                                        ->itemLabel(fn($state) => $state['label'] ?? 'Option')
+                                        ->columnSpanFull(),
+
                                     Grid::make(3)->schema([
                                         Toggle::make('is_required')
                                             ->label('Required')
@@ -342,7 +403,9 @@ class SurveyResource extends Resource
                                 ->itemLabel(fn($state) =>
                                     ($state['type'] ? ucfirst(str_replace('_', ' ', $state['type'])) . ' — ' : '') .
                                     ($state['question'] ?? 'New Question')
-                                ),
+                                )
+                                ->mutateRelationshipDataBeforeCreateUsing(fn(array $data): array => self::mergeImageOptions($data))
+                                ->mutateRelationshipDataBeforeSaveUsing(fn(array $data): array => self::mergeImageOptions($data)),
                         ]),
 
                 ]),
@@ -373,6 +436,7 @@ class SurveyResource extends Resource
                                         'text_long'       => '📄',
                                         'yes_no'          => '✅',
                                         'dropdown'        => '📋',
+                                        'image_choice'    => '🖼️',
                                     ];
 
                                     $html  = '<div style="font-family:sans-serif;max-width:640px;background:#fff;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;">';
@@ -434,6 +498,31 @@ class SurveyResource extends Resource
                                         } elseif ($type === 'dropdown') {
                                             $html .= '<div style="height:38px;background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:0 12px;line-height:38px;font-size:12px;color:#6b7280;display:flex;justify-content:space-between;align-items:center;">';
                                             $html .= '<span>' . (empty($options) ? 'Select an option…' : e($options[0]) . '…') . '</span><span style="color:#9ca3af;">▾</span></div>';
+
+                                        } elseif ($type === 'image_choice') {
+                                            $html .= '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">';
+                                            foreach ($options as $opt) {
+                                                $label  = is_array($opt) ? ($opt['label'] ?? '') : '';
+                                                $imgVal = is_array($opt) ? ($opt['upload'] ?? $opt['image'] ?? null) : null;
+                                                $src    = null;
+                                                if ($imgVal instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                                                    $src = $imgVal->temporaryUrl();
+                                                } elseif (is_string($imgVal) && $imgVal !== '') {
+                                                    $src = Storage::disk('public')->url($imgVal);
+                                                }
+                                                $html .= '<div style="border:1px solid #d1d5db;border-radius:8px;overflow:hidden;background:#fff;">';
+                                                if ($src) {
+                                                    $html .= '<img src="' . e($src) . '" style="width:100%;height:80px;object-fit:cover;display:block;" />';
+                                                } else {
+                                                    $html .= '<div style="width:100%;height:80px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:11px;">No image</div>';
+                                                }
+                                                $html .= '<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;font-size:11px;color:#374151;">';
+                                                $html .= '<div style="width:12px;height:12px;border-radius:50%;border:2px solid #d1d5db;flex-shrink:0;"></div>';
+                                                $html .= '<span style="flex:1;text-align:center;">' . e($label ?: 'Option') . '</span>';
+                                                $html .= '</div>';
+                                                $html .= '</div>';
+                                            }
+                                            $html .= '</div>';
 
                                         } elseif ($type === 'rating') {
                                             $html .= '<div style="display:flex;gap:8px;">';
@@ -659,7 +748,7 @@ class SurveyResource extends Resource
 
                                         if ($count === 0) {
                                             $html .= '<p style="color:#9ca3af;font-size:12px;font-style:italic">No responses yet.</p>';
-                                        } elseif (in_array($q->type, ['single_choice','multiple_choice','dropdown','yes_no'])) {
+                                        } elseif (in_array($q->type, ['single_choice','multiple_choice','dropdown','yes_no','image_choice'])) {
                                             // Tally choices
                                             $tally = [];
                                             foreach ($answers as $a) {
@@ -792,6 +881,21 @@ class SurveyResource extends Resource
                     ]),
             ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);
+    }
+
+    private static function mergeImageOptions(array $data): array
+    {
+        if (($data['type'] ?? null) === 'image_choice' && !empty($data['image_options'])) {
+            $data['options'] = array_values(array_map(function (array $opt) {
+                if (!empty($opt['upload'])) {
+                    $opt['image'] = $opt['upload'];
+                }
+                unset($opt['upload']);
+                return $opt;
+            }, $data['image_options']));
+        }
+        unset($data['image_options']);
+        return $data;
     }
 
     private static function resolveAiFilePaths(mixed $files): array

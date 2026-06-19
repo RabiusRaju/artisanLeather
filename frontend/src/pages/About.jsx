@@ -119,6 +119,7 @@ function StorySection() {
   const p1             = s['about.story.p1']              || 'Artisan Leather began not as a business plan, but as an obsession. Our founder spent years studying leatherwork — in Italy, in Morocco, and eventually in Oman — learning what makes a piece truly last.'
   const p2             = s['about.story.p2']              || 'The first workshop was a single room in Muscat. Three craftsmen. One set of tools. No shortcuts. That ethos has never changed, even as the brand has grown across the GCC.'
   const p3             = s['about.story.p3']              || 'Today, every piece that leaves our workshop is still inspected by hand, still stitched by hand, and still conditioned by hand — because the day we stop caring is the day we stop being Artisan Leather.'
+  const storyImage     = s['about.story.image']
 
   return (
     <section className="py-28 px-6 lg:px-12 max-w-7xl mx-auto">
@@ -130,11 +131,17 @@ function StorySection() {
           transition={{ duration: 0.9 }}
           className="relative"
         >
-          <div className="relative overflow-hidden" style={{ aspectRatio: '4/5', background: 'linear-gradient(135deg, #3A2210, #240F06, #160E06)' }}>
-            <div className="absolute inset-8 border border-dashed border-gold/8" />
-            <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
-              <span className="font-serif text-[12rem] font-bold leading-none text-white/[0.025] italic">AL</span>
-            </div>
+          <div className="relative overflow-hidden" style={{ aspectRatio: '4/5', background: storyImage ? undefined : 'linear-gradient(135deg, #3A2210, #240F06, #160E06)' }}>
+            {storyImage ? (
+              <img src={storyImage} alt="Artisan Leather craftsmanship" className="w-full h-full object-cover" />
+            ) : (
+              <>
+                <div className="absolute inset-8 border border-dashed border-gold/8" />
+                <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
+                  <span className="font-serif text-[12rem] font-bold leading-none text-white/[0.025] italic">AL</span>
+                </div>
+              </>
+            )}
             <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-dark-100/80 to-transparent" />
           </div>
           <div className="absolute -top-5 -left-5 w-28 h-28 border border-gold/12 hidden md:block" />

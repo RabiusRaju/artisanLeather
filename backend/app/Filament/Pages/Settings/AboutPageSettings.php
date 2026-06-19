@@ -5,6 +5,7 @@ use Anthropic\Client as AnthropicClient;
 use App\Enums\NavigationGroupEnum;
 use App\Models\Setting;
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -285,6 +286,16 @@ class AboutPageSettings extends Page implements HasSchemas
                 ->description('Brand story section shown beside the brand image.')
                 ->columns(2)
                 ->schema([
+                    FileUpload::make('about.story.image')
+                        ->label('Story Image')
+                        ->helperText('Shown on the left of the "Our Story" section. Without this, a placeholder "AL" monogram card is shown instead. Recommended: portrait photo, e.g. 1000×1250px.')
+                        ->image()
+                        ->disk('public')
+                        ->directory('about')
+                        ->imageEditor()
+                        ->maxSize(5120)
+                        ->columnSpanFull(),
+
                     TextInput::make('about.story.headline')
                         ->label('Story Headline — Line 1 (white)')
                         ->placeholder('Born from a Love'),
@@ -601,75 +612,146 @@ class AboutPageSettings extends Page implements HasSchemas
                                 ])),
 
                         ]),
-                ]),
 
-            // ── Preview ───────────────────────────────────────────────────
-            Section::make('🌐 Website Preview')
-                ->description('Live preview of the About page hero, story, values and CTA as visitors see them.')
-                ->collapsed()
-                ->schema([
-                    Placeholder::make('_about_preview')
-                        ->label('')
-                        ->content(function ($get) {
-                            $eyebrow  = e($get('about.hero.eyebrow')        ?: 'Muscat · Oman · Est. 2009');
-                            $line1    = e($get('about.hero.headline')        ?: 'A Story Written');
-                            $line2    = e($get('about.hero.headline_accent') ?: 'in Leather');
-                            $subtitle = e($get('about.hero.subtitle')        ?: 'Sixteen years of craft. One unwavering standard.');
+                    Tab::make('Preview')
+                        ->icon('heroicon-o-eye')
+                        ->schema([
+                            Section::make('🌐 Website Preview')
+                                ->description('Live preview of the full About page — hero, story, craft steps, materials, values, timeline and CTA — as visitors see them.')
+                                ->schema([
+                                    Placeholder::make('_about_preview')
+                                        ->label('')
+                                        ->content(function ($get) {
+                                            $eyebrow  = e($get('about.hero.eyebrow')        ?: 'Muscat · Oman · Est. 2009');
+                                            $line1    = e($get('about.hero.headline')        ?: 'A Story Written');
+                                            $line2    = e($get('about.hero.headline_accent') ?: 'in Leather');
+                                            $subtitle = e($get('about.hero.subtitle')        ?: 'Sixteen years of craft. One unwavering standard.');
 
-                            $sHeadline = e($get('about.story.headline')        ?: 'Born from a Love');
-                            $sAccent   = e($get('about.story.headline_accent') ?: 'of the Craft');
-                            $years     = e($get('about.story.years')           ?: '16+');
-                            $p1        = e($get('about.story.p1')              ?: 'Artisan Leather began not as a business plan, but as an obsession with material and making.');
+                                            $sHeadline = e($get('about.story.headline')        ?: 'Born from a Love');
+                                            $sAccent   = e($get('about.story.headline_accent') ?: 'of the Craft');
+                                            $years     = e($get('about.story.years')           ?: '16+');
+                                            $p1        = e($get('about.story.p1')              ?: 'Artisan Leather began not as a business plan, but as an obsession with material and making.');
 
-                            $values = '';
-                            for ($i = 1; $i <= 4; $i++) {
-                                $num   = e($get("about.value.{$i}.number") ?: ['I','II','III','IV'][$i-1]);
-                                $title = e($get("about.value.{$i}.title")  ?: ['Heritage','Precision','Longevity','Authenticity'][$i-1]);
-                                $values .= '<div style="text-align:center;padding:14px 8px;background:#1a1208;border-radius:6px;">
-                                    <div style="font-size:16px;font-weight:700;color:#d4af37;font-style:italic;margin-bottom:4px;">' . $num . '</div>
-                                    <div style="font-size:11px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:.08em;">' . $title . '</div>
-                                </div>';
-                            }
+                                            $storyImgVal = $get('about.story.image');
+                                            $storyImgSrc = null;
+                                            if ($storyImgVal instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                                                $storyImgSrc = $storyImgVal->temporaryUrl();
+                                            } elseif (is_string($storyImgVal) && $storyImgVal !== '') {
+                                                $storyImgSrc = \Illuminate\Support\Facades\Storage::disk('public')->url($storyImgVal);
+                                            }
+                                            $storyImgHtml = $storyImgSrc
+                                                ? '<img src="' . e($storyImgSrc) . '" style="width:64px;height:80px;object-fit:cover;border-radius:6px;flex-shrink:0;" />'
+                                                : '<div style="width:64px;height:80px;border-radius:6px;flex-shrink:0;background:linear-gradient(135deg,#3A2210,#240F06);display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-style:italic;color:rgba(255,255,255,0.15);font-size:18px;">AL</div>';
 
-                            $ctaHeading = e($get('about.cta.heading') ?: 'Own a Piece of the Craft');
-                            $ctaText    = e($get('about.cta.text')    ?: 'Every wallet, bag, and belt we make is a promise…');
+                                            $craftSteps = '';
+                                            for ($i = 1; $i <= 4; $i++) {
+                                                $num   = e($get("about.craft.{$i}.num")   ?: sprintf('0%d', $i));
+                                                $title = e($get("about.craft.{$i}.title") ?: "Step {$i}");
+                                                $body  = e($get("about.craft.{$i}.body")  ?: '');
+                                                $craftSteps .= '<div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;">
+                                                    <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">' . $num . '</div>
+                                                    <div>
+                                                        <div style="font-size:13px;font-weight:600;color:#111827;">' . $title . '</div>
+                                                        <div style="font-size:12px;color:#6b7280;line-height:1.5;margin-top:2px;">' . $body . '</div>
+                                                    </div>
+                                                </div>';
+                                            }
 
-                            return new HtmlString('
-                                <div style="max-width:680px;font-family:Georgia,serif;display:flex;flex-direction:column;gap:12px;">
+                                            $materials = '';
+                                            for ($i = 1; $i <= 3; $i++) {
+                                                $name     = e($get("about.material.{$i}.name")     ?: "Material {$i}");
+                                                $subtitle2 = e($get("about.material.{$i}.subtitle") ?: '');
+                                                $desc     = e($get("about.material.{$i}.desc")     ?: '');
+                                                $materials .= '<div style="background:#f9fafb;border-radius:8px;padding:14px 16px;border:1px solid #e5e7eb;">
+                                                    <div style="font-size:13px;font-weight:700;color:#111827;">' . $name . '</div>
+                                                    <div style="font-size:11px;color:#d4af37;font-style:italic;margin:2px 0 6px;">' . $subtitle2 . '</div>
+                                                    <div style="font-size:11px;color:#6b7280;line-height:1.5;">' . $desc . '</div>
+                                                </div>';
+                                            }
 
-                                    <!-- Hero -->
-                                    <div style="background:linear-gradient(135deg,#0d0a04,#1c1408);border-radius:12px;padding:36px 32px;">
-                                        <div style="font-size:10px;letter-spacing:.55em;text-transform:uppercase;color:rgba(212,175,55,0.6);margin-bottom:14px;">' . $eyebrow . '</div>
-                                        <div style="font-size:30px;font-weight:300;color:#fff;line-height:1.2;">' . $line1 . '</div>
-                                        <div style="font-size:30px;font-weight:300;color:#d4af37;font-style:italic;line-height:1.2;margin-bottom:14px;">' . $line2 . '</div>
-                                        <p style="color:rgba(255,255,255,0.5);font-size:13px;line-height:1.6;margin:0;">' . $subtitle . '</p>
-                                    </div>
+                                            $values = '';
+                                            for ($i = 1; $i <= 4; $i++) {
+                                                $num   = e($get("about.value.{$i}.number") ?: ['I','II','III','IV'][$i-1]);
+                                                $title = e($get("about.value.{$i}.title")  ?: ['Heritage','Precision','Longevity','Authenticity'][$i-1]);
+                                                $values .= '<div style="text-align:center;padding:14px 8px;background:#1a1208;border-radius:6px;">
+                                                    <div style="font-size:16px;font-weight:700;color:#d4af37;font-style:italic;margin-bottom:4px;">' . $num . '</div>
+                                                    <div style="font-size:11px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:.08em;">' . $title . '</div>
+                                                </div>';
+                                            }
 
-                                    <!-- Story -->
-                                    <div style="background:#f9fafb;border-radius:12px;padding:24px 28px;border:1px solid #e5e7eb;">
-                                        <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Our Story</div>
-                                        <div style="font-size:20px;font-weight:600;color:#111827;">' . $sHeadline . ' <span style="color:#d4af37;font-style:italic;">' . $sAccent . '</span></div>
-                                        <div style="display:inline-block;margin:10px 0;background:#d4af37;color:#0d0a04;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;">' . $years . ' Years</div>
-                                        <p style="font-size:13px;color:#374151;line-height:1.7;margin:8px 0 0;">' . $p1 . '</p>
-                                    </div>
+                                            $timeline = '';
+                                            for ($i = 1; $i <= 5; $i++) {
+                                                $year  = e($get("about.timeline.{$i}.year")  ?: '—');
+                                                $title = e($get("about.timeline.{$i}.title") ?: "Event {$i}");
+                                                $timeline .= '<div style="text-align:center;padding:0 6px;">
+                                                    <div style="font-size:13px;font-weight:700;color:#d4af37;">' . $year . '</div>
+                                                    <div style="width:6px;height:6px;border-radius:50%;background:#d4af37;margin:6px auto;"></div>
+                                                    <div style="font-size:10px;color:#6b7280;line-height:1.4;">' . $title . '</div>
+                                                </div>';
+                                            }
 
-                                    <!-- Values -->
-                                    <div style="background:#0d0a04;border-radius:12px;padding:20px 24px;">
-                                        <div style="font-size:11px;font-weight:700;color:rgba(212,175,55,0.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Our Values</div>
-                                        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">' . $values . '</div>
-                                    </div>
+                                            $ctaHeading = e($get('about.cta.heading') ?: 'Own a Piece of the Craft');
+                                            $ctaText    = e($get('about.cta.text')    ?: 'Every wallet, bag, and belt we make is a promise…');
 
-                                    <!-- CTA -->
-                                    <div style="background:linear-gradient(135deg,#1a1208,#2a1a08);border-radius:12px;padding:24px 28px;text-align:center;">
-                                        <div style="font-size:20px;font-weight:600;color:#fff;margin-bottom:8px;">' . $ctaHeading . '</div>
-                                        <p style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;margin:0 0 16px;">' . mb_substr(strip_tags($ctaText), 0, 120) . '…</p>
-                                        <div style="display:inline-block;background:#d4af37;color:#0d0a04;font-size:11px;font-weight:700;padding:10px 24px;border-radius:4px;letter-spacing:.06em;">Shop Now →</div>
-                                    </div>
+                                            return new HtmlString('
+                                                <div style="max-width:680px;font-family:Georgia,serif;display:flex;flex-direction:column;gap:12px;">
 
-                                </div>
-                            ');
-                        })
-                        ->columnSpanFull(),
+                                                    <!-- Hero -->
+                                                    <div style="background:linear-gradient(135deg,#0d0a04,#1c1408);border-radius:12px;padding:36px 32px;">
+                                                        <div style="font-size:10px;letter-spacing:.55em;text-transform:uppercase;color:rgba(212,175,55,0.6);margin-bottom:14px;">' . $eyebrow . '</div>
+                                                        <div style="font-size:30px;font-weight:300;color:#fff;line-height:1.2;">' . $line1 . '</div>
+                                                        <div style="font-size:30px;font-weight:300;color:#d4af37;font-style:italic;line-height:1.2;margin-bottom:14px;">' . $line2 . '</div>
+                                                        <p style="color:rgba(255,255,255,0.5);font-size:13px;line-height:1.6;margin:0;">' . $subtitle . '</p>
+                                                    </div>
+
+                                                    <!-- Story -->
+                                                    <div style="background:#f9fafb;border-radius:12px;padding:24px 28px;border:1px solid #e5e7eb;display:flex;gap:18px;">
+                                                        ' . $storyImgHtml . '
+                                                        <div>
+                                                            <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Our Story</div>
+                                                            <div style="font-size:20px;font-weight:600;color:#111827;">' . $sHeadline . ' <span style="color:#d4af37;font-style:italic;">' . $sAccent . '</span></div>
+                                                            <div style="display:inline-block;margin:10px 0;background:#d4af37;color:#0d0a04;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;">' . $years . ' Years</div>
+                                                            <p style="font-size:13px;color:#374151;line-height:1.7;margin:8px 0 0;">' . $p1 . '</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Craft Steps -->
+                                                    <div style="background:#f9fafb;border-radius:12px;padding:20px 24px;border:1px solid #e5e7eb;">
+                                                        <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">The Art of Making</div>
+                                                        ' . $craftSteps . '
+                                                    </div>
+
+                                                    <!-- Materials -->
+                                                    <div style="padding:4px 0;">
+                                                        <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Only the Finest Materials</div>
+                                                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' . $materials . '</div>
+                                                    </div>
+
+                                                    <!-- Values -->
+                                                    <div style="background:#0d0a04;border-radius:12px;padding:20px 24px;">
+                                                        <div style="font-size:11px;font-weight:700;color:rgba(212,175,55,0.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Our Values</div>
+                                                        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">' . $values . '</div>
+                                                    </div>
+
+                                                    <!-- Timeline -->
+                                                    <div style="background:#f9fafb;border-radius:12px;padding:20px 24px;border:1px solid #e5e7eb;">
+                                                        <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Our Journey</div>
+                                                        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;border-top:1px solid #e5e7eb;padding-top:14px;">' . $timeline . '</div>
+                                                    </div>
+
+                                                    <!-- CTA -->
+                                                    <div style="background:linear-gradient(135deg,#1a1208,#2a1a08);border-radius:12px;padding:24px 28px;text-align:center;">
+                                                        <div style="font-size:20px;font-weight:600;color:#fff;margin-bottom:8px;">' . $ctaHeading . '</div>
+                                                        <p style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;margin:0 0 16px;">' . mb_substr(strip_tags($ctaText), 0, 120) . '…</p>
+                                                        <div style="display:inline-block;background:#d4af37;color:#0d0a04;font-size:11px;font-weight:700;padding:10px 24px;border-radius:4px;letter-spacing:.06em;">Shop Now →</div>
+                                                    </div>
+
+                                                </div>
+                                            ');
+                                        })
+                                        ->columnSpanFull(),
+                                ]),
+                        ]),
                 ]),
 
             // ── SEO Ranking Potential ─────────────────────────────────────
