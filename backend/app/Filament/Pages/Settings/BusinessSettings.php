@@ -225,6 +225,21 @@ class BusinessSettings extends Page implements HasSchemas
                         ]),
                 ]),
 
+                Tab::make('Surveys')->icon('heroicon-o-clipboard-document-check')->schema([
+                    Section::make('🎯 Field Survey Collection')
+                        ->description('Lets staff submit a survey multiple times in a row when collecting feedback in person (e.g. visiting a shop and talking to several customers). Without this, only one response per device/IP is normally allowed.')
+                        ->columns(2)
+                        ->schema([
+                            TextInput::make('survey.collector_pin')
+                                ->label('Staff Collector PIN')
+                                ->password()
+                                ->revealable()
+                                ->placeholder('e.g. 2468')
+                                ->helperText('Share this PIN with staff who collect feedback in person. On the public survey page they tap "Staff Mode", enter this PIN once per device, and can then submit the survey repeatedly. Leave blank to disable Staff Mode entirely.')
+                                ->columnSpanFull(),
+                        ]),
+                ]),
+
             ])->columnSpanFull(),
 
         ])->statePath('data');

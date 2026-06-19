@@ -3,7 +3,9 @@ import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import SEO from '../components/SEO'
-import { fetchSurvey, submitSurvey } from '../services/api'
+import { fetchSurvey, submitSurvey, verifyStaffPin } from '../services/api'
+
+const STAFF_PIN_KEY = 'al_survey_staff_pin'
 
 // ── Individual Question Components ────────────────────────────────────────────
 
@@ -186,6 +188,71 @@ function QuestionInput({ question, value, onChange }) {
   }
 }
 
+// ── Staff Mode control — lets field staff unlock repeat submissions on this device ──
+function StaffModeControl({ unlocked, onUnlock }) {
+  const [open, setOpen] = useState(false)
+  const [pin, setPin] = useState('')
+  const [error, setError] = useState(null)
+  const [busy, setBusy] = useState(false)
+
+  if (unlocked) {
+    return (
+      <p className="text-center text-[10px] text-gold/50 tracking-widest uppercase mt-3">
+        🔓 Staff Mode — repeat submissions enabled on this device
+      </p>
+    )
+  }
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)}
+        className="block mx-auto mt-3 text-[10px] text-white/20 hover:text-white/40 tracking-widest uppercase transition-colors duration-200">
+        Collecting feedback in person? Staff Mode
+      </button>
+    )
+  }
+
+  const submit = async () => {
+    if (!pin.trim()) return
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await verifyStaffPin(pin.trim())
+      if (res.data?.success) {
+        localStorage.setItem(STAFF_PIN_KEY, pin.trim())
+        onUnlock()
+        setOpen(false)
+      } else {
+        setError('Incorrect PIN.')
+      }
+    } catch {
+      setError('Incorrect PIN.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="max-w-xs mx-auto mt-4 flex flex-col items-center gap-2">
+      <input type="password" value={pin} onChange={e => setPin(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && submit()}
+        placeholder="Enter staff PIN"
+        className="w-full bg-dark-100 border border-white/15 text-white px-3 py-2 text-sm text-center placeholder-white/25 focus:border-gold focus:outline-none transition-colors duration-200 rounded" />
+      <div className="flex gap-2">
+        <button onClick={submit} disabled={busy}
+          className="px-5 py-1.5 bg-gold text-dark text-[10px] tracking-widest uppercase font-bold hover:bg-amber-400 transition-colors duration-200 disabled:opacity-50">
+          {busy ? '…' : 'Unlock'}
+        </button>
+        <button onClick={() => { setOpen(false); setError(null) }}
+          className="px-5 py-1.5 border border-white/15 text-white/40 text-[10px] tracking-widest uppercase hover:text-white/70 transition-colors duration-200">
+          Cancel
+        </button>
+      </div>
+      {error && <p className="text-red-400 text-xs">{error}</p>}
+    </div>
+  )
+}
+
 // ── Main Survey Page ──────────────────────────────────────────────────────────
 export default function SurveyPage() {
   const { slug }    = useParams()
@@ -202,19 +269,33 @@ export default function SurveyPage() {
 
   // Session token for deduplication
   const tokenKey = `survey_token_${slug}`
-  const [token] = useState(() => {
-    const existing = sessionStorage.getItem(tokenKey)
-    if (existing) return existing
+  const generateToken = () => {
     const t = Math.random().toString(36).substr(2) + Date.now().toString(36)
     sessionStorage.setItem(tokenKey, t)
     return t
-  })
+  }
+  const [token, setToken] = useState(() => sessionStorage.getItem(tokenKey) || generateToken())
 
-  useEffect(() => {
+  // Staff Mode — lets field staff submit this survey repeatedly on the same device
+  const [staffUnlocked, setStaffUnlocked] = useState(() => !!localStorage.getItem(STAFF_PIN_KEY))
+
+  const loadSurvey = () => {
+    setLoading(true)
+    setError(null)
     fetchSurvey(slug)
       .then(res => { setSurvey(res.data.data); setLoading(false) })
       .catch(err => { setError(err.response?.data?.error || 'Survey not found.'); setLoading(false) })
-  }, [slug])
+  }
+
+  useEffect(() => { loadSurvey() }, [slug])
+
+  const startNewResponse = () => {
+    setToken(generateToken())
+    setAnswers({})
+    setStep(0)
+    setSubmitted(false)
+    setSubmitError(null)
+  }
 
   if (loading) return (
     <div className="min-h-screen bg-dark flex items-center justify-center">
@@ -231,6 +312,7 @@ export default function SurveyPage() {
         <p className="text-5xl mb-6">📋</p>
         <p className="font-serif text-2xl text-white/60 font-light mb-3">{error}</p>
         <Link to="/" className="text-gold text-xs tracking-widest uppercase hover:underline">← Back to Home</Link>
+        <StaffModeControl unlocked={staffUnlocked} onUnlock={() => { setStaffUnlocked(true); loadSurvey() }} />
       </div>
     </div>
   )
@@ -296,6 +378,12 @@ export default function SurveyPage() {
           <Link to="/collections" className="inline-block px-10 py-4 bg-gold text-dark text-[10px] tracking-[0.35em] uppercase font-bold hover:bg-amber-400 transition-colors duration-300">
             Explore Collection →
           </Link>
+        )}
+        {staffUnlocked && (
+          <button onClick={startNewResponse}
+            className="block mx-auto mt-6 px-10 py-3 border border-gold/40 text-gold text-[10px] tracking-[0.35em] uppercase font-bold hover:bg-gold/10 transition-colors duration-300">
+            📝 Submit Another Response (Next Customer)
+          </button>
         )}
       </motion.div>
     </div>
@@ -423,6 +511,8 @@ export default function SurveyPage() {
         {submitError && (
           <p className="text-center text-red-400 text-sm mt-4">{submitError}</p>
         )}
+
+        <StaffModeControl unlocked={staffUnlocked} onUnlock={() => setStaffUnlocked(true)} />
       </div>
     </div>
   )

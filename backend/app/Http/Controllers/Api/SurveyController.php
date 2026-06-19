@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\Survey;
 use App\Models\SurveyAnswer;
 use App\Models\SurveyResponse;
@@ -11,6 +12,30 @@ use Illuminate\Support\Str;
 
 class SurveyController extends Controller
 {
+    // True when the request carries a valid Staff Collector PIN (X-Staff-Pin header).
+    // Lets field staff submit a survey repeatedly while collecting feedback in person,
+    // bypassing the normal one-response-per-device limit and rate limiter.
+    private function isStaffRequest(Request $request): bool
+    {
+        $configured = Setting::get('survey.collector_pin');
+        $provided   = $request->header('X-Staff-Pin');
+
+        return !blank($configured) && !blank($provided) && hash_equals((string) $configured, (string) $provided);
+    }
+
+    // POST /api/v1/surveys/staff-unlock — lets the frontend validate a PIN immediately
+    public function verifyStaffPin(Request $request)
+    {
+        $configured = Setting::get('survey.collector_pin');
+        $provided   = (string) $request->input('pin');
+
+        if (blank($configured) || blank($provided) || !hash_equals((string) $configured, $provided)) {
+            return response()->json(['success' => false], 401);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
     // GET /api/v1/surveys/:slug
     public function show(Request $request, string $slug)
     {
@@ -20,8 +45,8 @@ class SurveyController extends Controller
             return response()->json(['error' => 'Survey is not currently active.'], 403);
         }
 
-        // Check for duplicate submission (token + IP dual check)
-        if (!$survey->allow_multiple_responses) {
+        // Check for duplicate submission (token + IP dual check) — staff PIN bypasses this
+        if (!$survey->allow_multiple_responses && !$this->isStaffRequest($request)) {
             $token = $request->header('X-Survey-Token') ?? $request->query('token');
             $tokenCompleted = $token && SurveyResponse::where('survey_id', $survey->id)
                 ->where('session_token', $token)->whereNotNull('completed_at')->exists();
@@ -79,9 +104,13 @@ class SurveyController extends Controller
             return response()->json(['error' => 'Survey is not currently active.'], 403);
         }
 
-        // C-5 FIX: IP-based rate limiting — max 5 submissions per IP per survey per hour
-        $rateLimitKey = 'survey:' . $survey->id . ':' . $request->ip();
-        if (RateLimiter::tooManyAttempts($rateLimitKey, maxAttempts: 5)) {
+        $isStaff = $this->isStaffRequest($request);
+
+        // C-5 FIX: IP-based rate limiting — max 5 submissions per IP per survey per hour.
+        // Staff PIN raises this to 100/hour so a shop visit collecting many responses isn't blocked.
+        $rateLimitKey   = 'survey:' . $survey->id . ':' . $request->ip();
+        $maxAttempts    = $isStaff ? 100 : 5;
+        if (RateLimiter::tooManyAttempts($rateLimitKey, maxAttempts: $maxAttempts)) {
             $seconds = RateLimiter::availableIn($rateLimitKey);
             return response()->json([
                 'error' => 'Too many responses. Please try again in ' . ceil($seconds / 60) . ' minutes.',
@@ -94,8 +123,8 @@ class SurveyController extends Controller
         $clientToken = $request->header('X-Survey-Token');
         $token = $clientToken ?: Str::random(40);
 
-        // C-5 FIX: Dual deduplication — by token AND by IP (covers token-omission bypass)
-        if (!$survey->allow_multiple_responses) {
+        // C-5 FIX: Dual deduplication — by token AND by IP (covers token-omission bypass) — staff PIN bypasses this
+        if (!$survey->allow_multiple_responses && !$isStaff) {
             // Check token-based dedup
             $tokenExists = $clientToken && SurveyResponse::where('survey_id', $survey->id)
                 ->where('session_token', $clientToken)

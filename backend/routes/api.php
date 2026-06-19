@@ -27,6 +27,7 @@ Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
     Route::get('/brands',            [BrandController::class, 'index']);
     Route::get('/posts',             [PostController::class, 'index']);
     Route::get('/posts/{slug}',      [PostController::class, 'show']);
+    Route::post('/surveys/staff-unlock', [SurveyController::class, 'verifyStaffPin']);
     Route::get('/surveys/{slug}',     [SurveyController::class, 'show']);
     Route::post('/surveys/{slug}/respond', [SurveyController::class, 'respond']);
     Route::get('/settings',              [SettingsController::class, 'index']);
