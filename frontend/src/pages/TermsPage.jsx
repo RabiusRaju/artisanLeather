@@ -15,6 +15,7 @@ function Section({ title, children }) {
 
 export default function TermsPage() {
   const email = useSetting('business.email', 'info@artisanleatherom.com')
+  const returnPolicy = useSetting('orders.return_policy', 'We accept returns within 14 days of delivery for unused items in original packaging.')
 
   return (
     <div className="min-h-screen bg-dark">
@@ -66,12 +67,7 @@ export default function TermsPage() {
         </Section>
 
         <Section title="Returns & Exchanges">
-          <p>
-            Unless otherwise stated on a product page, items may be returned within 14 days of
-            delivery provided they are unused, undamaged, and in their original packaging. To
-            initiate a return or exchange, please contact us with your order number. Return
-            shipping costs may apply unless the item received was faulty or incorrect.
-          </p>
+          <p>{returnPolicy}</p>
         </Section>
 
         <Section title="Product Reviews">

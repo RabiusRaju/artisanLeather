@@ -47,6 +47,7 @@ class SettingsController extends Controller
             // Orders
             'orders.free_delivery_threshold' => $settings['orders.free_delivery_threshold'] ?? '0',
             'orders.whatsapp_message'        => $settings['orders.whatsapp_message']    ?? '',
+            'orders.return_policy'           => $settings['orders.return_policy']       ?? 'We accept returns within 14 days of delivery for unused items in original packaging.',
 
             // SEO
             'seo.meta_title'                 => $settings['seo.meta_title']             ?? '',

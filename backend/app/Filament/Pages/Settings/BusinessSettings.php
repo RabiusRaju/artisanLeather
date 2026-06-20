@@ -148,6 +148,16 @@ class BusinessSettings extends Page implements HasSchemas
                                 ->label('WhatsApp Order Template')
                                 ->rows(2)->columnSpanFull()
                                 ->helperText('Message sent when customer chooses WhatsApp payment'),
+
+                            Textarea::make('orders.return_policy')
+                                ->label('Return Policy (English)')
+                                ->rows(3)->columnSpanFull()
+                                ->helperText('Shown on every product page and on the Terms of Service page. Write your real policy — this is the only place it needs to be edited.'),
+
+                            Textarea::make('orders.return_policy_ar')
+                                ->label('Return Policy (Arabic)')
+                                ->rows(3)->columnSpanFull()
+                                ->extraAttributes(['dir' => 'rtl']),
                         ]),
                 ]),
 

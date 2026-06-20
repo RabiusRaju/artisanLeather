@@ -290,6 +290,7 @@ export default function ProductPage() {
   const { t, i18n }   = useTranslation()
   const isAr           = i18n.language === 'ar'
   const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
+  const returnPolicy = useSetting('orders.return_policy', 'We accept returns within 14 days of delivery for unused items in original packaging.')
   const { toggle: toggleWishlistItem, isInWishlist } = useWishlist()
   const [wishlistBusy, setWishlistBusy] = useState(false)
 
@@ -716,7 +717,7 @@ export default function ProductPage() {
               <AccordionItem title={t('product.delivery')}>
                 <p className="text-white/45 text-sm font-light leading-relaxed">{product.shipping}</p>
                 <p className="text-white/35 text-sm font-light leading-relaxed mt-3">
-                  We accept returns within 14 days of delivery for unused items in original packaging.
+                  {returnPolicy}
                 </p>
               </AccordionItem>
             </div>
