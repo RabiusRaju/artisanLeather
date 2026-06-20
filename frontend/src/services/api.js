@@ -40,6 +40,7 @@ export const verifyStaffPin   = (pin)         => api.post('/surveys/staff-unlock
 export const fetchSettings      = ()            => api.get('/settings')
 export const fetchTestimonials  = ()            => api.get('/testimonials')
 export const fetchFaqs          = ()            => api.get('/faqs')
+export const fetchLegalPage     = (slug)        => api.get(`/legal/${slug}`)
 
 // Coupons
 export const validateCoupon = (code, subtotal) => api.post('/coupons/validate', { code, subtotal })

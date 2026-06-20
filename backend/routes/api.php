@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\WishlistController;
+use App\Http\Controllers\Api\LegalPageController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
@@ -39,6 +40,7 @@ Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
     Route::post('/coupons/validate', [CouponController::class, 'validateCode'])->middleware('throttle:20,1');
     Route::get('/coupons/featured',  [CouponController::class, 'featured']);
     Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
+    Route::get('/legal/{slug}', [LegalPageController::class, 'show']);
 
     // Auth
     Route::post('/auth/register',    [AuthController::class, 'register']);
