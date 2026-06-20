@@ -16,6 +16,7 @@ import Navbar               from './components/Navbar'
 import Footer               from './components/Footer'
 import WhatsAppButton       from './components/WhatsAppButton'
 import ThemeSelector        from './components/ThemeSelector'
+import CouponPopup          from './components/CouponPopup'
 import Home                 from './pages/Home'
 
 const CollectionsPage   = lazy(() => import('./pages/CollectionsPage'))
@@ -83,6 +84,7 @@ function Layout() {
       {!minimal && <Footer />}
       {!minimal && <WhatsAppButton />}
       {!minimal && <ThemeSelector />}
+      {!minimal && <CouponPopup />}
     </>
   )
 }

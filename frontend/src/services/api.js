@@ -43,6 +43,7 @@ export const fetchFaqs          = ()            => api.get('/faqs')
 
 // Coupons
 export const validateCoupon = (code, subtotal) => api.post('/coupons/validate', { code, subtotal })
+export const fetchFeaturedCoupon = () => api.get('/coupons/featured')
 
 // Reviews
 export const fetchProductReviews = (productId, params = {}) => api.get(`/products/${productId}/reviews`, { params })
