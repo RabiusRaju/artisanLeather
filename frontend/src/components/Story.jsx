@@ -2,9 +2,11 @@ import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useInView } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { useSetting } from '../hooks/useSettings'
 
 export default function Story() {
   const { t } = useTranslation()
+  const years = useSetting('about.story.years', '16+')
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
@@ -39,7 +41,7 @@ export default function Story() {
               transition={{ duration: 0.7, delay: 0.5 }}
               className="absolute -bottom-6 -right-6 bg-dark border border-gold/20 px-7 py-6 hidden md:block"
             >
-              <div className="font-serif text-5xl text-gradient-gold">15+</div>
+              <div className="font-serif text-5xl text-gradient-gold">{years}</div>
               <div className="text-white/40 text-[10px] tracking-[0.3em] uppercase mt-1">
                 {t('home.story.yearsLabel')}
               </div>

@@ -16,4 +16,14 @@ class EditCoupon extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        if (! empty($data['upload'])) {
+            $data['popup_image'] = $data['upload'];
+        }
+        unset($data['upload']);
+
+        return $data;
+    }
 }

@@ -11,10 +11,12 @@ Route::get('/', fn() => redirect('/admin'));
 
 // ── Social preview prerender (for Facebook/WhatsApp/Twitter/etc. bots) ─────
 // The Caddy server in front of the static SPA at artisanleatherom.com should
-// route bot requests for /blog/{slug} and /product/{slug} here instead of
-// serving the static index.html, so each page gets its own title/image.
+// route bot requests for /blog/{slug}, /product/{slug} and /survey/{slug}
+// here instead of serving the static index.html, so each page gets its own
+// title/image instead of always the generic homepage info.
 Route::get('/prerender/blog/{slug}',    [PrerenderController::class, 'blogPost']);
 Route::get('/prerender/product/{slug}', [PrerenderController::class, 'product']);
+Route::get('/prerender/survey/{slug}',  [PrerenderController::class, 'survey']);
 
 // ── Dynamic XML Sitemap ────────────────────────────────────────────────────
 Route::get('/sitemap.xml', function () {

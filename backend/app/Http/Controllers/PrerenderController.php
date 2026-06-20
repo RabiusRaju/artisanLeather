@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Models\Product;
+use App\Models\Survey;
 use Illuminate\Http\Request;
 
 class PrerenderController extends Controller
@@ -77,6 +78,31 @@ class PrerenderController extends Controller
             'image'       => $image,
             'url'         => $url,
             'type'        => 'product',
+        ]);
+    }
+
+    // GET /prerender/survey/{slug}
+    public function survey(Request $request, string $slug)
+    {
+        $url = "https://artisanleatherom.com/survey/{$slug}";
+
+        if (!self::isBot($request)) {
+            return redirect($url);
+        }
+
+        $survey = Survey::where('slug', $slug)->firstOrFail();
+
+        // Surveys have no dedicated image field — fall back to the first
+        // question's image (if any), otherwise no og:image at all.
+        $firstQuestionImage = $survey->questions()->whereNotNull('image_path')->value('image_path');
+        $image = $firstQuestionImage ? asset('storage/' . $firstQuestionImage) : null;
+
+        return view('prerender.meta', [
+            'title'       => $survey->title,
+            'description' => $survey->description ?: 'Share your feedback with Artisan Leather — it only takes a minute.',
+            'image'       => $image,
+            'url'         => $url,
+            'type'        => 'website',
         ]);
     }
 }

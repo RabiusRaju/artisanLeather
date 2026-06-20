@@ -3,33 +3,6 @@ import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { fetchTestimonials } from '../services/api'
 
-const FALLBACK = [
-  {
-    id: 1,
-    quote: 'The most exquisite wallet I have ever owned. The leather is buttery smooth and the craftsmanship is simply unmatched. Worth every Baisa.',
-    quote_ar: 'إنها أروع محفظة امتلكتها على الإطلاق. الجلد ناعم كالحرير والحرفية لا مثيل لها. تستحق كل بيسة.',
-    author: 'Mohammed Al Rashidi',
-    location: 'Muscat, Oman',
-    rating: 5,
-  },
-  {
-    id: 2,
-    quote: 'I gifted an Artisan Leather bag to my wife for our anniversary. She was speechless. The quality speaks before the price.',
-    quote_ar: 'أهديت زوجتي حقيبة من آرتيزان ليذر بمناسبة ذكرى زواجنا، فأُصيبت بالذهول. الجودة تتحدث عن نفسها قبل السعر.',
-    author: 'Khalid Al Harthi',
-    location: 'Dubai, UAE',
-    rating: 5,
-  },
-  {
-    id: 3,
-    quote: 'These are not just leather goods — they are heirlooms in the making. I have had my belt for three years and it only looks better with age.',
-    quote_ar: 'هذه ليست مجرد منتجات جلدية، بل قطع أثرية في طور التكوين. أمتلك حزامي منذ ثلاث سنوات وهو يزداد جمالاً مع الوقت.',
-    author: 'Salim Al Balushi',
-    location: 'Salalah, Oman',
-    rating: 5,
-  },
-]
-
 function Stars({ rating }) {
   return (
     <div className="flex justify-center gap-0.5 mb-6" aria-label={`${rating} out of 5 stars`}>
@@ -48,7 +21,8 @@ function Stars({ rating }) {
 }
 
 export default function Testimonials() {
-  const [testimonials, setTestimonials] = useState(FALLBACK)
+  const [testimonials, setTestimonials] = useState([])
+  const [loaded, setLoaded]             = useState(false)
   const [current, setCurrent]           = useState(0)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true })
@@ -59,13 +33,16 @@ export default function Testimonials() {
     fetchTestimonials()
       .then(res => {
         const data = res.data?.data
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setTestimonials(data)
-          setCurrent(0)
         }
       })
-      .catch(() => {}) // keep fallback on error
+      .catch(() => {})
+      .finally(() => setLoaded(true))
   }, [])
+
+  // No real testimonials yet — don't invent fake social proof, just hide the section.
+  if (!loaded || testimonials.length === 0) return null
 
   const prev = () => setCurrent(c => (c === 0 ? testimonials.length - 1 : c - 1))
   const next = () => setCurrent(c => (c === testimonials.length - 1 ? 0 : c + 1))

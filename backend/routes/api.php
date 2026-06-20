@@ -37,6 +37,7 @@ Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
     Route::post('/orders',           [OrderController::class, 'store'])->middleware('throttle:10,1');
     Route::post('/contact',          [ContactController::class, 'store'])->middleware('throttle:5,1');
     Route::post('/coupons/validate', [CouponController::class, 'validateCode'])->middleware('throttle:20,1');
+    Route::get('/coupons/featured',  [CouponController::class, 'featured']);
     Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
 
     // Auth

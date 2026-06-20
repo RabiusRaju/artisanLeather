@@ -43,6 +43,21 @@ class CouponsTable
                     ->boolean()
                     ->sortable(),
 
+                IconColumn::make('show_as_popup')
+                    ->label('Popup')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-megaphone')
+                    ->falseIcon('heroicon-o-minus')
+                    ->trueColor('warning')
+                    ->falseColor('gray')
+                    ->sortable(),
+
+                TextColumn::make('expires_at')
+                    ->label('Popup Ends')
+                    ->dateTime('d M Y, h:i A')
+                    ->placeholder('—')
+                    ->sortable(),
+
                 TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime('d M Y')
