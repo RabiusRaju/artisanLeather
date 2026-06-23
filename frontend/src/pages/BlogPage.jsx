@@ -39,7 +39,7 @@ function PostCard({ post, index }) {
             <img
               src={post.featured_image}
               alt={post.title}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-dark-100 to-dark-200 flex items-center justify-center">
