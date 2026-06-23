@@ -152,8 +152,10 @@ export default function BlogPostPage() {
       <article className="max-w-3xl mx-auto px-6 lg:px-12 mt-12">
         <div
           className="prose prose-invert prose-lg max-w-none
-            prose-headings:font-serif prose-headings:font-light prose-headings:text-white
-            prose-p:text-white/65 prose-p:leading-relaxed
+            prose-headings:font-serif prose-headings:text-white prose-headings:tracking-wide
+            prose-h2:text-2xl md:prose-h2:text-3xl prose-h2:font-medium prose-h2:mt-14 prose-h2:mb-5 prose-h2:pb-4 prose-h2:border-b prose-h2:border-gold/20 first:prose-h2:mt-0
+            prose-h3:text-xl md:prose-h3:text-2xl prose-h3:font-medium prose-h3:mt-10 prose-h3:mb-3
+            prose-p:text-white/65 prose-p:leading-relaxed prose-p:mb-6
             prose-a:text-gold prose-a:no-underline hover:prose-a:underline
             prose-strong:text-white
             prose-li:text-white/65
