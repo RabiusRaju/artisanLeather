@@ -138,12 +138,13 @@ export default function BlogPostPage() {
       {/* Featured image */}
       {post.featured_image && (
         <div className="max-w-4xl mx-auto px-6 lg:px-12 mt-12">
-          <img
-            src={post.featured_image}
-            alt={post.title}
-            className="w-full object-cover"
-            style={{ aspectRatio: '16/9' }}
-          />
+          <div className="relative w-full bg-dark-100" style={{ aspectRatio: '16/9' }}>
+            <img
+              src={post.featured_image}
+              alt={post.title}
+              className="absolute inset-0 w-full h-full object-contain"
+            />
+          </div>
         </div>
       )}
 
