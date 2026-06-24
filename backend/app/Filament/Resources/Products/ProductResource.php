@@ -259,6 +259,55 @@ class ProductResource extends Resource
                                     ->placeholder('e.g. Hand-stitched in Muscat, Oman')
                                     ->columnSpan(1),
                             ])->columns(3),
+
+                            Section::make('📋 Specifications')
+                                ->description('Spec-sheet style details shown on the product page and on shared catalogue links.')
+                                ->schema([
+                                    TextInput::make('sku')
+                                        ->label('Product Code / SKU')
+                                        ->placeholder('e.g. AL-WAL-014')
+                                        ->columnSpan(1),
+
+                                    TextInput::make('dimensions')
+                                        ->label('Size / Dimensions')
+                                        ->placeholder('e.g. 11 x 9 x 2 cm')
+                                        ->columnSpan(1),
+
+                                    TextInput::make('dimensions_ar')
+                                        ->label('Size / Dimensions (Arabic)')
+                                        ->placeholder('e.g. ١١ × ٩ × ٢ سم')
+                                        ->columnSpan(1),
+                                ])->columns(3),
+
+                            Section::make('📦 Bulk Pricing Tiers')
+                                ->description('Optional volume-discount tiers for wholesale buyers, e.g. "10–49 pcs" → price. Leave empty to hide this from the product page and catalogue links.')
+                                ->schema([
+                                    Repeater::make('bulk_pricing')
+                                        ->label('')
+                                        ->schema([
+                                            TextInput::make('label')
+                                                ->label('Quantity Tier (English)')
+                                                ->placeholder('e.g. 10–49 pcs')
+                                                ->required()
+                                                ->columnSpan(1),
+
+                                            TextInput::make('label_ar')
+                                                ->label('Quantity Tier (Arabic)')
+                                                ->placeholder('e.g. ١٠–٤٩ قطعة')
+                                                ->columnSpan(1),
+
+                                            TextInput::make('price')
+                                                ->label('Price per Unit')
+                                                ->placeholder('e.g. OMR 18.000')
+                                                ->required()
+                                                ->columnSpan(1),
+                                        ])
+                                        ->columns(3)
+                                        ->reorderable()
+                                        ->reorderableWithDragAndDrop()
+                                        ->addActionLabel('Add Price Tier')
+                                        ->itemLabel(fn(array $state): ?string => $state['label'] ?? 'Tier'),
+                                ]),
                         ]),
 
                     // ── Tab 2: Arabic Content ────────────────────────────

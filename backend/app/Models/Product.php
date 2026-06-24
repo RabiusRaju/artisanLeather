@@ -38,6 +38,7 @@ class Product extends Model
         'origin', 'origin_ar', 'care', 'care_ar', 'shipping', 'shipping_ar',
         'price', 'badge', 'is_active', 'is_featured', 'sort_order',
         'meta_title', 'meta_description', 'shared_platforms',
+        'sku', 'dimensions', 'dimensions_ar', 'bulk_pricing',
     ];
 
     protected $casts = [
@@ -45,6 +46,7 @@ class Product extends Model
         'is_active'        => 'boolean',
         'is_featured'      => 'boolean',
         'shared_platforms' => 'array',
+        'bulk_pricing'     => 'array',
     ];
 
     public function brand(): BelongsTo

@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Models\Product;
+use App\Models\ProductShareLink;
 use App\Models\Survey;
 use Illuminate\Http\Request;
 
@@ -103,6 +104,41 @@ class PrerenderController extends Controller
         return view('prerender.meta', [
             'title'       => $survey->title,
             'description' => $survey->description ?: 'Share your feedback with Artisan Leather — it only takes a minute.',
+            'image'       => $image,
+            'url'         => $url,
+            'type'        => 'website',
+        ]);
+    }
+
+    // GET /prerender/share/{token}
+    public function shareLink(Request $request, string $token)
+    {
+        $url = "https://artisanleatherom.com/share/{$token}";
+
+        if (!self::isBot($request)) {
+            return redirect($url);
+        }
+
+        $link = ProductShareLink::where('token', $token)->firstOrFail();
+        if ($link->isExpired()) {
+            abort(404);
+        }
+
+        $products = $link->products();
+        $firstProduct = $products->first();
+        $imagePath = $firstProduct?->images->first()?->url;
+        $image = $imagePath
+            ? (str_starts_with($imagePath, 'http') ? $imagePath : asset('storage/' . $imagePath))
+            : null;
+
+        $count = $products->count();
+        $description = $count > 0
+            ? "A curated selection of {$count} product" . ($count === 1 ? '' : 's') . " from Artisan Leather."
+            : 'A curated selection of products from Artisan Leather.';
+
+        return view('prerender.meta', [
+            'title'       => $link->name ?: 'A Curated Selection — Artisan Leather',
+            'description' => $description,
             'image'       => $image,
             'url'         => $url,
             'type'        => 'website',
