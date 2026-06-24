@@ -3,6 +3,7 @@ namespace App\Filament\Resources\Blog;
 
 use App\Filament\Resources\Blog\Pages;
 use App\Models\Post;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -302,6 +303,17 @@ class PostResource extends Resource
                                 ->columnSpanFull(),
                         ]),
 
+                    Section::make('📢 Social Sharing Tracker')
+                        ->description('Check off where you\'ve already shared this article, so you know at a glance what\'s left to post.')
+                        ->schema([
+                            CheckboxList::make('shared_platforms')
+                                ->label('')
+                                ->options(self::socialPlatformOptions())
+                                ->columns(3)
+                                ->gridDirection('row')
+                                ->columnSpanFull(),
+                        ]),
+
                 ]),
 
                 // ── Tab 4: SEO ───────────────────────────────────────────
@@ -526,6 +538,22 @@ class PostResource extends Resource
                     ->label('Published')
                     ->dateTime('d M Y')
                     ->sortable(),
+
+                TextColumn::make('shared_platforms')
+                    ->label('Shared On')
+                    ->formatStateUsing(function ($state) {
+                        $platforms = self::socialPlatformOptions();
+                        $selected  = array_intersect_key($platforms, array_flip((array) $state));
+                        if (empty($selected)) {
+                            return '—';
+                        }
+                        return implode(' ', array_map(fn ($label) => mb_substr($label, 0, 2), $selected));
+                    })
+                    ->tooltip(function ($state) {
+                        $platforms = self::socialPlatformOptions();
+                        $selected  = array_intersect_key($platforms, array_flip((array) $state));
+                        return empty($selected) ? 'Not shared anywhere yet' : implode(', ', $selected);
+                    }),
             ])
             ->defaultSort('published_at', 'desc')
             ->filters([
@@ -539,6 +567,26 @@ class PostResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
+
+                Action::make('update_sharing')
+                    ->label('Sharing')
+                    ->icon('heroicon-o-share')
+                    ->color('warning')
+                    ->schema([
+                        CheckboxList::make('shared_platforms')
+                            ->label('Shared On')
+                            ->options(self::socialPlatformOptions())
+                            ->columns(2),
+                    ])
+                    ->fillForm(fn ($record) => ['shared_platforms' => $record->shared_platforms ?? []])
+                    ->action(function (array $data, $record) {
+                        $record->update(['shared_platforms' => $data['shared_platforms'] ?? []]);
+                        \Filament\Notifications\Notification::make()
+                            ->title('✅ Sharing status updated!')
+                            ->success()->send();
+                    })
+                    ->modalHeading(fn ($record) => 'Update Sharing — ' . $record->title)
+                    ->modalSubmitActionLabel('Save'),
 
                 Action::make('share_whatsapp')
                     ->label('WhatsApp')
@@ -605,6 +653,20 @@ class PostResource extends Resource
         $set('meta_description', $data['meta_description']  ?? '');
         $set('_seo_score',       (string) ($data['seo_score'] ?? 0));
         $set('_seo_notes',       $data['seo_notes']         ?? '');
+    }
+
+    protected static function socialPlatformOptions(): array
+    {
+        return [
+            'facebook'         => '📘 Facebook',
+            'instagram'        => '📷 Instagram',
+            'linkedin'         => '💼 LinkedIn',
+            'google_business'  => '🔍 Google Business Profile',
+            'twitter'          => '🐦 Twitter / X',
+            'tiktok'           => '🎵 TikTok',
+            'pinterest'        => '📌 Pinterest',
+            'whatsapp_status'  => '💬 WhatsApp Status',
+        ];
     }
 
     protected static function competitionMarkets(): array

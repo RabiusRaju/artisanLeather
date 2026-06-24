@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import SEO from '../components/SEO'
+import ShareButton from '../components/ShareButton'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { FaWhatsapp } from 'react-icons/fa'
@@ -576,17 +577,20 @@ export default function ProductPage() {
               <h1 className="font-serif text-4xl md:text-5xl text-white font-light leading-tight">
                 {productName}
               </h1>
-              <button
-                onClick={handleWishlistToggle}
-                disabled={wishlistBusy}
-                aria-label="Toggle wishlist"
-                className="flex-shrink-0 mt-2 w-10 h-10 flex items-center justify-center border border-white/10 hover:border-gold/40 transition-colors duration-300 disabled:opacity-50"
-              >
-                <HiHeart
-                  size={18}
-                  className={isInWishlist(product.id) ? 'text-gold' : 'text-white/40'}
-                />
-              </button>
+              <div className="flex-shrink-0 mt-2 flex items-center gap-2">
+                <ShareButton url={typeof window !== 'undefined' ? window.location.href : ''} title={productName} />
+                <button
+                  onClick={handleWishlistToggle}
+                  disabled={wishlistBusy}
+                  aria-label="Toggle wishlist"
+                  className="w-10 h-10 flex items-center justify-center border border-white/10 hover:border-gold/40 transition-colors duration-300 disabled:opacity-50"
+                >
+                  <HiHeart
+                    size={18}
+                    className={isInWishlist(product.id) ? 'text-gold' : 'text-white/40'}
+                  />
+                </button>
+              </div>
             </div>
 
             {/* Tagline */}
