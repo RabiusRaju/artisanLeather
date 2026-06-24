@@ -22,11 +22,19 @@ export default function ShareButton({ url, title, className = '' }) {
   const encodedTitle = encodeURIComponent(title)
 
   const links = [
-    { label: 'WhatsApp', icon: FaWhatsapp, color: '#25D366', href: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}` },
-    { label: 'Facebook', icon: FaFacebook, color: '#1877F2', href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
-    { label: 'X',        icon: FaXTwitter, color: '#ffffff', href: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}` },
-    { label: 'LinkedIn', icon: FaLinkedin, color: '#0A66C2', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
+    { label: 'WhatsApp', icon: FaWhatsapp, color: '#25D366', href: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`, popup: false },
+    { label: 'Facebook', icon: FaFacebook, color: '#1877F2', href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, popup: true },
+    { label: 'X',        icon: FaXTwitter, color: '#ffffff', href: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`, popup: true },
+    { label: 'LinkedIn', icon: FaLinkedin, color: '#0A66C2', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, popup: true },
   ]
+
+  const openPopup = (href) => {
+    const width = 600, height = 500
+    const left = window.screenX + (window.outerWidth - width) / 2
+    const top  = window.screenY + (window.outerHeight - height) / 2
+    window.open(href, 'share-popup', `width=${width},height=${height},left=${left},top=${top},noopener,noreferrer`)
+    setOpen(false)
+  }
 
   const copyLink = () => {
     navigator.clipboard?.writeText(url)
@@ -55,18 +63,29 @@ export default function ShareButton({ url, title, className = '' }) {
             transition={{ duration: 0.15 }}
             className="absolute right-0 mt-2 w-48 bg-dark-200 border border-gold/20 shadow-xl z-20 py-2"
           >
-            {links.map(({ label, icon: Icon, color, href }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors duration-200"
-              >
-                <Icon size={16} style={{ color }} />
-                {label}
-              </a>
+            {links.map(({ label, icon: Icon, color, href, popup }) => (
+              popup ? (
+                <button
+                  key={label}
+                  onClick={() => openPopup(href)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors duration-200"
+                >
+                  <Icon size={16} style={{ color }} />
+                  {label}
+                </button>
+              ) : (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors duration-200"
+                >
+                  <Icon size={16} style={{ color }} />
+                  {label}
+                </a>
+              )
             ))}
             <button
               onClick={copyLink}
