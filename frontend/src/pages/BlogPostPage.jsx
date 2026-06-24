@@ -53,7 +53,7 @@ export default function BlogPostPage() {
 
   const categoryLabel = CATEGORY_KEYS[post.category] ? t(CATEGORY_KEYS[post.category]) : post.category?.replace(/-/g, ' ')
 
-  const seoTitle = post.meta_title || `${post.title} | Artisan Leather Blog`
+  const seoTitle = post.meta_title || post.title
   const seoDesc  = post.meta_description || post.excerpt || 'Read this article on the Artisan Leather blog.'
 
   const articleSchema = {

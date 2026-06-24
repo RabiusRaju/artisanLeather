@@ -1,9 +1,12 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Post;
 use App\Models\Product;
 use App\Models\ProductShareLink;
+use App\Models\Setting;
 use App\Models\Survey;
 use Illuminate\Http\Request;
 
@@ -138,6 +141,112 @@ class PrerenderController extends Controller
 
         return view('prerender.meta', [
             'title'       => $link->name ?: 'A Curated Selection — Artisan Leather',
+            'description' => $description,
+            'image'       => $image,
+            'url'         => $url,
+            'type'        => 'website',
+        ]);
+    }
+
+    // GET /prerender/  (homepage)
+    public function home(Request $request)
+    {
+        $url = 'https://artisanleatherom.com/';
+
+        if (!self::isBot($request)) {
+            return redirect($url);
+        }
+
+        $settings = Setting::pluck('value', 'key');
+
+        return view('prerender.meta', [
+            'title'       => $settings['homepage.seo.meta_title'] ?: 'Luxury Leather Wallets, Bags & Accessories',
+            'description' => $settings['homepage.seo.meta_description'] ?: 'Discover premium handcrafted leather wallets, bags, belts and accessories from Artisan Leather, Muscat Oman. Free delivery across Oman and GCC. Shop now.',
+            'image'       => 'https://artisanleatherom.com/og-image.jpg',
+            'url'         => $url,
+            'type'        => 'website',
+        ]);
+    }
+
+    // GET /prerender/about
+    public function about(Request $request)
+    {
+        $url = 'https://artisanleatherom.com/about';
+
+        if (!self::isBot($request)) {
+            return redirect($url);
+        }
+
+        $settings = Setting::pluck('value', 'key');
+
+        return view('prerender.meta', [
+            'title'       => $settings['about.seo.meta_title'] ?: 'Our Story — Leather Artisans, Muscat',
+            'description' => $settings['about.seo.meta_description'] ?: "Learn about Artisan Leather's heritage, craftsmanship philosophy, and the skilled artisans behind every handcrafted leather piece made in Muscat, Oman.",
+            'image'       => 'https://artisanleatherom.com/og-image.jpg',
+            'url'         => $url,
+            'type'        => 'website',
+        ]);
+    }
+
+    // GET /prerender/contact
+    public function contact(Request $request)
+    {
+        $url = 'https://artisanleatherom.com/contact';
+
+        if (!self::isBot($request)) {
+            return redirect($url);
+        }
+
+        return view('prerender.meta', [
+            'title'       => 'Contact Us — Muscat, Oman',
+            'description' => "Contact Artisan Leather via WhatsApp, email or our online form. We're based in Muscat, Oman and deliver across the GCC. Custom orders and enquiries welcome.",
+            'image'       => 'https://artisanleatherom.com/og-image.jpg',
+            'url'         => $url,
+            'type'        => 'website',
+        ]);
+    }
+
+    // GET /prerender/collections/{category?}
+    public function collections(Request $request, ?string $category = null)
+    {
+        $url = 'https://artisanleatherom.com/collections' . ($category ? "/{$category}" : '');
+        $brandSlug = $request->query('brand');
+        if ($brandSlug) {
+            $url .= '?brand=' . $brandSlug;
+        }
+
+        if (!self::isBot($request)) {
+            return redirect($url);
+        }
+
+        $activeBrand    = $brandSlug ? Brand::where('slug', $brandSlug)->where('is_active', true)->first() : null;
+        $activeCategory = $category ? Category::where('slug', $category)->first() : null;
+
+        $productQuery = Product::with('images')->where('is_active', true);
+        if ($activeBrand) {
+            $productQuery->where('brand_id', $activeBrand->id);
+        } elseif ($activeCategory) {
+            $productQuery->where('category_id', $activeCategory->id);
+        }
+        $imagePath = $productQuery->first()?->images->first()?->url;
+        $image = $imagePath
+            ? (str_starts_with($imagePath, 'http') ? $imagePath : asset('storage/' . $imagePath))
+            : 'https://artisanleatherom.com/og-image.jpg';
+
+        if ($activeBrand) {
+            $title       = "{$activeBrand->name} — Handcrafted Leather";
+            $description = "Shop {$activeBrand->name} — handcrafted leather goods made by artisans in Muscat, Oman. Free delivery across Oman and GCC.";
+        } elseif ($category) {
+            $categoryLabel = $activeCategory?->name ?: ucfirst($category);
+            $title       = "{$categoryLabel} — Handcrafted Leather Goods";
+            $description = "Browse our handcrafted leather {$category} collection. Premium quality, made by artisans in Muscat, Oman. Free delivery across Oman and GCC.";
+        } else {
+            $title       = 'All Collections — Handcrafted Leather';
+            $description = 'Explore the full Artisan Leather collection — wallets, bags, belts and accessories. All handcrafted in Muscat, Oman. Free delivery across Oman and GCC.';
+        }
+
+        return view('prerender.meta', [
+            'title'       => $title,
             'description' => $description,
             'image'       => $image,
             'url'         => $url,

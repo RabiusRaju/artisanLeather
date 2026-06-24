@@ -110,7 +110,7 @@ export default function BlogPage() {
   return (
     <div className="min-h-screen bg-dark pb-24">
       <SEO
-        title="The Leather Journal — Care Guides, Style Tips & Stories | Artisan Leather"
+        title="The Leather Journal — Care Guides & Style Tips"
         description="Expert leather care guides, style tips, and stories from the artisans at Artisan Leather, Muscat Oman."
         url="/blog"
       />
