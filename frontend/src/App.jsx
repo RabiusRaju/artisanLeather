@@ -33,6 +33,7 @@ const TrackOrderPage    = lazy(() => import('./pages/TrackOrderPage'))
 const BlogPage          = lazy(() => import('./pages/BlogPage'))
 const BlogPostPage      = lazy(() => import('./pages/BlogPostPage'))
 const SurveyPage        = lazy(() => import('./pages/SurveyPage'))
+const SharedProductsPage = lazy(() => import('./pages/SharedProductsPage'))
 const WishlistPage      = lazy(() => import('./pages/WishlistPage'))
 const PrivacyPage       = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage         = lazy(() => import('./pages/TermsPage'))
@@ -65,6 +66,7 @@ function Layout() {
           <Route path="/blog"                  element={<BlogPage />} />
           <Route path="/blog/:slug"            element={<BlogPostPage />} />
           <Route path="/survey/:slug"          element={<SurveyPage />} />
+          <Route path="/share/:token"          element={<SharedProductsPage />} />
           <Route path="/about"                 element={<About />} />
           <Route path="/contact"               element={<Contact />} />
           <Route path="/cart"                  element={<CartPage />} />
