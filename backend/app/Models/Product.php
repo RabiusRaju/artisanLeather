@@ -37,13 +37,14 @@ class Product extends Model
         'description', 'description_ar', 'material', 'material_ar',
         'origin', 'origin_ar', 'care', 'care_ar', 'shipping', 'shipping_ar',
         'price', 'badge', 'is_active', 'is_featured', 'sort_order',
-        'meta_title', 'meta_description',
+        'meta_title', 'meta_description', 'shared_platforms',
     ];
 
     protected $casts = [
-        'price'       => 'decimal:3',
-        'is_active'   => 'boolean',
-        'is_featured' => 'boolean',
+        'price'            => 'decimal:3',
+        'is_active'        => 'boolean',
+        'is_featured'      => 'boolean',
+        'shared_platforms' => 'array',
     ];
 
     public function brand(): BelongsTo

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import SEO from '../components/SEO'
+import ShareButton from '../components/ShareButton'
 import { usePost } from '../hooks/usePost'
 
 const CATEGORY_KEYS = {
@@ -115,22 +116,25 @@ export default function BlogPostPage() {
             {post.title}
           </motion.h1>
 
-          <div className="flex items-center gap-4 text-[11px] text-white/30 tracking-wider">
-            <span>{post.author}</span>
-            <span>·</span>
-            <span>{date}</span>
-            <span>·</span>
-            <span>{post.read_time} {t('blog.minRead')}</span>
-            {post.tags?.length > 0 && (
-              <>
-                <span>·</span>
-                <div className="flex gap-2">
-                  {post.tags.slice(0, 3).map(tag => (
-                    <span key={tag} className="border border-white/10 px-2 py-0.5 text-[9px]">{tag}</span>
-                  ))}
-                </div>
-              </>
-            )}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-4 text-[11px] text-white/30 tracking-wider">
+              <span>{post.author}</span>
+              <span>·</span>
+              <span>{date}</span>
+              <span>·</span>
+              <span>{post.read_time} {t('blog.minRead')}</span>
+              {post.tags?.length > 0 && (
+                <>
+                  <span>·</span>
+                  <div className="flex gap-2">
+                    {post.tags.slice(0, 3).map(tag => (
+                      <span key={tag} className="border border-white/10 px-2 py-0.5 text-[9px]">{tag}</span>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            <ShareButton url={typeof window !== 'undefined' ? window.location.href : ''} title={post.title} />
           </div>
         </div>
       </section>

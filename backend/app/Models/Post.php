@@ -10,13 +10,14 @@ class Post extends Model
         'title', 'title_ar', 'slug', 'excerpt', 'excerpt_ar',
         'content', 'content_ar', 'featured_image', 'category', 'tags',
         'author', 'meta_title', 'meta_description',
-        'is_published', 'published_at', 'read_time',
+        'is_published', 'published_at', 'read_time', 'shared_platforms',
     ];
 
     protected $casts = [
-        'tags'         => 'array',
-        'is_published' => 'boolean',
-        'published_at' => 'datetime',
+        'tags'             => 'array',
+        'is_published'     => 'boolean',
+        'published_at'     => 'datetime',
+        'shared_platforms' => 'array',
     ];
 
     // Scope: only published posts for the public API

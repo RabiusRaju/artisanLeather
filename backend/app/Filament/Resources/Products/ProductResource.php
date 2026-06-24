@@ -6,6 +6,7 @@ use App\Filament\Resources\Products\Pages;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -196,6 +197,17 @@ class ProductResource extends Resource
                                         ->default(false),
                                 ])->columnSpanFull(),
                             ])->columns(3),
+
+                            Section::make('📢 Social Sharing Tracker')
+                                ->description('Check off where you\'ve already shared this product, so you know at a glance what\'s left to post.')
+                                ->schema([
+                                    CheckboxList::make('shared_platforms')
+                                        ->label('')
+                                        ->options(self::socialPlatformOptions())
+                                        ->columns(3)
+                                        ->gridDirection('row')
+                                        ->columnSpanFull(),
+                                ]),
 
                             Section::make('Identity (English)')->schema([
                                 TextInput::make('name')
@@ -738,6 +750,23 @@ class ProductResource extends Resource
                     }),
                 IconColumn::make('is_active')->boolean()->label('Active'),
                 IconColumn::make('is_featured')->boolean()->label('Featured'),
+
+                TextColumn::make('shared_platforms')
+                    ->label('Shared On')
+                    ->formatStateUsing(function ($state) {
+                        $platforms = self::socialPlatformOptions();
+                        $selected  = array_intersect_key($platforms, array_flip((array) $state));
+                        if (empty($selected)) {
+                            return '—';
+                        }
+                        return implode(' ', array_map(fn ($label) => mb_substr($label, 0, 2), $selected));
+                    })
+                    ->tooltip(function ($state) {
+                        $platforms = self::socialPlatformOptions();
+                        $selected  = array_intersect_key($platforms, array_flip((array) $state));
+                        return empty($selected) ? 'Not shared anywhere yet' : implode(', ', $selected);
+                    }),
+
                 TextColumn::make('updated_at')->dateTime()->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -745,9 +774,80 @@ class ProductResource extends Resource
                 SelectFilter::make('category')->relationship('category', 'name'),
                 SelectFilter::make('badge')->options(['bestseller' => 'Bestseller', 'new' => 'New']),
             ])
-            ->recordActions([EditAction::make(), DeleteAction::make()])
+            ->recordActions([
+                EditAction::make(),
+
+                Action::make('update_sharing')
+                    ->label('Sharing')
+                    ->icon('heroicon-o-share')
+                    ->color('warning')
+                    ->schema([
+                        CheckboxList::make('shared_platforms')
+                            ->label('Shared On')
+                            ->options(self::socialPlatformOptions())
+                            ->columns(2),
+                    ])
+                    ->fillForm(fn ($record) => ['shared_platforms' => $record->shared_platforms ?? []])
+                    ->action(function (array $data, $record) {
+                        $record->update(['shared_platforms' => $data['shared_platforms'] ?? []]);
+                        \Filament\Notifications\Notification::make()
+                            ->title('✅ Sharing status updated!')
+                            ->success()->send();
+                    })
+                    ->modalHeading(fn ($record) => 'Update Sharing — ' . $record->name)
+                    ->modalSubmitActionLabel('Save'),
+
+                Action::make('share_whatsapp')
+                    ->label('WhatsApp')
+                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                    ->color('success')
+                    ->url(fn ($record) =>
+                        'https://wa.me/?text=' . urlencode(
+                            "🛍️ New from Artisan Leather:\n\n" .
+                            "*{$record->name}*\n" .
+                            ($record->tagline ? "_{$record->tagline}_\n\n" : "\n") .
+                            "👉 https://artisanleatherom.com/product/{$record->slug}\n\n" .
+                            "#ArtisanLeather #Oman"
+                        )
+                    )
+                    ->openUrlInNewTab()
+                    ->visible(fn ($record) => $record->is_active),
+
+                Action::make('copy_link')
+                    ->label('Copy Link')
+                    ->icon('heroicon-o-link')
+                    ->color('gray')
+                    ->action(function ($record, $livewire) {
+                        $url = "https://artisanleatherom.com/product/{$record->slug}";
+                        $livewire->dispatch('copy-to-clipboard', text: $url);
+                    })
+                    ->extraAttributes(fn () => [
+                        'x-data' => '{}',
+                        'x-on:copy-to-clipboard.window' => "
+                            navigator.clipboard.writeText(\$event.detail.text);
+                            \$el.textContent = '✓ Copied!';
+                            setTimeout(() => \$el.textContent = 'Copy Link', 2000);
+                        ",
+                    ]),
+
+                DeleteAction::make(),
+            ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
             ->defaultSort('sort_order');
+    }
+
+    protected static function socialPlatformOptions(): array
+    {
+        return [
+            'facebook'         => '📘 Facebook',
+            'instagram'        => '📷 Instagram',
+            'linkedin'         => '💼 LinkedIn',
+            'google_business'  => '🔍 Google Business Profile',
+            'twitter'          => '🐦 Twitter / X',
+            'tiktok'           => '🎵 TikTok',
+            'pinterest'        => '📌 Pinterest',
+            'whatsapp_status'  => '💬 WhatsApp Status',
+        ];
     }
 
     private static function resolveAiFilePaths(mixed $files): array
