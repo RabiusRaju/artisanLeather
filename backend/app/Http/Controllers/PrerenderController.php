@@ -69,8 +69,11 @@ class PrerenderController extends Controller
             return redirect($url);
         }
 
-        $product = Product::where('slug', $slug)->where('is_active', true)->firstOrFail();
-        $image   = $product->images->first()?->url;
+        $product   = Product::where('slug', $slug)->where('is_active', true)->firstOrFail();
+        $imagePath = $product->images->first()?->url;
+        $image     = $imagePath
+            ? (str_starts_with($imagePath, 'http') ? $imagePath : asset('storage/' . $imagePath))
+            : null;
 
         return view('prerender.meta', [
             'title'       => $product->meta_title ?: $product->name,
