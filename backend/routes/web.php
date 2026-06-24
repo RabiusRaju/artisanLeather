@@ -18,6 +18,10 @@ Route::get('/prerender/blog/{slug}',    [PrerenderController::class, 'blogPost']
 Route::get('/prerender/product/{slug}', [PrerenderController::class, 'product']);
 Route::get('/prerender/survey/{slug}',  [PrerenderController::class, 'survey']);
 Route::get('/prerender/share/{token}',  [PrerenderController::class, 'shareLink']);
+Route::get('/prerender/home',           [PrerenderController::class, 'home']);
+Route::get('/prerender/about',          [PrerenderController::class, 'about']);
+Route::get('/prerender/contact',        [PrerenderController::class, 'contact']);
+Route::get('/prerender/collections/{category?}', [PrerenderController::class, 'collections']);
 
 // ── Dynamic XML Sitemap ────────────────────────────────────────────────────
 Route::get('/sitemap.xml', function () {

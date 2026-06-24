@@ -141,7 +141,7 @@ export default function SharedProductsPage() {
 
   return (
     <div className="min-h-screen bg-dark">
-      <SEO title={data.name || 'Shared Products'} description="A curated selection of products from Artisan Leather." noIndex />
+      <SEO title={data.name || 'Shared Products'} description="A curated selection of products from Artisan Leather." url={`/share/${token}`} noIndex />
 
       {/* ── Cover slide ─────────────────────────────────────────────── */}
       <section className="px-6 lg:px-16 pt-32 pb-16 bg-dark-100">
@@ -150,7 +150,7 @@ export default function SharedProductsPage() {
             {data.products[0]?.images?.[0]?.url && (
               <img
                 src={data.products[0].images[0].url}
-                alt=""
+                alt={data.name || 'Artisan Leather curated selection'}
                 className="w-full h-full object-cover"
               />
             )}

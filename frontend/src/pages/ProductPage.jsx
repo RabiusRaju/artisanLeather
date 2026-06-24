@@ -353,7 +353,7 @@ export default function ProductPage() {
   const seoDesc = product.meta_description
     || `${product.name} — ${product.tagline || 'Premium handcrafted leather from Artisan Leather, Muscat Oman'}. Price: OMR ${product.price}. Free delivery across Oman and GCC.`
   const seoTitle = product.meta_title
-    || `${product.name} — Handcrafted Leather | Artisan Leather Oman`
+    || `${product.name} — Handcrafted Leather`
 
   // JSON-LD Product Schema
   const productSchema = {

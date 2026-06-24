@@ -242,7 +242,7 @@ export default function Contact() {
     <div className="min-h-screen bg-dark">
 
       <SEO
-        title="Contact Us — Get in Touch with Artisan Leather, Muscat"
+        title="Contact Us — Muscat, Oman"
         description="Contact Artisan Leather via WhatsApp, email or our online form. We're based in Muscat, Oman and deliver across the GCC. Custom orders and enquiries welcome."
         url="/contact"
       />

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
 import SEO from '../components/SEO'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -132,10 +132,11 @@ function ProductCard({ product, index }) {
 // ── Page ────────────────────────────────────────────────────────────────────
 export default function CollectionsPage() {
   const { category }  = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [sortBy,      setSortBy]      = useState('default')
   const [sortOpen,    setSortOpen]    = useState(false)
   const [brandOpen,   setBrandOpen]   = useState(false)
-  const [brandFilter, setBrandFilter] = useState('')
+  const [brandFilter, setBrandFilter] = useState(() => searchParams.get('brand') || '')
   const sortRef  = useRef(null)
   const brandRef = useRef(null)
   const { t } = useTranslation()
@@ -151,6 +152,12 @@ export default function CollectionsPage() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  const selectBrand = (slug) => {
+    setBrandFilter(slug)
+    setBrandOpen(false)
+    setSearchParams(slug ? { brand: slug } : {}, { replace: true })
+  }
 
   const sortOptions = [
     { id: 'default',    label: t('collections.featured') },
@@ -171,20 +178,26 @@ export default function CollectionsPage() {
   const categoryLabel = category
     ? (activeCategory?.name || t(`collections.${category}`, { defaultValue: category.charAt(0).toUpperCase() + category.slice(1) }))
     : t('collections.allPieces')
+  const activeBrand = brands.find(b => b.slug === brandFilter)
 
-  const seoTitle = category
-    ? `${categoryLabel} — Handcrafted Leather ${categoryLabel} | Artisan Leather Oman`
-    : 'All Collections — Handcrafted Leather Goods | Artisan Leather Oman'
-  const seoDesc = category
-    ? `Browse our handcrafted leather ${category} collection. Premium quality, made by artisans in Muscat, Oman. Free delivery across Oman and GCC.`
-    : 'Explore the full Artisan Leather collection — wallets, bags, belts and accessories. All handcrafted in Muscat, Oman. Free delivery across Oman and GCC.'
+  const seoTitle = activeBrand
+    ? `${activeBrand.name} — Handcrafted Leather`
+    : category
+      ? `${categoryLabel} — Handcrafted Leather Goods`
+      : 'All Collections — Handcrafted Leather'
+  const seoDesc = activeBrand
+    ? `Shop ${activeBrand.name} — handcrafted leather goods made by artisans in Muscat, Oman. Free delivery across Oman and GCC.`
+    : category
+      ? `Browse our handcrafted leather ${category} collection. Premium quality, made by artisans in Muscat, Oman. Free delivery across Oman and GCC.`
+      : 'Explore the full Artisan Leather collection — wallets, bags, belts and accessories. All handcrafted in Muscat, Oman. Free delivery across Oman and GCC.'
+  const seoUrl = (category ? `/collections/${category}` : '/collections') + (brandFilter ? `?brand=${brandFilter}` : '')
 
   return (
     <div className="min-h-screen bg-dark">
       <SEO
         title={seoTitle}
         description={seoDesc}
-        url={category ? `/collections/${category}` : '/collections'}
+        url={seoUrl}
       />
       {/* Page Hero */}
       <section className="relative pt-40 pb-20 px-6 lg:px-12 border-b border-gold/10 overflow-hidden">
@@ -264,7 +277,7 @@ export default function CollectionsPage() {
                   <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
                     className="absolute left-0 top-full mt-2 w-60 bg-dark-100 border border-gold/15 z-30 max-h-80 overflow-y-auto">
-                    <button onClick={() => { setBrandFilter(''); setBrandOpen(false) }}
+                    <button onClick={() => selectBrand('')}
                       className={`w-full text-left px-5 py-3 text-[10px] tracking-[0.25em] uppercase transition-colors duration-200 ${
                         !brandFilter ? 'text-gold bg-gold/5' : 'text-white/40 hover:text-gold hover:bg-white/5'
                       }`}>
@@ -272,7 +285,7 @@ export default function CollectionsPage() {
                     </button>
                     {brands.map(b => (
                       <button key={b.id}
-                        onClick={() => { setBrandFilter(b.slug); setBrandOpen(false) }}
+                        onClick={() => selectBrand(b.slug)}
                         className={`w-full flex items-center gap-2.5 text-left px-5 py-3 text-[10px] tracking-[0.25em] uppercase transition-colors duration-200 ${
                           brandFilter === b.slug ? 'text-gold bg-gold/5' : 'text-white/40 hover:text-gold hover:bg-white/5'
                         }`}>
