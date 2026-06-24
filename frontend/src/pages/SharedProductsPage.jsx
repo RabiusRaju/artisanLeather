@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import SEO from '../components/SEO'
+import ShareButton from '../components/ShareButton'
 import { useCurrency } from '../context/CurrencyContext'
 import { fetchSharedProducts } from '../services/api'
 
@@ -155,9 +156,12 @@ export default function SharedProductsPage() {
             )}
           </div>
           <div>
-            <h1 className="font-serif text-[40px] sm:text-[52px] leading-[1.05] font-light tracking-tight text-white uppercase mb-5">
-              {data.name || 'Product Presentation'}
-            </h1>
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <h1 className="font-serif text-[40px] sm:text-[52px] leading-[1.05] font-light tracking-tight text-white uppercase">
+                {data.name || 'Product Presentation'}
+              </h1>
+              <ShareButton url={window.location.href} title={data.name || 'A Curated Selection — Artisan Leather'} />
+            </div>
             <p className="text-[15px] text-white/40">
               Experience the Art of Genuine Leather Craftsmanship
             </p>
