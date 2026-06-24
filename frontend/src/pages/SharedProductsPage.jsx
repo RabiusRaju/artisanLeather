@@ -6,87 +6,111 @@ import SEO from '../components/SEO'
 import { useCurrency } from '../context/CurrencyContext'
 import { fetchSharedProducts } from '../services/api'
 
-function CatalogueRow({ product, index }) {
+// ── Running header — repeats above every product slide, like a PDF page header ──
+function SlideHeader() {
+  return (
+    <div className="flex items-center justify-end pb-3 mb-8 border-b border-[#cfc8b8] print:mb-6">
+      <span className="text-[13px] text-[#6b6b6b] tracking-wide">PRODUCT PRESENTATION</span>
+    </div>
+  )
+}
+
+function ProductSlide({ product, index, reverse }) {
   const { format } = useCurrency()
   const { i18n } = useTranslation()
   const isAr = i18n.language?.startsWith('ar')
   const name = isAr && product.name_ar ? product.name_ar : product.name
-  const firstImage = product.images?.[0]?.url
+  const images = (product.images || []).slice(0, 4)
   const tiers = product.bulk_pricing || []
+  const categoryName = product.category?.name || 'Leather Goods'
 
-  const specs = [
-    { label: 'Product Code', value: product.sku },
-    { label: 'Category', value: product.category?.name },
-    { label: 'Material', value: product.material },
+  const details = [
+    { label: 'Product Name', value: name },
+    { label: 'Materials', value: product.material },
     { label: 'Size', value: product.dimensions },
-  ].filter((s) => s.value)
+    { label: 'Category', value: categoryName },
+    { label: 'Product Code', value: product.sku },
+  ].filter((d) => d.value)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: (index % 8) * 0.06 }}
-      className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-6 sm:gap-10 py-10 border-b border-white/10 print:py-6 print:border-gold/20"
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.45 }}
+      className="py-14 print:py-8 print:break-inside-avoid"
     >
-      <Link to={`/product/${product.slug}`} className="block">
-        <div className="relative overflow-hidden bg-dark-100 w-full sm:w-[200px]" style={{ aspectRatio: '3/4' }}>
-          {firstImage && (
-            <img
-              src={firstImage}
-              alt={name}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          )}
-        </div>
-      </Link>
+      <SlideHeader />
 
-      <div className="flex flex-col">
-        <p className="text-gold/50 text-[10px] tracking-[0.3em] uppercase mb-1">
-          {String(index + 1).padStart(2, '0')}
-        </p>
-        <Link to={`/product/${product.slug}`}>
-          <h3 className="font-serif text-2xl text-white hover:text-gold transition-colors duration-300">
-            {name}
-          </h3>
-        </Link>
-        {product.tagline && (
-          <p className="text-white/40 text-sm italic mt-1 mb-5">{product.tagline}</p>
-        )}
+      <div className={`grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center ${reverse ? 'lg:[&>*:first-child]:order-2' : ''}`}>
+        {/* ── Text column ───────────────────────────────────────────── */}
+        <div>
+          <h2 className="inline-block bg-white text-[34px] sm:text-[42px] leading-tight font-semibold tracking-tight text-[#3a3a3a] uppercase mb-8 px-1">
+            {categoryName}
+          </h2>
 
-        {specs.length > 0 && (
-          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3 mb-6">
-            {specs.map((s) => (
-              <div key={s.label}>
-                <dt className="text-[9px] tracking-[0.25em] uppercase text-white/30 mb-1">{s.label}</dt>
-                <dd className="text-white/70 text-sm">{s.value}</dd>
+          <p className="text-[12px] font-bold tracking-wide text-[#3a3a3a] uppercase mb-3">
+            Product Details
+          </p>
+
+          <dl className="space-y-1 mb-5">
+            {details.map((d) => (
+              <div key={d.label} className="flex flex-wrap gap-1 text-[14px] text-[#4a4a4a]">
+                <dt className="font-medium">{d.label} :</dt>
+                <dd>{d.value}</dd>
               </div>
             ))}
           </dl>
-        )}
 
-        <p className="font-serif text-2xl text-gold font-light mb-0">{format(product.price)}</p>
+          {tiers.length > 0 ? (
+            <div className="text-[14px] text-[#4a4a4a] mb-5 space-y-0.5">
+              {tiers.map((tier, i) => (
+                <p key={i}>
+                  {i === 0 ? 'Quantity- ' : <span className="inline-block w-[68px]" />}
+                  {tier.label} &nbsp; Price- {tier.price} (Per Colour)
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="font-serif text-2xl text-[#3a3a3a] mb-5">{format(product.price)}</p>
+          )}
 
-        {tiers.length > 0 && (
-          <div className="mt-5 border border-gold/15 divide-y divide-gold/10">
-            <p className="text-[9px] tracking-[0.25em] uppercase text-white/30 px-4 pt-3 pb-2">
-              Bulk / Wholesale Pricing
-            </p>
-            {tiers.map((tier, i) => (
-              <div key={i} className="flex items-center justify-between px-4 py-2.5 text-sm">
-                <span className="text-white/55">{tier.label}</span>
-                <span className="text-gold/90">{tier.price}</span>
+          <Link
+            to={`/product/${product.slug}`}
+            className="print:hidden inline-block text-[11px] tracking-[0.25em] uppercase text-[#8a6d2f] border-b border-[#8a6d2f] pb-0.5 hover:text-[#3a3a3a] hover:border-[#3a3a3a] transition-colors duration-300"
+          >
+            View Product →
+          </Link>
+        </div>
+
+        {/* ── Image column ──────────────────────────────────────────── */}
+        <Link to={`/product/${product.slug}`} className="block">
+          {images.length > 1 ? (
+            <div className="grid grid-cols-3 grid-rows-2 gap-2.5 h-[340px] sm:h-[420px]">
+              <div className="col-span-2 row-span-2 bg-[#eee9dd] overflow-hidden">
+                <img src={images[0].url} alt={name} className="w-full h-full object-cover" />
               </div>
-            ))}
-          </div>
-        )}
+              {images.slice(1, 4).map((img, i) => (
+                <div key={i} className="bg-[#eee9dd] overflow-hidden">
+                  <img src={img.url} alt={name} className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-[#eee9dd] overflow-hidden h-[340px] sm:h-[420px]">
+              {images[0] && (
+                <img src={images[0].url} alt={name} className="w-full h-full object-cover" />
+              )}
+            </div>
+          )}
+        </Link>
       </div>
-    </motion.div>
+    </motion.section>
   )
 }
 
 export default function SharedProductsPage() {
   const { token } = useParams()
-  const { t } = useTranslation()
   const [data, setData] = useState(null)
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -99,50 +123,72 @@ export default function SharedProductsPage() {
   }, [token])
 
   if (loading) {
-    return <div className="min-h-screen bg-dark" />
+    return <div className="min-h-screen bg-[#f3efe5]" />
   }
 
   if (error || !data || data.products.length === 0) {
     return (
-      <div className="min-h-screen bg-dark flex items-center justify-center">
+      <div className="min-h-screen bg-[#f3efe5] flex items-center justify-center">
         <div className="text-center px-6">
           <p className="text-5xl mb-6">🔗</p>
-          <p className="font-serif text-2xl text-white/40 font-light mb-6">This link is invalid or has expired.</p>
-          <Link to="/" className="text-gold text-sm tracking-widest uppercase">← artisanleatherom.com</Link>
+          <p className="text-2xl text-[#6b6b6b] font-light mb-6">This link is invalid or has expired.</p>
+          <Link to="/" className="text-[#8a6d2f] text-sm tracking-widest uppercase">← artisanleatherom.com</Link>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-dark pb-24 print:bg-white">
+    <div className="min-h-screen bg-[#f3efe5]">
       <SEO title={data.name || 'Shared Products'} description="A curated selection of products from Artisan Leather." noIndex />
 
-      <section className="pt-36 pb-12 px-6 lg:px-12 border-b border-gold/10 bg-dark-100 print:pt-6 print:bg-white print:border-b-2 print:border-gold">
-        <div className="max-w-4xl mx-auto flex items-end justify-between gap-6 flex-wrap">
-          <div>
-            <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-3">Artisan Leather — Oman</p>
-            <h1 className="font-serif text-4xl md:text-5xl text-white font-light print:text-dark">
-              {data.name || t('common.curatedForYou', 'A Curated Selection')}
-            </h1>
-            <p className="text-white/30 text-xs tracking-wide mt-3 print:text-dark/50">
-              {data.products.length} {data.products.length === 1 ? 'item' : 'items'} · Prices in OMR unless otherwise noted
-            </p>
+      {/* ── Cover slide ─────────────────────────────────────────────── */}
+      <section className="px-6 lg:px-16 pt-32 pb-16 print:pt-10">
+        <div className="max-w-5xl mx-auto flex items-center justify-end pb-3 mb-10 border-b border-[#cfc8b8]">
+          <span className="text-[13px] text-[#6b6b6b] tracking-wide">artisanleatherom.com</span>
+        </div>
+
+        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          <div className="bg-[#eee9dd] overflow-hidden h-[280px] sm:h-[360px]">
+            {data.products[0]?.images?.[0]?.url && (
+              <img
+                src={data.products[0].images[0].url}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            )}
           </div>
-          <button
-            onClick={() => window.print()}
-            className="print:hidden text-[10px] tracking-[0.3em] uppercase text-gold border border-gold/40 px-5 py-3 hover:bg-gold hover:text-dark transition-colors duration-300"
-          >
-            Print / Save PDF
-          </button>
+          <div>
+            <h1 className="text-[40px] sm:text-[52px] leading-[1.05] font-bold tracking-tight text-[#3a3a3a] uppercase mb-5">
+              {data.name || 'Product Presentation'}
+            </h1>
+            <p className="text-[15px] text-[#6b6b6b] mb-8">
+              Experience the Art of Genuine Leather Craftsmanship
+            </p>
+            <button
+              onClick={() => window.print()}
+              className="print:hidden text-[10px] tracking-[0.3em] uppercase text-[#3a3a3a] border border-[#3a3a3a] px-6 py-3 hover:bg-[#3a3a3a] hover:text-white transition-colors duration-300"
+            >
+              Print / Save as PDF
+            </button>
+          </div>
         </div>
       </section>
 
-      <div className="max-w-4xl mx-auto px-6 lg:px-12 pt-4">
+      {/* ── Product slides ──────────────────────────────────────────── */}
+      <div className="max-w-5xl mx-auto px-6 lg:px-16 divide-y divide-[#cfc8b8]">
         {data.products.map((product, i) => (
-          <CatalogueRow key={product.id} product={product} index={i} />
+          <ProductSlide key={product.id} product={product} index={i} reverse={i % 2 === 1} />
         ))}
       </div>
+
+      {/* ── Closing slide ───────────────────────────────────────────── */}
+      <section className="px-6 lg:px-16 py-24 text-center">
+        <p className="text-[40px] sm:text-[56px] font-bold tracking-tight text-[#3a3a3a] uppercase mb-3">
+          Thank You
+        </p>
+        <p className="text-[14px] text-[#6b6b6b]">Artisan Leather — Muscat, Oman</p>
+      </section>
     </div>
   )
 }
