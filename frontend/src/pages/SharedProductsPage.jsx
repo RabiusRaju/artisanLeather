@@ -6,11 +6,6 @@ import SEO from '../components/SEO'
 import { useCurrency } from '../context/CurrencyContext'
 import { fetchSharedProducts } from '../services/api'
 
-// ── Running divider — repeats above every product slide, like a PDF page header ──
-function SlideHeader() {
-  return <div className="pb-3 mb-8 border-b border-gold/15" />
-}
-
 function truncate(text, max) {
   if (!text || text.length <= max) return text
   return text.slice(0, text.lastIndexOf(' ', max)).trim() + '…'
@@ -41,8 +36,6 @@ function ProductSlide({ product, index, reverse }) {
       transition={{ duration: 0.45 }}
       className="py-14"
     >
-      <SlideHeader />
-
       <div className={`grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center ${reverse ? 'lg:[&>*:first-child]:order-2' : ''}`}>
         {/* ── Text column ───────────────────────────────────────────── */}
         <div>
@@ -151,10 +144,6 @@ export default function SharedProductsPage() {
 
       {/* ── Cover slide ─────────────────────────────────────────────── */}
       <section className="px-6 lg:px-16 pt-32 pb-16 bg-dark-100">
-        <div className="max-w-5xl mx-auto flex items-center justify-end pb-3 mb-10 border-b border-gold/15">
-          <span className="text-[13px] text-white/30 tracking-wide">artisanleatherom.com</span>
-        </div>
-
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div className="bg-dark overflow-hidden h-[280px] sm:h-[360px]">
             {data.products[0]?.images?.[0]?.url && (
