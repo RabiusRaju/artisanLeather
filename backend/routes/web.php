@@ -17,6 +17,7 @@ Route::get('/', fn() => redirect('/admin'));
 Route::get('/prerender/blog/{slug}',    [PrerenderController::class, 'blogPost']);
 Route::get('/prerender/product/{slug}', [PrerenderController::class, 'product']);
 Route::get('/prerender/survey/{slug}',  [PrerenderController::class, 'survey']);
+Route::get('/prerender/share/{token}',  [PrerenderController::class, 'shareLink']);
 
 // ── Dynamic XML Sitemap ────────────────────────────────────────────────────
 Route::get('/sitemap.xml', function () {

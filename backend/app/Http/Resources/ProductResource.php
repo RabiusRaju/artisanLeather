@@ -32,6 +32,12 @@ class ProductResource extends JsonResource
             'shipping_ar'    => $this->shipping_ar,
             'price'       => (float) $this->price,
             'badge'       => $this->badge,
+            'sku'         => $this->sku,
+            'dimensions'  => $locale === 'ar' && $this->dimensions_ar ? $this->dimensions_ar : $this->dimensions,
+            'bulk_pricing' => collect($this->bulk_pricing ?? [])->map(fn ($tier) => [
+                'label' => $locale === 'ar' && !empty($tier['label_ar']) ? $tier['label_ar'] : ($tier['label'] ?? ''),
+                'price' => $tier['price'] ?? '',
+            ])->values(),
             'is_featured' => $this->is_featured,
             'in_stock'    => $this->in_stock,
             'average_rating' => $this->average_rating,
