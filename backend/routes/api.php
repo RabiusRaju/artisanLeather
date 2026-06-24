@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\LegalPageController;
+use App\Http\Controllers\Api\ProductShareLinkController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
@@ -41,6 +42,7 @@ Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
     Route::get('/coupons/featured',  [CouponController::class, 'featured']);
     Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
     Route::get('/legal/{slug}', [LegalPageController::class, 'show']);
+    Route::get('/share/{token}', [ProductShareLinkController::class, 'show']);
 
     // Auth
     Route::post('/auth/register',    [AuthController::class, 'register']);

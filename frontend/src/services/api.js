@@ -41,6 +41,7 @@ export const fetchSettings      = ()            => api.get('/settings')
 export const fetchTestimonials  = ()            => api.get('/testimonials')
 export const fetchFaqs          = ()            => api.get('/faqs')
 export const fetchLegalPage     = (slug)        => api.get(`/legal/${slug}`)
+export const fetchSharedProducts = (token)      => api.get(`/share/${token}`)
 
 // Coupons
 export const validateCoupon = (code, subtotal) => api.post('/coupons/validate', { code, subtotal })
