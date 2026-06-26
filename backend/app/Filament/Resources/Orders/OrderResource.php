@@ -33,6 +33,7 @@ use Illuminate\Support\Str;
 class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
+    protected static ?string $recordTitleAttribute = 'order_number';
 
     public static function getNavigationIcon(): string { return 'heroicon-o-clipboard-document-list'; }
     public static function getNavigationGroup(): string { return NavigationGroupEnum::Sales->value; }
@@ -43,6 +44,20 @@ class OrderResource extends Resource
         return $count > 0 ? (string) $count : null;
     }
     public static function getNavigationBadgeColor(): string { return 'warning'; }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['order_number', 'first_name', 'last_name', 'phone', 'email'];
+    }
+
+    public static function getGlobalSearchResultDetails(\Illuminate\Database\Eloquent\Model $record): array
+    {
+        return [
+            'Customer' => "{$record->first_name} {$record->last_name}",
+            'Total'    => 'OMR ' . number_format((float) $record->total_omr, 3),
+            'Status'   => ucfirst($record->status),
+        ];
+    }
 
     public static function form(Schema $schema): Schema
     {

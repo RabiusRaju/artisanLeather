@@ -41,6 +41,7 @@ use Illuminate\Support\Facades\Http;
 class PostResource extends Resource
 {
     protected static ?string $model = Post::class;
+    protected static ?string $recordTitleAttribute = 'title';
     public static function getNavigationIcon(): string  { return 'heroicon-o-pencil-square'; }
     public static function getNavigationGroup(): string { return NavigationGroupEnum::Content->value; }
     public static function getNavigationSort(): int     { return 1; }
@@ -50,6 +51,19 @@ class PostResource extends Resource
         return $count > 0 ? (string)$count : null;
     }
     public static function getNavigationBadgeColor(): string { return 'warning'; }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['title', 'slug', 'category'];
+    }
+
+    public static function getGlobalSearchResultDetails(\Illuminate\Database\Eloquent\Model $record): array
+    {
+        return [
+            'Category'  => ucfirst(str_replace('-', ' ', $record->category)),
+            'Published' => $record->is_published ? 'Yes' : 'Draft',
+        ];
+    }
 
     public static function form(Schema $schema): Schema
     {

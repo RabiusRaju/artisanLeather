@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 /**
  * @property int         $id
@@ -32,6 +34,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Product extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'category_id', 'brand_id', 'name', 'name_ar', 'slug', 'tagline', 'tagline_ar',
         'description', 'description_ar', 'material', 'material_ar',
@@ -102,5 +106,19 @@ class Product extends Model
     public function getReviewCountAttribute(): int
     {
         return $this->approvedReviews()->count();
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName) => match ($eventName) {
+                'created' => "Product \"{$this->name}\" was created",
+                'updated' => "Product \"{$this->name}\" was updated",
+                'deleted' => "Product \"{$this->name}\" was deleted",
+                default => "Product \"{$this->name}\" {$eventName}",
+            });
     }
 }

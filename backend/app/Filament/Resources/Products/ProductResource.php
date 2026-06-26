@@ -44,10 +44,24 @@ use Illuminate\Support\Str;
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function getNavigationIcon(): string { return 'heroicon-o-shopping-bag'; }
     public static function getNavigationGroup(): string { return NavigationGroupEnum::Catalogue->value; }
     public static function getNavigationSort(): int { return 2; }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'sku', 'slug'];
+    }
+
+    public static function getGlobalSearchResultDetails(\Illuminate\Database\Eloquent\Model $record): array
+    {
+        return [
+            'SKU'   => $record->sku ?: '—',
+            'Price' => 'OMR ' . number_format((float) $record->price, 3),
+        ];
+    }
 
     public static function form(Schema $schema): Schema
     {

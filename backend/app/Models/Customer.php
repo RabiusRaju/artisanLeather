@@ -3,9 +3,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class Customer extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'name','name_ar','email','phone','whatsapp','date_of_birth',
         'country','governorate','city','address',
@@ -40,5 +44,19 @@ class Customer extends Model
         $custom  = $this->customOrders()->count();
         $regular = $this->email ? Order::where('email', $this->email)->count() : 0;
         return $custom + $regular;
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName) => match ($eventName) {
+                'created' => "New customer \"{$this->name}\" added",
+                'updated' => "Customer \"{$this->name}\" updated",
+                'deleted' => "Customer \"{$this->name}\" deleted",
+                default => "Customer \"{$this->name}\" {$eventName}",
+            });
     }
 }

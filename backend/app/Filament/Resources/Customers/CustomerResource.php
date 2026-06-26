@@ -30,6 +30,7 @@ use Filament\Tables\Table;
 class CustomerResource extends Resource
 {
     protected static ?string $model = Customer::class;
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function getNavigationIcon(): string { return 'heroicon-o-users'; }
     public static function getNavigationGroup(): string { return NavigationGroupEnum::Customers->value; }
@@ -39,6 +40,19 @@ class CustomerResource extends Resource
         return (string) Customer::where('status', 'vip')->count() ?: null;
     }
     public static function getNavigationBadgeColor(): string { return 'warning'; }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'email', 'phone', 'whatsapp'];
+    }
+
+    public static function getGlobalSearchResultDetails(\Illuminate\Database\Eloquent\Model $record): array
+    {
+        return [
+            'Email' => $record->email ?: '—',
+            'Phone' => $record->phone ?: '—',
+        ];
+    }
 
     public static function form(Schema $schema): Schema
     {
