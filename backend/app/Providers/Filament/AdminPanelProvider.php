@@ -3,6 +3,8 @@
 namespace App\Providers\Filament;
 
 use App\Enums\NavigationGroupEnum;
+use Filament\Enums\GlobalSearchPosition;
+use Filament\Support\Icons\Heroicon;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationGroup;
@@ -33,7 +35,17 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->brandName('Artisan Leather')
-            ->sidebarFullyCollapsibleOnDesktop()
+            ->globalSearch(position: GlobalSearchPosition::Topbar)
+            ->sidebarCollapsibleOnDesktop()
+
+            // ── Sidebar starts minimized (icons only) — hover an icon to see
+            // its label, click the header chevron to pin it open. Only seeds
+            // the default for browsers that have never toggled it before;
+            // an existing user preference in localStorage is left alone.
+            ->renderHook(
+                'panels::head.end',
+                fn () => view('filament.sidebar.default-collapsed')
+            )
 
             // ── Navigation order — guaranteed on every request type ─────────────
             ->navigation(function (NavigationBuilder $nav): NavigationBuilder {
@@ -46,6 +58,22 @@ class AdminPanelProvider extends PanelProvider
                     'Sales', 'Customers', 'Catalogue', 'Operations', 'Finance',
                     'Analytics', 'Compliance', 'Human Resources', 'Content', 'Settings',
                 ]);
+
+                // One icon per group — lets the collapsed sidebar show a single
+                // parent icon that flies out the group's items on hover, instead
+                // of every item's icon stacked up individually.
+                $groupIcons = [
+                    'Sales'           => Heroicon::OutlinedShoppingCart,
+                    'Customers'       => Heroicon::OutlinedUserGroup,
+                    'Catalogue'       => Heroicon::OutlinedCube,
+                    'Operations'      => Heroicon::OutlinedClipboardDocumentList,
+                    'Finance'         => Heroicon::OutlinedBanknotes,
+                    'Analytics'       => Heroicon::OutlinedChartBar,
+                    'Compliance'      => Heroicon::OutlinedShieldCheck,
+                    'Human Resources' => Heroicon::OutlinedUsers,
+                    'Content'         => Heroicon::OutlinedDocumentText,
+                    'Settings'        => Heroicon::OutlinedCog6Tooth,
+                ];
 
                 $items = collect();
                 foreach (filament()->getResources() as $resource) {
@@ -63,6 +91,7 @@ class AdminPanelProvider extends PanelProvider
                 $groups = collect($order)
                     ->map(fn($_, $groupName) =>
                         NavigationGroup::make($groupName)
+                            ->icon($groupIcons[$groupName] ?? null)
                             ->items($grouped->get($groupName, collect())->all())
                     )
                     ->filter(fn($g) => filled($g->getItems()))
@@ -76,6 +105,25 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 'panels::topbar.end',
                 fn () => view('filament.topbar.notifications')
+            )
+
+            // ── Topbar "recently visited" dropdown — last 7 admin pages you
+            // navigated to, per-browser (localStorage), clickable straight back.
+            ->renderHook(
+                'panels::topbar.end',
+                fn () => view('filament.topbar.recent-pages')
+            )
+            ->renderHook(
+                'panels::body.end',
+                fn () => view('filament.topbar.recent-pages-tracker')
+            )
+
+            // ── Topbar recent activity dropdown — last 7 data changes
+            // (orders/products/posts/customers created or edited), clickable
+            // straight to that record.
+            ->renderHook(
+                'panels::topbar.end',
+                fn () => view('filament.topbar.activity-log')
             )
 
             // ── PWA: meta tags + SW ───────────────────────────────────────────

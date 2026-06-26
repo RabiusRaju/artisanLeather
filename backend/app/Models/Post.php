@@ -3,9 +3,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class Post extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'title', 'title_ar', 'title_bn', 'slug', 'excerpt', 'excerpt_ar', 'excerpt_bn',
         'content', 'content_ar', 'content_bn', 'featured_image', 'category', 'tags',
@@ -39,5 +43,20 @@ class Post extends Model
                 $post->slug = Str::slug($post->title);
             }
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName) => match (true) {
+                $eventName === 'created' => "Blog post \"{$this->title}\" was created",
+                $eventName === 'updated' && $this->is_published => "Blog post \"{$this->title}\" was published",
+                $eventName === 'updated' => "Blog post \"{$this->title}\" was updated",
+                $eventName === 'deleted' => "Blog post \"{$this->title}\" was deleted",
+                default => "Blog post \"{$this->title}\" {$eventName}",
+            });
     }
 }

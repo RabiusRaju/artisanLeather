@@ -4,9 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class Order extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'order_number', 'first_name', 'last_name', 'email', 'phone',
         'governorate', 'city', 'address', 'notes',
@@ -36,5 +40,19 @@ class Order extends Model
     public static function generateOrderNumber(): string
     {
         return 'AL-' . date('Y') . '-' . str_pad(random_int(10000, 99999), 5, '0', STR_PAD_LEFT);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName) => match ($eventName) {
+                'created' => "New order {$this->order_number} placed",
+                'updated' => "Order {$this->order_number} updated",
+                'deleted' => "Order {$this->order_number} deleted",
+                default => "Order {$this->order_number} {$eventName}",
+            });
     }
 }
