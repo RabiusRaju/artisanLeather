@@ -14,6 +14,7 @@ Route::get('/', fn() => redirect('/admin'));
 // route bot requests for /blog/{slug}, /product/{slug} and /survey/{slug}
 // here instead of serving the static index.html, so each page gets its own
 // title/image instead of always the generic homepage info.
+Route::get('/prerender/blog',           [PrerenderController::class, 'blogIndex']);
 Route::get('/prerender/blog/{slug}',    [PrerenderController::class, 'blogPost']);
 Route::get('/prerender/product/{slug}', [PrerenderController::class, 'product']);
 Route::get('/prerender/survey/{slug}',  [PrerenderController::class, 'survey']);
@@ -22,6 +23,7 @@ Route::get('/prerender/home',           [PrerenderController::class, 'home']);
 Route::get('/prerender/about',          [PrerenderController::class, 'about']);
 Route::get('/prerender/contact',        [PrerenderController::class, 'contact']);
 Route::get('/prerender/collections/{category?}', [PrerenderController::class, 'collections']);
+Route::get('/prerender/track',          [PrerenderController::class, 'track']);
 
 // ── Dynamic XML Sitemap ────────────────────────────────────────────────────
 Route::get('/sitemap.xml', function () {
@@ -109,8 +111,16 @@ Route::get('/sitemap.xml', function () {
 
     $xml .= '</urlset>';
 
-    return response($xml, 200)->header('Content-Type', 'application/xml');
-})->name('sitemap');
+    return response($xml, 200)
+        ->header('Content-Type', 'application/xml')
+        ->header('Cache-Control', 'public, max-age=3600');
+})->withoutMiddleware([
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class,
+])->name('sitemap');
 
 // ── robots.txt served by Laravel ──────────────────────────────────────────
 Route::get('/robots.txt', function () {
@@ -119,8 +129,16 @@ Route::get('/robots.txt', function () {
     $content .= "Disallow: /cart\nDisallow: /checkout\nDisallow: /account\n";
     $content .= "Disallow: /login\nDisallow: /register\nDisallow: /order-confirmation\n\n";
     $content .= "Sitemap: https://artisanleatherom.com/sitemap.xml\n";
-    return response($content, 200)->header('Content-Type', 'text/plain');
-})->name('robots');
+    return response($content, 200)
+        ->header('Content-Type', 'text/plain')
+        ->header('Cache-Control', 'public, max-age=3600');
+})->withoutMiddleware([
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class,
+])->name('robots');
 
 // ── Invoice print view — protected by admin auth ──────────────────────────
 // C-4 FIX: Use Filament's panel middleware so auth redirect goes to admin login,

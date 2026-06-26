@@ -33,6 +33,7 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->brandName('Artisan Leather')
+            ->sidebarFullyCollapsibleOnDesktop()
 
             // ── Navigation order — guaranteed on every request type ─────────────
             ->navigation(function (NavigationBuilder $nav): NavigationBuilder {

@@ -22,9 +22,6 @@
     @if ($image)
         <meta name="twitter:image" content="{{ $image }}" />
     @endif
-
-    {{-- For the rare human visitor (or a bot UA that also follows redirects), send them straight to the real page --}}
-    <meta http-equiv="refresh" content="0; url={{ $url }}" />
 </head>
 <body>
     <h1>{{ $title }}</h1>
