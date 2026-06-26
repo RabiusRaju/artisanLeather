@@ -15,6 +15,7 @@ import { useCurrency }  from '../context/CurrencyContext'
 import { useWishlist }  from '../context/WishlistContext'
 import { useAuth }      from '../context/AuthContext'
 import { fetchProductReviews, submitReview } from '../services/api'
+import { trackViewContent, trackLead } from '../lib/tracking'
 
 // ── Accordion item ─────────────────────────────────────────────────────────
 function AccordionItem({ title, children, defaultOpen = false }) {
@@ -301,6 +302,10 @@ export default function ProductPage() {
   )
   const relatedProducts = related.filter(p => p.id !== product?.id).slice(0, 4)
 
+  useEffect(() => {
+    if (product) trackViewContent(product)
+  }, [product])
+
   if (loading) return <ProductSkeleton />
   if (error || !product) return (
     <div className="min-h-screen bg-dark flex items-center justify-center">
@@ -339,7 +344,7 @@ export default function ProductPage() {
     if (wishlistBusy) return
     setWishlistBusy(true)
     try {
-      await toggleWishlistItem(product.id)
+      await toggleWishlistItem(product.id, product)
     } finally {
       setWishlistBusy(false)
     }
@@ -687,6 +692,7 @@ export default function ProductPage() {
                 href={`https://wa.me/${waNumber}?text=${waMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackLead('whatsapp_product_enquiry')}
                 className="w-full py-4 border border-[#25D366]/60 text-[#25D366] text-[10px] tracking-[0.35em] uppercase flex items-center justify-center gap-2.5 hover:bg-[#25D366] hover:text-white hover:border-[#25D366] active:scale-[0.99] transition-all duration-300"
               >
                 <FaWhatsapp size={15} /> {t('product.enquireWhatsApp')}

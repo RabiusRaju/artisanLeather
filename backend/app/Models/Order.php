@@ -13,6 +13,7 @@ class Order extends Model
         'payment_method', 'currency_code', 'currency_rate',
         'subtotal_omr', 'total_omr', 'status', 'admin_notes',
         'coupon_code', 'discount_amount',
+        'utm_source', 'utm_medium', 'utm_campaign',
     ];
 
     protected $casts = [

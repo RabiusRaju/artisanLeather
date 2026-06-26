@@ -257,6 +257,41 @@ class PostResource extends Resource
 
                 ]),
 
+                // ── Tab 2b: Bangla ───────────────────────────────────────
+                Tab::make('Bangla / বাংলা')->icon('heroicon-o-language')->schema([
+
+                    Section::make('Bangla Translation')
+                        ->description('Optional — for Bangladeshi readers.')
+                        ->schema([
+                            TextInput::make('title_bn')
+                                ->label('শিরোনাম (বাংলা)')
+                                ->placeholder('e.g. আপনার চামড়ার ওয়ালেটের যত্ন কীভাবে নেবেন')
+                                ->columnSpanFull(),
+
+                            Textarea::make('excerpt_bn')
+                                ->label('সংক্ষিপ্তসার (বাংলা)')
+                                ->rows(2)
+                                ->columnSpanFull(),
+
+                            RichEditor::make('content_bn')
+                                ->label('বিষয়বস্তু (বাংলা)')
+                                ->live(debounce: 800)
+                                ->toolbarButtons([
+                                    'h2', 'h3', 'bold', 'italic', 'underline',
+                                    'link', 'bulletList', 'orderedList', 'blockquote', 'undo',
+                                ])
+                                ->helperText('💡 Paste a YouTube or Vimeo link on its own line and it will automatically appear as a playable video — both here in the preview and on the published article.')
+                                ->columnSpanFull(),
+
+                            Placeholder::make('content_bn_video_preview')
+                                ->label('Video Preview')
+                                ->content(fn($get) => new HtmlString(VideoEmbedder::extractEmbeds($get('content_bn') ?? '')))
+                                ->visible(fn($get) => VideoEmbedder::hasVideoLinks($get('content_bn') ?? ''))
+                                ->columnSpanFull(),
+                        ]),
+
+                ]),
+
                 // ── Tab 3: Settings ──────────────────────────────────────
                 Tab::make('Settings')->icon('heroicon-o-adjustments-horizontal')->schema([
 

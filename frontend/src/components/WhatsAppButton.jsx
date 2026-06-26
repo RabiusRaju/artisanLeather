@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { FaWhatsapp } from 'react-icons/fa'
 import { useSetting } from '../hooks/useSettings'
+import { trackLead } from '../lib/tracking'
 
 export default function WhatsAppButton() {
   const whatsapp = useSetting('business.whatsapp', '96812345678')
@@ -12,6 +13,7 @@ export default function WhatsAppButton() {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => trackLead('whatsapp_floating_button')}
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 2.5, type: 'spring', stiffness: 200 }}

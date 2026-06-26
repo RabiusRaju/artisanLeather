@@ -47,7 +47,7 @@ function ProductCard({ product, index }) {
   const handleWishlistClick = (e) => {
     e.preventDefault()
     e.stopPropagation()
-    toggleWishlist(product.id)
+    toggleWishlist(product.id, product)
   }
 
   return (

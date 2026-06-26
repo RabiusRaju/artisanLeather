@@ -10,6 +10,7 @@ import { ThemeProvider }     from './context/ThemeContext'
 import { WishlistProvider }  from './context/WishlistContext'
 import { ToastProvider }     from './context/ToastContext'
 import { SettingsProvider } from './hooks/useSettings'
+import { captureUtmParams } from './lib/utm'
 import ErrorBoundary         from './components/ErrorBoundary'
 import Analytics            from './components/Analytics'
 import Navbar               from './components/Navbar'
@@ -92,6 +93,8 @@ function Layout() {
 }
 
 export default function App() {
+  useEffect(() => { captureUtmParams() }, [])
+
   return (
     <ErrorBoundary>
     <HelmetProvider>

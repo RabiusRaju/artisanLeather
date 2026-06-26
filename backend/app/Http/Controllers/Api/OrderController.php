@@ -38,6 +38,9 @@ class OrderController extends Controller
             'items.*.quantity'     => 'required|integer|min:1|max:999',
             // unit_price is intentionally NOT validated from client — we use DB price below
             'coupon_code'    => 'nullable|string|max:50',
+            'utm_source'     => 'nullable|string|max:255',
+            'utm_medium'     => 'nullable|string|max:255',
+            'utm_campaign'   => 'nullable|string|max:255',
         ]);
 
         return DB::transaction(function () use ($validated) {
@@ -105,6 +108,9 @@ class OrderController extends Controller
                 'coupon_code'   => $couponCode,
                 'discount_amount' => round($discountAmount, 3),
                 'status'        => 'pending',
+                'utm_source'    => $validated['utm_source']   ?? null,
+                'utm_medium'    => $validated['utm_medium']   ?? null,
+                'utm_campaign'  => $validated['utm_campaign'] ?? null,
             ]);
 
             foreach ($validated['items'] as $item) {

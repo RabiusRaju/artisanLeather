@@ -1,5 +1,6 @@
 import { createContext, useContext, useReducer, useState, useEffect } from 'react'
 import { validateCoupon } from '../services/api'
+import { trackAddToCart } from '../lib/tracking'
 
 const CartContext = createContext(null)
 
@@ -71,7 +72,7 @@ export function CartProvider({ children }) {
     }
   }, [coupon])
 
-  const addItem    = (item)           => dispatch({ type: 'ADD', item })
+  const addItem    = (item)           => { dispatch({ type: 'ADD', item }); trackAddToCart(item) }
   const removeItem = (key)            => dispatch({ type: 'REMOVE', key })
   const updateQty  = (key, quantity)  => dispatch({ type: 'UPDATE_QTY', key, quantity })
   const clearCart  = ()               => { dispatch({ type: 'CLEAR' }); setCoupon(null); setCouponError(null) }
