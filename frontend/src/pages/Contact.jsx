@@ -6,6 +6,7 @@ import { FaWhatsapp, FaInstagram, FaFacebook } from 'react-icons/fa'
 import { HiChevronDown, HiCheckCircle } from 'react-icons/hi'
 import SEO from '../components/SEO'
 import { useFaqs } from '../hooks/useFaqs'
+import { trackLead } from '../lib/tracking'
 import axios from 'axios'
 
 // ── Sub-components ─────────────────────────────────────────────────────────
@@ -72,9 +73,11 @@ function ContactForm() {
         headers: { 'Accept': 'application/json' }
       })
       setSubmitted(true)
+      trackLead('contact_form')
     } catch {
       // Still show success to user — message may have saved
       setSubmitted(true)
+      trackLead('contact_form')
     } finally {
       setLoading(false)
     }
@@ -107,6 +110,7 @@ function ContactForm() {
               href={`https://wa.me/${waNumber}`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackLead('whatsapp_contact_success')}
               className="inline-flex items-center gap-2 mt-8 border border-[#25D366]/50 text-[#25D366] px-7 py-3 text-[10px] tracking-[0.3em] uppercase hover:bg-[#25D366] hover:text-white transition-all duration-300"
             >
               <FaWhatsapp size={14} /> {t('contact.openWhatsApp')}
@@ -316,6 +320,7 @@ export default function Contact() {
                 value: `+${waNumber}`,
                 sub: whatsappHours,
                 link: `https://wa.me/${waNumber}`,
+                isWhatsApp: true,
               },
               {
                 label: t('contact.emailLabel'),
@@ -337,6 +342,7 @@ export default function Contact() {
                   {item.link ? (
                     <a
                       href={item.link}
+                      onClick={item.isWhatsApp ? () => trackLead('whatsapp_contact_info') : undefined}
                       className="font-serif text-xl text-white group-hover:text-gold transition-colors duration-300"
                     >
                       {item.value}
@@ -357,6 +363,7 @@ export default function Contact() {
                   href={`https://wa.me/${waNumber}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackLead('whatsapp_contact_social')}
                   className="flex items-center gap-2.5 border border-[#25D366]/40 text-[#25D366] px-5 py-2.5 text-[10px] tracking-[0.25em] uppercase hover:bg-[#25D366] hover:text-white transition-all duration-300"
                 >
                   <FaWhatsapp size={13} /> WhatsApp
@@ -427,6 +434,7 @@ export default function Contact() {
             href={`https://wa.me/${waNumber}?text=Hello%20Artisan%20Leather%2C%20I%20have%20a%20question.`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackLead('whatsapp_contact_banner')}
             className="flex-shrink-0 flex items-center gap-3 bg-[#25D366] text-white px-10 py-4 text-[10px] tracking-[0.35em] uppercase font-bold hover:bg-[#1da851] active:scale-[0.98] transition-all duration-300 shadow-lg shadow-[#25D366]/20"
           >
             <FaWhatsapp size={18} />

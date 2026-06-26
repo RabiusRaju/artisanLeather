@@ -381,6 +381,19 @@ class OrderResource extends Resource
                 ]),
             ])->compact(),
 
+            // ── Marketing attribution ──────────────────────────────────
+            Section::make('Marketing Attribution')
+                ->icon('heroicon-o-megaphone')
+                ->visible(fn(Order $r) => filled($r->utm_source) || filled($r->utm_campaign))
+                ->schema([
+                    Grid::make(3)->schema([
+                        TextEntry::make('utm_source')->label('Source')->badge()->placeholder('—'),
+                        TextEntry::make('utm_medium')->label('Medium')->placeholder('—'),
+                        TextEntry::make('utm_campaign')->label('Campaign')->placeholder('—'),
+                    ]),
+                ])
+                ->compact(),
+
             // ── Customer details ──────────────────────────────────────
             Section::make('Customer Details')
                 ->icon('heroicon-o-user')
@@ -523,6 +536,16 @@ class OrderResource extends Resource
                         'pending' => 'warning', 'confirmed' => 'info', 'processing' => 'primary',
                         'shipped' => 'success', 'delivered' => 'success', 'cancelled' => 'danger', default => 'gray',
                     }),
+                TextColumn::make('utm_source')
+                    ->label('Source')
+                    ->badge()
+                    ->color('gray')
+                    ->placeholder('Direct / Organic')
+                    ->toggleable(),
+                TextColumn::make('utm_campaign')
+                    ->label('Campaign')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')->dateTime()->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
@@ -534,6 +557,9 @@ class OrderResource extends Resource
                 SelectFilter::make('payment_method')->options([
                     'cod' => 'Cash on Delivery', 'bank' => 'Bank Transfer', 'whatsapp' => 'WhatsApp',
                 ]),
+                SelectFilter::make('utm_source')
+                    ->label('Traffic Source')
+                    ->options(fn() => Order::whereNotNull('utm_source')->distinct()->pluck('utm_source', 'utm_source')->toArray()),
             ])
             ->recordActions([ViewAction::make(), EditAction::make()])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);

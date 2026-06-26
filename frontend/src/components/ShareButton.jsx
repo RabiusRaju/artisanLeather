@@ -4,6 +4,7 @@ import { HiShare, HiOutlineClipboard, HiOutlineClipboardCheck } from 'react-icon
 import { FaWhatsapp, FaFacebook, FaLinkedin } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
 import { useToast } from '../context/ToastContext'
+import { trackShare } from '../lib/tracking'
 
 export default function ShareButton({ url, title, className = '' }) {
   const [open, setOpen] = useState(false)
@@ -22,17 +23,18 @@ export default function ShareButton({ url, title, className = '' }) {
   const encodedTitle = encodeURIComponent(title)
 
   const links = [
-    { label: 'WhatsApp', icon: FaWhatsapp, color: '#25D366', href: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`, popup: false },
-    { label: 'Facebook', icon: FaFacebook, color: '#1877F2', href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, popup: true },
-    { label: 'X',        icon: FaXTwitter, color: '#ffffff', href: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`, popup: true },
-    { label: 'LinkedIn', icon: FaLinkedin, color: '#0A66C2', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, popup: true },
+    { label: 'WhatsApp', method: 'whatsapp', icon: FaWhatsapp, color: '#25D366', href: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`, popup: false },
+    { label: 'Facebook', method: 'facebook', icon: FaFacebook, color: '#1877F2', href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, popup: true },
+    { label: 'X',        method: 'x',        icon: FaXTwitter, color: '#ffffff', href: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`, popup: true },
+    { label: 'LinkedIn', method: 'linkedin', icon: FaLinkedin, color: '#0A66C2', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, popup: true },
   ]
 
-  const openPopup = (href) => {
+  const openPopup = (href, method) => {
     const width = 600, height = 500
     const left = window.screenX + (window.outerWidth - width) / 2
     const top  = window.screenY + (window.outerHeight - height) / 2
     window.open(href, 'share-popup', `width=${width},height=${height},left=${left},top=${top},noopener,noreferrer`)
+    trackShare(method, title)
     setOpen(false)
   }
 
@@ -40,6 +42,7 @@ export default function ShareButton({ url, title, className = '' }) {
     navigator.clipboard?.writeText(url)
     setCopied(true)
     toast?.toast('Link copied to clipboard', { type: 'success' })
+    trackShare('copy_link', title)
     setTimeout(() => setCopied(false), 2000)
     setOpen(false)
   }
@@ -63,11 +66,11 @@ export default function ShareButton({ url, title, className = '' }) {
             transition={{ duration: 0.15 }}
             className="absolute right-0 mt-2 w-48 bg-dark-200 border border-gold/20 shadow-xl z-20 py-2"
           >
-            {links.map(({ label, icon: Icon, color, href, popup }) => (
+            {links.map(({ label, method, icon: Icon, color, href, popup }) => (
               popup ? (
                 <button
                   key={label}
-                  onClick={() => openPopup(href)}
+                  onClick={() => openPopup(href, method)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors duration-200"
                 >
                   <Icon size={16} style={{ color }} />
@@ -79,7 +82,7 @@ export default function ShareButton({ url, title, className = '' }) {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => setOpen(false)}
+                  onClick={() => { trackShare(method, title); setOpen(false) }}
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors duration-200"
                 >
                   <Icon size={16} style={{ color }} />

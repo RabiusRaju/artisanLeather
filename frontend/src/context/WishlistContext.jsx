@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { fetchWishlist, toggleWishlist, syncWishlist } from '../services/api'
 import { useAuth } from './AuthContext'
+import { trackAddToWishlist } from '../lib/tracking'
 
 const WishlistContext = createContext(null)
 const STORAGE_KEY = 'al_wishlist'
@@ -57,12 +58,13 @@ export function WishlistProvider({ children }) {
     }
   }, [productIds, user])
 
-  const toggle = async (productId) => {
+  const toggle = async (productId, product = null) => {
     if (user) {
       const res = await toggleWishlist(productId)
       const inWishlist = res.data.data.in_wishlist
       setProductIds((ids) => inWishlist ? [...ids, productId] : ids.filter((id) => id !== productId))
       refresh()
+      if (inWishlist && product) trackAddToWishlist(product)
       return inWishlist
     }
 
@@ -75,6 +77,7 @@ export function WishlistProvider({ children }) {
       inWishlist = true
       return [...ids, productId]
     })
+    if (inWishlist && product) trackAddToWishlist(product)
     return inWishlist
   }
 

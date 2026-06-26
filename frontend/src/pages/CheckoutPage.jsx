@@ -10,6 +10,8 @@ import { useCurrency } from '../context/CurrencyContext'
 import { useAuth }     from '../context/AuthContext'
 import { useToast }    from '../context/ToastContext'
 import { placeOrder }  from '../services/api'
+import { trackInitiateCheckout, trackLead } from '../lib/tracking'
+import { getUtmParams } from '../lib/utm'
 
 const omanGovernorates = [
   'Muscat', 'Dhofar', 'Musandam', 'Al Buraimi', 'Al Batinah North',
@@ -101,6 +103,17 @@ export default function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
+  // Fire once when the customer reaches checkout with items in the cart
+  useEffect(() => {
+    if (items.length === 0) return
+    trackInitiateCheckout({
+      value: cartTotal,
+      numItems: items.reduce((sum, i) => sum + i.quantity, 0),
+      contentIds: items.map((i) => i.id),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // If cart is empty, redirect back
   if (items.length === 0) {
     return (
@@ -126,6 +139,7 @@ export default function CheckoutPage() {
     e.preventDefault()
 
     if (payment === 'whatsapp') {
+      trackLead('whatsapp_order')
       window.open(`https://wa.me/${waNumber}?text=${waMessage}`, '_blank')
       return
     }
@@ -153,6 +167,9 @@ export default function CheckoutPage() {
           unit_price:   parseFloat(item.price),
         })),
         coupon_code: coupon?.code || null,
+        utm_source:   getUtmParams().utm_source   || null,
+        utm_medium:   getUtmParams().utm_medium   || null,
+        utm_campaign: getUtmParams().utm_campaign || null,
       }
 
       const res = await placeOrder(payload)

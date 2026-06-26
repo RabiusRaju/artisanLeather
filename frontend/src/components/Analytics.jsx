@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useSettings } from '../hooks/useSettings'
+import { trackPageView } from '../lib/tracking'
 
 function injectScript(id, js) {
   if (document.getElementById(id)) return
@@ -21,6 +23,7 @@ function injectScriptSrc(id, src) {
 
 export default function Analytics() {
   const s = useSettings()
+  const { pathname } = useLocation()
 
   const ga4     = (s['seo.google_analytics']  || '').trim()
   const gtm     = (s['seo.google_tag_manager'] || '').trim()
@@ -36,7 +39,7 @@ export default function Analytics() {
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', '${ga4}');
+        gtag('config', '${ga4}', { send_page_view: false });
       `)
     }
 
@@ -61,7 +64,6 @@ export default function Analytics() {
         t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
         (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
         fbq('init','${pixel}');
-        fbq('track','PageView');
       `)
     }
 
@@ -75,6 +77,16 @@ export default function Analytics() {
       `)
     }
   }, [ga4, gtm, pixel, clarity])
+
+  // ── Fire a page view on every route change (initial load + in-app nav) ──
+  // SPA navigation never reloads the document, so without this, GA4/Meta only
+  // ever see the very first URL the visitor landed on — every page after
+  // that goes untracked. A short delay lets each page's <SEO>/Helmet title
+  // commit first so page_title isn't stale from the previous page.
+  useEffect(() => {
+    const timer = setTimeout(() => trackPageView(pathname, document.title), 50)
+    return () => clearTimeout(timer)
+  }, [pathname])
 
   // Google Search Console only needs a meta tag — no script
   return gsc ? (

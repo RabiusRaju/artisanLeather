@@ -1,10 +1,12 @@
 import { useSetting } from '../hooks/useSettings'
 import SEO from '../components/SEO'
+import { useEffect } from 'react'
 import { useLocation, Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { HiCheckCircle } from 'react-icons/hi'
 import { FaWhatsapp, FaInstagram } from 'react-icons/fa'
 import { useCurrency } from '../context/CurrencyContext'
+import { trackPurchase } from '../lib/tracking'
 
 const paymentLabels = {
   cod:       'Cash on Delivery',
@@ -16,6 +18,16 @@ export default function OrderConfirmation() {
   const { state }  = useLocation()
   const { format } = useCurrency()
   const waNumber = useSetting('business.whatsapp', '96812345678').replace(/[^0-9]/g, '')
+
+  // Fire once per order — guards against double-counting on refresh/back-nav
+  useEffect(() => {
+    if (!state?.orderNum) return
+    const guardKey = `al_tracked_purchase_${state.orderNum}`
+    if (sessionStorage.getItem(guardKey)) return
+    sessionStorage.setItem(guardKey, '1')
+    trackPurchase({ orderId: state.orderNum, value: state.total, items: state.items || [] })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (!state?.orderNum) return <Navigate to="/" replace />
 
