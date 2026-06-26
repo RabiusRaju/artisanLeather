@@ -37,6 +37,42 @@ class PrerenderController extends Controller
         return false;
     }
 
+    // GET /prerender/blog  (listing page)
+    public function blogIndex(Request $request)
+    {
+        $url = 'https://artisanleatherom.com/blog';
+
+        if (!self::isBot($request)) {
+            return redirect($url);
+        }
+
+        return view('prerender.meta', [
+            'title'       => 'The Leather Journal — Care Guides & Style Tips',
+            'description' => 'Expert leather care guides, style tips, and stories from the artisans at Artisan Leather, Muscat Oman.',
+            'image'       => 'https://artisanleatherom.com/og-image.jpg',
+            'url'         => $url,
+            'type'        => 'website',
+        ]);
+    }
+
+    // GET /prerender/track
+    public function track(Request $request)
+    {
+        $url = 'https://artisanleatherom.com/track';
+
+        if (!self::isBot($request)) {
+            return redirect($url);
+        }
+
+        return view('prerender.meta', [
+            'title'       => 'Track Your Order',
+            'description' => 'Track your Artisan Leather order status in real-time.',
+            'image'       => 'https://artisanleatherom.com/og-image.jpg',
+            'url'         => $url,
+            'type'        => 'website',
+        ]);
+    }
+
     // GET /prerender/blog/{slug}
     public function blogPost(Request $request, string $slug)
     {
