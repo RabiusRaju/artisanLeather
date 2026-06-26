@@ -14,16 +14,24 @@ Route::get('/', fn() => redirect('/admin'));
 // route bot requests for /blog/{slug}, /product/{slug} and /survey/{slug}
 // here instead of serving the static index.html, so each page gets its own
 // title/image instead of always the generic homepage info.
-Route::get('/prerender/blog',           [PrerenderController::class, 'blogIndex']);
-Route::get('/prerender/blog/{slug}',    [PrerenderController::class, 'blogPost']);
-Route::get('/prerender/product/{slug}', [PrerenderController::class, 'product']);
-Route::get('/prerender/survey/{slug}',  [PrerenderController::class, 'survey']);
-Route::get('/prerender/share/{token}',  [PrerenderController::class, 'shareLink']);
-Route::get('/prerender/home',           [PrerenderController::class, 'home']);
-Route::get('/prerender/about',          [PrerenderController::class, 'about']);
-Route::get('/prerender/contact',        [PrerenderController::class, 'contact']);
-Route::get('/prerender/collections/{category?}', [PrerenderController::class, 'collections']);
-Route::get('/prerender/track',          [PrerenderController::class, 'track']);
+Route::withoutMiddleware([
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class,
+])->group(function () {
+    Route::get('/prerender/blog',           [PrerenderController::class, 'blogIndex']);
+    Route::get('/prerender/blog/{slug}',    [PrerenderController::class, 'blogPost']);
+    Route::get('/prerender/product/{slug}', [PrerenderController::class, 'product']);
+    Route::get('/prerender/survey/{slug}',  [PrerenderController::class, 'survey']);
+    Route::get('/prerender/share/{token}',  [PrerenderController::class, 'shareLink']);
+    Route::get('/prerender/home',           [PrerenderController::class, 'home']);
+    Route::get('/prerender/about',          [PrerenderController::class, 'about']);
+    Route::get('/prerender/contact',        [PrerenderController::class, 'contact']);
+    Route::get('/prerender/collections/{category?}', [PrerenderController::class, 'collections']);
+    Route::get('/prerender/track',          [PrerenderController::class, 'track']);
+});
 
 // ── Dynamic XML Sitemap ────────────────────────────────────────────────────
 Route::get('/sitemap.xml', function () {
