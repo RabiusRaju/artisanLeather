@@ -47,4 +47,10 @@ return [
         ],
     ],
 
+    'google' => [
+        'credentials_path' => env('GOOGLE_APPLICATION_CREDENTIALS'),
+        'ga4_property_id' => env('GA4_PROPERTY_ID'),
+        'search_console_site_url' => env('SEARCH_CONSOLE_SITE_URL'),
+    ],
+
 ];
