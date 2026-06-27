@@ -14,8 +14,8 @@ use OpenAI;
 class AiPostService
 {
     private string $systemPrompt = <<<PROMPT
-You are a professional content writer for Artisan Leather, a premium leather goods brand based in Muscat, Oman.
-You write high-quality content in both English and Arabic (Gulf Arabic, formal but approachable).
+You are a senior content writer, SEO specialist, and digital marketing strategist for Artisan Leather, a premium leather goods brand based in Muscat, Oman.
+You write high-quality, original, search-optimized content in both English and Arabic (Gulf Arabic, formal but approachable).
 Always return valid JSON only — no markdown fences, no extra text before or after the JSON object.
 
 The business sells: leather wallets, bags, belts, accessories, custom leather items.
@@ -24,24 +24,110 @@ PROMPT;
 
     // ── Blog Posts ─────────────────────────────────────────────────────────
 
-    public function generatePostWithClaude(string $prompt, string $category = 'general', array $filePaths = []): array
+    public function generatePostWithClaude(string $prompt, string $category = 'general', array $filePaths = [], ?string $referenceUrl = null): array
     {
-        return $this->callClaude($this->buildPostMessage($prompt, $category), $filePaths);
+        return $this->generateLongFormPost('claude', $prompt, $category, $filePaths, $referenceUrl);
     }
 
-    public function generatePostWithOpenAI(string $prompt, string $category = 'general', array $filePaths = []): array
+    public function generatePostWithOpenAI(string $prompt, string $category = 'general', array $filePaths = [], ?string $referenceUrl = null): array
     {
-        return $this->callOpenAI($this->buildPostMessage($prompt, $category), $filePaths);
+        return $this->generateLongFormPost('openai', $prompt, $category, $filePaths, $referenceUrl);
     }
 
-    public function translatePostToArabicWithOpenAI(string $title, string $excerpt, string $content): array
+    public function translatePostToArabicWithOpenAI(string $title, string $excerpt, string $content, string $socialCaption = ''): array
     {
-        return $this->callOpenAI($this->buildPostTranslationMessage($title, $excerpt, $content));
+        return $this->callOpenAI($this->buildPostTranslationMessage($title, $excerpt, $content, $socialCaption));
     }
 
-    public function translatePostToArabicWithClaude(string $title, string $excerpt, string $content): array
+    public function translatePostToArabicWithClaude(string $title, string $excerpt, string $content, string $socialCaption = ''): array
     {
-        return $this->callClaude($this->buildPostTranslationMessage($title, $excerpt, $content));
+        return $this->callClaude($this->buildPostTranslationMessage($title, $excerpt, $content, $socialCaption));
+    }
+
+    private function callAi(string $engine, string $message, array $filePaths = []): array
+    {
+        return $engine === 'claude'
+            ? $this->callClaude($message, $filePaths)
+            : $this->callOpenAI($message, $filePaths);
+    }
+
+    /**
+     * Long-form posts are generated in stages instead of one giant call:
+     * a model asked for 1500-1800 words across 9 sections in a single JSON
+     * response reliably undershoots (it nails the section count, since that's
+     * easy to self-check, but not the words-per-section). Splitting into an
+     * outline call + small section-writing batches gives each call an
+     * achievable target, then the finished English article is translated
+     * to Arabic in one pass (translation preserves length far more
+     * reliably than independent generation).
+     */
+    private function generateLongFormPost(string $engine, string $prompt, string $category, array $filePaths, ?string $referenceUrl): array
+    {
+        $outline  = $this->callAi($engine, $this->buildOutlineMessage($prompt, $category, $referenceUrl), $filePaths);
+        $sections = $outline['sections'] ?? [];
+
+        if (count($sections) < 3) {
+            throw new \RuntimeException('AI returned too few sections to build a long-form article. Try again.');
+        }
+
+        $title  = $outline['title'] ?? $prompt;
+        $ctaUrl = $outline['cta_url'] ?? 'https://artisanleatherom.com/collections';
+
+        $batches       = array_chunk($sections, 2);
+        $contentHtml   = '';
+        $contentChunks = [];
+
+        foreach ($batches as $i => $batch) {
+            $isFirstBatch = $i === 0;
+            $isFinalBatch = $i === count($batches) - 1;
+            $result       = $this->callAi($engine, $this->buildSectionBatchMessage($title, $sections, $batch, $isFirstBatch, $isFinalBatch, $ctaUrl));
+            $html         = $result['html'] ?? '';
+            $contentHtml  .= $html;
+            $contentChunks[] = $html;
+        }
+
+        $wordCount = count(preg_split('/\s+/u', trim(strip_tags($contentHtml)), -1, PREG_SPLIT_NO_EMPTY));
+        $readTime  = max(1, (int) ceil($wordCount / 200));
+
+        // Asking the model to translate ~1500+ words in one call has the same
+        // "too much in one shot" failure mode as generation does — it can
+        // quietly cut the translation short and close the JSON early. So
+        // Arabic and Bangla are each translated chunk-by-chunk, mirroring
+        // the same batches used to write the English content.
+        $excerpt        = $outline['excerpt'] ?? '';
+        $socialCaption  = $outline['social_caption'] ?? '';
+        $metaTranslation = $this->callAi($engine, $this->buildMetaTranslationMessage($title, $excerpt, $socialCaption));
+
+        $contentArHtml = '';
+        $contentBnHtml = '';
+        foreach ($contentChunks as $chunk) {
+            $arResult       = $this->callAi($engine, $this->buildContentChunkTranslationMessage($chunk, 'formal but approachable Gulf Arabic'));
+            $contentArHtml .= ($arResult['html'] ?? '');
+
+            $bnResult       = $this->callAi($engine, $this->buildContentChunkTranslationMessage($chunk, 'standard Bangla (বাংলা)'));
+            $contentBnHtml .= ($bnResult['html'] ?? '');
+        }
+
+        return [
+            'title'             => $title,
+            'excerpt'           => $excerpt,
+            'content'           => $contentHtml,
+            'title_ar'          => $metaTranslation['title_ar'] ?? '',
+            'excerpt_ar'        => $metaTranslation['excerpt_ar'] ?? '',
+            'content_ar'        => $contentArHtml,
+            'title_bn'          => $metaTranslation['title_bn'] ?? '',
+            'excerpt_bn'        => $metaTranslation['excerpt_bn'] ?? '',
+            'content_bn'        => $contentBnHtml,
+            'social_caption'    => $socialCaption,
+            'social_caption_ar' => $metaTranslation['social_caption_ar'] ?? '',
+            'tags'              => $outline['tags'] ?? [],
+            'category'          => $outline['category'] ?? $category,
+            'read_time'         => $readTime,
+            'meta_title'        => $outline['meta_title'] ?? '',
+            'meta_description'  => $outline['meta_description'] ?? '',
+            'seo_score'         => $outline['seo_score'] ?? 0,
+            'seo_notes'         => $outline['seo_notes'] ?? '',
+        ];
     }
 
     // ── Products ───────────────────────────────────────────────────────────
@@ -108,7 +194,7 @@ PROMPT;
 
     private function callClaude(string $message, array $filePaths = []): array
     {
-        set_time_limit(120);
+        set_time_limit(240);
 
         $key = config('services.anthropic.key');
         if (blank($key)) {
@@ -118,7 +204,7 @@ PROMPT;
         $client   = new AnthropicClient(apiKey: $key);
         $response = $client->messages->create(
             model: 'claude-opus-4-8',
-            maxTokens: 4000,
+            maxTokens: 16000,
             system: $this->systemPrompt,
             messages: [['role' => 'user', 'content' => $content]],
         );
@@ -131,7 +217,7 @@ PROMPT;
 
     private function callOpenAI(string $message, array $filePaths = []): array
     {
-        set_time_limit(120);
+        set_time_limit(240);
 
         $key = config('services.openai.key');
         if (blank($key)) {
@@ -140,7 +226,7 @@ PROMPT;
         $content = $this->buildOpenAIContent($message, $filePaths);
         $client  = OpenAI::factory()
             ->withApiKey($key)
-            ->withHttpClient(new \GuzzleHttp\Client(['timeout' => 90, 'connect_timeout' => 10]))
+            ->withHttpClient(new \GuzzleHttp\Client(['timeout' => 180, 'connect_timeout' => 10]))
             ->make();
         $response = $client->chat()->create([
             'model'           => 'gpt-4o',
@@ -148,7 +234,7 @@ PROMPT;
                 ['role' => 'system', 'content' => $this->systemPrompt],
                 ['role' => 'user',   'content' => $content],
             ],
-            'max_tokens'      => 4000,
+            'max_tokens'      => 16000,
             'response_format' => ['type' => 'json_object'],
         ]);
         return $this->parseJson($response->choices[0]->message->content ?? '');
@@ -224,46 +310,102 @@ PROMPT;
 
     // ── Private: message builders ──────────────────────────────────────────
 
-    private function buildPostMessage(string $prompt, string $category): string
+    private function buildOutlineMessage(string $prompt, string $category, ?string $referenceUrl): string
     {
-        $existing      = Post::latest()->limit(30)->pluck('title')->toArray();
-        $noRepeat      = $this->buildExistingBlock($existing, 'blog post titles');
-        $searchContext = $this->buildSearchContext($prompt);
+        $existing       = Post::latest()->limit(30)->pluck('title')->toArray();
+        $noRepeat       = $this->buildExistingBlock($existing, 'blog post titles');
+        $searchContext  = $this->buildSearchContext($prompt);
+        $referenceBlock = $this->buildReferenceBlock($referenceUrl);
 
         return <<<MSG
-Write a complete blog post based on this request: "{$prompt}"
+You are planning a long-form blog post based on this request: "{$prompt}"
 {$noRepeat}
+{$referenceBlock}
 {$searchContext}
+
+Plan a LinkedIn-style founder article (first-person voice, genuinely specific and useful, not generic filler) that will be written in full afterward in a separate step. Do NOT write the full article yet — only plan it.
 
 Return a single JSON object with exactly these keys:
 {
   "title": "Engaging English title (max 70 chars)",
   "excerpt": "1-2 sentence English summary (max 250 chars)",
-  "content": "Full English article as HTML (use <h2>, <h3>, <p>, <ul>, <li> tags, 400-700 words)",
-  "title_ar": "Arabic title translation",
-  "excerpt_ar": "Arabic excerpt (1-2 sentences)",
-  "content_ar": "Full Arabic article as HTML (same structure as English, 400-700 words)",
+  "sections": [
+    {"heading": "Section heading text", "brief": "1-2 sentences describing exactly what this section should cover — specific to this topic, not generic"}
+  ],
+  "cta_url": "the single most relevant URL from this list: https://artisanleatherom.com/collections, https://artisanleatherom.com/collections/wallets, https://artisanleatherom.com/collections/bags, https://artisanleatherom.com/collections/belts, https://artisanleatherom.com/collections/accessories, https://artisanleatherom.com/contact",
+  "social_caption": "A ready-to-paste LinkedIn/social caption teasing this article, 3-5 short lines. Strong hook as the first line, build curiosity, end with a soft call-to-action to read more. Do NOT include any URL, hashtags, or placeholder link — just the caption text on its own.",
   "tags": ["tag1", "tag2", "tag3"],
   "category": "one of: care-guide, style-tips, leather-knowledge, news, general",
-  "read_time": 4,
   "meta_title": "SEO title under 60 chars — Artisan Leather Oman",
   "meta_description": "SEO description 140-160 chars",
   "seo_score": 78,
   "seo_notes": "3-5 concise actionable SEO tips for this specific article. Each tip on its own line starting with a dash."
 }
 
+The "sections" array must contain at least 9 items, ordered logically from introduction to conclusion. The LAST section must be a reflective closing that naturally leads into a call-to-action — describe that in its brief (e.g. "Reflective closing tying back to brand values, leading into an invitation to explore the collection"); do not write the actual CTA sentence here, that happens in the writing step.
+
 category hint: {$category}
 MSG;
     }
 
-    private function buildPostTranslationMessage(string $title, string $excerpt, string $content): string
+    private function buildSectionBatchMessage(string $title, array $allSections, array $batchSections, bool $isFirstBatch, bool $isFinalBatch, string $ctaUrl): string
     {
+        $outlineList = '';
+        foreach ($allSections as $i => $s) {
+            $outlineList .= ($i + 1) . ". {$s['heading']} — {$s['brief']}\n";
+        }
+
+        $batchList = '';
+        foreach ($batchSections as $s) {
+            $batchList .= "- Heading: \"{$s['heading']}\"\n  Cover: {$s['brief']}\n";
+        }
+
+        $openingInstruction = $isFirstBatch
+            ? "\nThis batch includes the FIRST section of the article. Open with a personal, first-person hook — e.g. \"As I continue building Artisan Leather, I've learned...\" or \"Every time I...\". Make it clear this is the founder speaking from real experience, not a brand bio."
+            : '';
+
+        $ctaInstruction = $isFinalBatch
+            ? "\nThis batch includes the FINAL section of the article. End it with a short call-to-action paragraph linking to exactly this URL: {$ctaUrl}\nExample phrasing: <p><strong>Looking for [relevant hook]?</strong> <a href=\"{$ctaUrl}\">Explore our [relevant collection] →</a></p>"
+            : '';
+
         return <<<MSG
-Translate the following English blog post into formal but approachable Gulf Arabic. Preserve all HTML tags and structure in the content exactly as given — only translate the text.
+You are writing PART of a long-form blog post titled "{$title}" for Artisan Leather.
+
+VOICE — non-negotiable: this is a first-person LinkedIn-style founder article. Write as "I" and "we" throughout (e.g. "I've found that...", "When we select leather, we look for...") — NEVER slip into third-person brand-bio language like "Artisan Leather embodies..." or "The brand believes...". Short punchy paragraphs of 1-3 sentences. Genuinely specific and useful, not filler.
+
+Full article outline (for context only — do NOT write these other sections, only the ones listed below):
+{$outlineList}
+
+Write ONLY these sections now, in full, as HTML:
+{$batchList}
+For EACH section above: start with an <h2> containing its heading, then write 280-320 words of substantive paragraph content (use <h3> sub-headings or <ul><li> bullet lists where natural). Go deep — add a concrete example, a specific detail, or a practical tip rather than restating the brief in fewer words. This is a hard minimum per section — do not stop short.
+{$openingInstruction}
+{$ctaInstruction}
+
+Return a single JSON object with exactly this key:
+{
+  "html": "The HTML for only these sections, concatenated in order, as one string"
+}
+MSG;
+    }
+
+    private function buildPostTranslationMessage(string $title, string $excerpt, string $content, string $socialCaption = ''): string
+    {
+        $captionBlock = blank($socialCaption)
+            ? ''
+            : "\nSocial caption: \"{$socialCaption}\"";
+
+        $captionKey = blank($socialCaption)
+            ? ''
+            : ",\n  \"social_caption_ar\": \"Arabic translation of the social caption, same tone and length\"";
+
+        return <<<MSG
+Translate the following English blog post into formal but approachable Gulf Arabic. Preserve all HTML tags and structure in the content exactly as given — only translate the text. Translate the full content in its entirety, do not summarize or shorten it.
 
 Title: "{$title}"
 
 Excerpt: "{$excerpt}"
+{$captionBlock}
 
 Content (HTML):
 {$content}
@@ -272,7 +414,45 @@ Return a single JSON object with exactly these keys:
 {
   "title_ar": "Arabic translation of the title",
   "excerpt_ar": "Arabic translation of the excerpt",
-  "content_ar": "Arabic translation of the content, same HTML structure"
+  "content_ar": "Arabic translation of the content, same HTML structure, translated in full"{$captionKey}
+}
+MSG;
+    }
+
+    private function buildMetaTranslationMessage(string $title, string $excerpt, string $socialCaption): string
+    {
+        $captionBlock = blank($socialCaption) ? '' : "\nSocial caption: \"{$socialCaption}\"";
+        $captionKey   = blank($socialCaption) ? '' : ",\n  \"social_caption_ar\": \"Arabic translation of the social caption, same tone and length\"";
+
+        return <<<MSG
+Translate the following into both (1) formal but approachable Gulf Arabic and (2) standard Bangla.
+
+Title: "{$title}"
+
+Excerpt: "{$excerpt}"
+{$captionBlock}
+
+Return a single JSON object with exactly these keys:
+{
+  "title_ar": "Arabic translation of the title",
+  "excerpt_ar": "Arabic translation of the excerpt",
+  "title_bn": "Bangla translation of the title",
+  "excerpt_bn": "Bangla translation of the excerpt"{$captionKey}
+}
+MSG;
+    }
+
+    private function buildContentChunkTranslationMessage(string $html, string $language = 'formal but approachable Gulf Arabic'): string
+    {
+        return <<<MSG
+Translate this excerpt of a blog post's HTML into {$language}. Preserve all HTML tags and structure exactly as given — only translate the visible text. Translate every sentence in full, do not summarize, shorten, or skip anything — this is one part of a longer article and every part must be translated completely.
+
+HTML excerpt:
+{$html}
+
+Return a single JSON object with exactly this key:
+{
+  "html": "The fully translated HTML for this excerpt, same structure, translated in full"
 }
 MSG;
     }
@@ -653,6 +833,74 @@ MSG;
         } catch (\Throwable) {
             return ''; // Silently skip if search fails — never break AI generation
         }
+    }
+
+    private function buildReferenceBlock(?string $referenceUrl): string
+    {
+        if (blank($referenceUrl)) {
+            return '';
+        }
+
+        $referenceText = $this->fetchReferenceArticle($referenceUrl);
+
+        return <<<MSG
+
+REFERENCE ARTICLE — the user shared this article as a benchmark for topic depth and structure. Study what it covers and how thoroughly, then write something at least as comprehensive and well-organized. Do NOT copy or closely paraphrase any sentence from it — every word in your output must be original, in Artisan Leather's own voice.
+
+Reference article text:
+"""
+{$referenceText}
+"""
+MSG;
+    }
+
+    private function fetchReferenceArticle(string $url): string
+    {
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new \RuntimeException("The reference URL doesn't look valid: {$url}");
+        }
+
+        try {
+            $response = Http::timeout(15)
+                ->withHeaders(['User-Agent' => 'Mozilla/5.0 (compatible; ArtisanLeatherBot/1.0; +https://artisanleatherom.com)'])
+                ->get($url);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException("Could not reach the reference URL: {$e->getMessage()}");
+        }
+
+        if (!$response->successful()) {
+            throw new \RuntimeException("Reference URL returned HTTP {$response->status()}.");
+        }
+
+        $text = $this->extractReadableText($response->body());
+
+        if (blank($text)) {
+            throw new \RuntimeException('Could not extract readable article text from the reference URL.');
+        }
+
+        return mb_substr($text, 0, 6000);
+    }
+
+    private function extractReadableText(string $html): string
+    {
+        $previousErrorSetting = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $dom->loadHTML($html);
+        libxml_use_internal_errors($previousErrorSetting);
+
+        $xpath = new \DOMXPath($dom);
+
+        foreach ($xpath->query('//script|//style|//nav|//header|//footer|//aside|//form|//iframe|//svg|//noscript') as $node) {
+            $node->parentNode?->removeChild($node);
+        }
+
+        $article = $xpath->query('//article')->item(0) ?? $dom->getElementsByTagName('body')->item(0);
+
+        if (!$article) {
+            return '';
+        }
+
+        return trim(preg_replace('/\s+/u', ' ', $article->textContent ?? '') ?? '');
     }
 
     private function buildExistingBlock(array $existing, string $label): string

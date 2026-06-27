@@ -81,6 +81,13 @@ class PostResource extends Resource
                         ->rows(4)
                         ->columnSpanFull(),
 
+                    TextInput::make('ai_reference_url')
+                        ->label('Reference Article URL (optional)')
+                        ->placeholder('https://example.com/blogs/how-are-leather-wallets-made')
+                        ->helperText('A competitor or inspiration article. The AI studies its depth and structure, then writes a fully original article in our own voice — never copied or paraphrased.')
+                        ->url()
+                        ->columnSpanFull(),
+
                     FileUpload::make('ai_attachments')
                         ->label('Reference Images & Documents (optional)')
                         ->helperText('Claude reads images + PDFs. OpenAI reads images only.')
@@ -114,7 +121,7 @@ class PostResource extends Resource
                                 $filePaths = self::resolveAiFilePaths($get('ai_attachments') ?? []);
                                 try {
                                     $data = app(AiPostService::class)
-                                        ->generatePostWithClaude($prompt, $get('category') ?: 'general', $filePaths);
+                                        ->generatePostWithClaude($prompt, $get('category') ?: 'general', $filePaths, $get('ai_reference_url'));
                                     self::fillAiFields($set, $data);
                                     $set('ai_attachments', []);
                                     \Filament\Notifications\Notification::make()
@@ -148,7 +155,7 @@ class PostResource extends Resource
                                 $filePaths = self::resolveAiFilePaths($get('ai_attachments') ?? []);
                                 try {
                                     $data = app(AiPostService::class)
-                                        ->generatePostWithOpenAI($prompt, $get('category') ?: 'general', $filePaths);
+                                        ->generatePostWithOpenAI($prompt, $get('category') ?: 'general', $filePaths, $get('ai_reference_url'));
                                     self::fillAiFields($set, $data);
                                     $set('ai_attachments', []);
                                     \Filament\Notifications\Notification::make()
@@ -459,6 +466,87 @@ class PostResource extends Resource
                                 ->columnSpanFull(),
                         ]),
 
+                    Section::make('📱 Social Caption')
+                        ->description('Ready-to-paste captions for LinkedIn / Facebook / Instagram. Pair with a tracked link from "Share Links" below.')
+                        ->collapsed()
+                        ->schema([
+                            Textarea::make('_social_caption')->dehydrated(false)->hidden(),
+                            Textarea::make('_social_caption_ar')->dehydrated(false)->hidden(),
+
+                            Placeholder::make('_social_caption_card')
+                                ->label('')
+                                ->content(function ($get) {
+                                    $en = trim($get('_social_caption') ?? '');
+                                    $ar = trim($get('_social_caption_ar') ?? '');
+
+                                    if (blank($en) && blank($ar)) {
+                                        return new HtmlString('<p style="color:#9ca3af;font-style:italic;font-size:13px;">Generate content with AI to get a ready-to-paste social caption.</p>');
+                                    }
+
+                                    $block = function (string $label, string $text, string $id) {
+                                        if (blank($text)) {
+                                            return '';
+                                        }
+                                        return '
+                                            <div style="margin-bottom:14px;">
+                                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                                                    <span style="font-size:12px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:.05em;">' . e($label) . '</span>
+                                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById(\'' . $id . '\').value); this.textContent=\'Copied!\'; setTimeout(()=>this.textContent=\'Copy\',1500);" style="font-size:11px;font-weight:600;color:#fff;background:#d97706;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;">Copy</button>
+                                                </div>
+                                                <textarea id="' . $id . '" readonly style="width:100%;min-height:90px;font-size:13px;color:#374151;border:1px solid #e5e7eb;border-radius:8px;padding:10px;background:#f9fafb;resize:vertical;">' . e($text) . '</textarea>
+                                            </div>';
+                                    };
+
+                                    return new HtmlString('
+                                        <div style="font-family:sans-serif;max-width:640px;">
+                                            ' . $block('English Caption', $en, 'social_caption_en') . '
+                                            ' . $block('Arabic Caption', $ar, 'social_caption_ar_box') . '
+                                        </div>
+                                    ');
+                                })
+                                ->columnSpanFull(),
+                        ]),
+
+                    Section::make('🔗 Share Links (UTM-tagged)')
+                        ->description('Copy a tracked link per platform — visits and orders from these links will show up in Web Analytics.')
+                        ->collapsed()
+                        ->schema([
+                            Placeholder::make('_share_links_card')
+                                ->label('')
+                                ->content(function ($get) {
+                                    $slug = trim($get('slug') ?? '');
+
+                                    if (blank($slug)) {
+                                        return new HtmlString('<p style="color:#9ca3af;font-style:italic;font-size:13px;">Enter a title first to generate share links.</p>');
+                                    }
+
+                                    $base = "https://artisanleatherom.com/blog/{$slug}";
+                                    $platforms = [
+                                        'linkedin'  => '💼 LinkedIn',
+                                        'facebook'  => '📘 Facebook',
+                                        'instagram' => '📷 Instagram',
+                                        'whatsapp'  => '💬 WhatsApp',
+                                    ];
+
+                                    $rows = '';
+                                    foreach ($platforms as $key => $label) {
+                                        $url = $base . '?utm_source=' . $key . '&utm_medium=social&utm_campaign=' . $slug;
+                                        $id  = 'share_link_' . $key;
+                                        $rows .= '
+                                            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;">
+                                                <div style="min-width:0;flex:1;">
+                                                    <div style="font-size:12px;font-weight:600;color:#374151;">' . $label . '</div>
+                                                    <input id="' . $id . '" readonly value="' . e($url) . '" onclick="this.select()" style="width:100%;font-size:11px;color:#6b7280;border:none;background:transparent;padding:0;">
+                                                </div>
+                                                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById(\'' . $id . '\').value); this.textContent=\'Copied!\'; setTimeout(()=>this.textContent=\'Copy\',1500);" style="flex-shrink:0;font-size:11px;font-weight:600;color:#fff;background:#d97706;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;">Copy</button>
+                                            </div>';
+                                    }
+
+                                    return new HtmlString('<div style="font-family:sans-serif;max-width:640px;">' . $rows . '</div>');
+                                })
+                                ->columnSpanFull(),
+                        ]),
+
                     Section::make('🔍 Google Competition')
                         ->description('See what currently ranks for your topic — so you can write something more comprehensive and valuable.')
                         ->collapsed()
@@ -695,6 +783,9 @@ class PostResource extends Resource
         $set('title_ar',         $data['title_ar']          ?? '');
         $set('excerpt_ar',       $data['excerpt_ar']        ?? '');
         $set('content_ar',       $data['content_ar']        ?? '');
+        $set('title_bn',         $data['title_bn']          ?? '');
+        $set('excerpt_bn',       $data['excerpt_bn']        ?? '');
+        $set('content_bn',       $data['content_bn']        ?? '');
         $set('tags',             $data['tags']              ?? []);
         $set('category',         $data['category']          ?? 'general');
         $set('read_time',        $data['read_time']         ?? 4);
@@ -702,6 +793,8 @@ class PostResource extends Resource
         $set('meta_description', $data['meta_description']  ?? '');
         $set('_seo_score',       (string) ($data['seo_score'] ?? 0));
         $set('_seo_notes',       $data['seo_notes']         ?? '');
+        $set('_social_caption',    $data['social_caption']    ?? '');
+        $set('_social_caption_ar', $data['social_caption_ar'] ?? '');
     }
 
     protected static function socialPlatformOptions(): array
