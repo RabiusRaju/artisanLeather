@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Anthropic\Client as AnthropicClient;
+use App\Models\NewsStagingItem;
 use App\Models\Post;
 use App\Models\Product;
 use App\Models\Setting;
@@ -42,6 +43,39 @@ PROMPT;
     public function translatePostToArabicWithClaude(string $title, string $excerpt, string $content, string $socialCaption = ''): array
     {
         return $this->callClaude($this->buildPostTranslationMessage($title, $excerpt, $content, $socialCaption));
+    }
+
+    /**
+     * Translates manually-written/pasted English post content into both Arabic
+     * and Bangla. Content is translated in chunks (same approach as the
+     * long-form generator) rather than one call — a single call translating
+     * 1500+ words reliably self-truncates without throwing, since the JSON
+     * response is still valid, just shorter than the source.
+     */
+    public function translateContentBundle(string $engine, string $title, string $excerpt, string $content, string $socialCaption = ''): array
+    {
+        $meta = $this->callAi($engine, $this->buildMetaTranslationMessage($title, $excerpt, $socialCaption));
+
+        $contentArHtml = '';
+        $contentBnHtml = '';
+
+        foreach ($this->chunkHtmlForTranslation($content) as $chunk) {
+            $ar = $this->callAi($engine, $this->buildContentChunkTranslationMessage($chunk, 'formal but approachable Gulf Arabic'));
+            $contentArHtml .= $ar['html'] ?? '';
+
+            $bn = $this->callAi($engine, $this->buildContentChunkTranslationMessage($chunk, 'standard Bangla (বাংলা)'));
+            $contentBnHtml .= $bn['html'] ?? '';
+        }
+
+        return [
+            'title_ar'          => $meta['title_ar'] ?? '',
+            'excerpt_ar'        => $meta['excerpt_ar'] ?? '',
+            'content_ar'        => $contentArHtml,
+            'title_bn'          => $meta['title_bn'] ?? '',
+            'excerpt_bn'        => $meta['excerpt_bn'] ?? '',
+            'content_bn'        => $contentBnHtml,
+            'social_caption_ar' => $meta['social_caption_ar'] ?? '',
+        ];
     }
 
     private function callAi(string $engine, string $message, array $filePaths = []): array
@@ -127,6 +161,47 @@ PROMPT;
             'meta_description'  => $outline['meta_description'] ?? '',
             'seo_score'         => $outline['seo_score'] ?? 0,
             'seo_notes'         => $outline['seo_notes'] ?? '',
+        ];
+    }
+
+    /**
+     * Curated news pieces are short (300-500 words: a few key takeaways +
+     * attribution back to the source) — unlike generateLongFormPost(), this
+     * is reliable in a single call per language, no batching needed.
+     */
+    public function curateNewsArticle(string $engine, NewsStagingItem $item): array
+    {
+        $sourceText = $this->fetchReferenceArticle($item->article_url);
+        $result     = $this->callAi($engine, $this->buildNewsCurationMessage($item, $sourceText));
+
+        $title         = $result['title'] ?? $item->title;
+        $excerpt       = $result['excerpt'] ?? '';
+        $content       = $result['content'] ?? '';
+        $socialCaption = $result['social_caption'] ?? '';
+
+        $ar = $this->callAi($engine, $this->buildShortTranslationMessage($title, $excerpt, $content, $socialCaption, 'formal but approachable Gulf Arabic', 'ar'));
+        $bn = $this->callAi($engine, $this->buildShortTranslationMessage($title, $excerpt, $content, $socialCaption, 'standard Bangla (বাংলা)', 'bn'));
+
+        $wordCount = count(preg_split('/\s+/u', trim(strip_tags($content)), -1, PREG_SPLIT_NO_EMPTY));
+        $readTime  = max(1, (int) ceil($wordCount / 200));
+
+        return [
+            'title'             => $title,
+            'excerpt'           => $excerpt,
+            'content'           => $content,
+            'title_ar'          => $ar['title_ar'] ?? '',
+            'excerpt_ar'        => $ar['excerpt_ar'] ?? '',
+            'content_ar'        => $ar['content_ar'] ?? '',
+            'title_bn'          => $bn['title_bn'] ?? '',
+            'excerpt_bn'        => $bn['excerpt_bn'] ?? '',
+            'content_bn'        => $bn['content_bn'] ?? '',
+            'social_caption'    => $socialCaption,
+            'social_caption_ar' => $ar['social_caption_ar'] ?? '',
+            'tags'              => $result['tags'] ?? [],
+            'category'          => $result['category'] ?? 'news',
+            'read_time'         => $readTime,
+            'meta_title'        => $result['meta_title'] ?? '',
+            'meta_description'  => $result['meta_description'] ?? '',
         ];
     }
 
@@ -310,6 +385,66 @@ PROMPT;
 
     // ── Private: message builders ──────────────────────────────────────────
 
+    private function buildNewsCurationMessage(NewsStagingItem $item, string $sourceText): string
+    {
+        return <<<MSG
+You're curating industry news for Artisan Leather's blog. Summarize the article below in your own words — do NOT copy or closely paraphrase sentences from it, this must be a transformative summary, not a reproduction.
+
+Source: {$item->source_name}
+Source title: "{$item->title}"
+Source URL: {$item->article_url}
+
+Source article text:
+"""
+{$sourceText}
+"""
+
+Write a short curated piece (300-500 words total) for Artisan Leather's blog, in this structure:
+1. A short intro (2-3 sentences) framing why this matters to a quality-conscious leather goods shopper in Oman/GCC.
+2. 3-5 key takeaways as a bullet list, summarizing the source's main points in your own words.
+3. A short closing paragraph connecting it back to Artisan Leather's craftsmanship/expertise.
+4. One short call-to-action linking to whichever ONE of these real URLs is most relevant: https://artisanleatherom.com/collections, https://artisanleatherom.com/collections/wallets, https://artisanleatherom.com/collections/bags, https://artisanleatherom.com/collections/belts, https://artisanleatherom.com/collections/accessories, https://artisanleatherom.com/contact
+5. As the very last line, an explicit attribution: <p>Originally reported by <a href="{$item->article_url}">{$item->source_name}</a> →</p>
+
+Return a single JSON object with exactly these keys:
+{
+  "title": "Engaging English title (max 70 chars)",
+  "excerpt": "1-2 sentence English summary (max 250 chars)",
+  "content": "The full curated piece as HTML (<h2>, <p>, <ul>, <li> tags), following the structure above exactly, 300-500 words",
+  "social_caption": "A ready-to-paste LinkedIn/social caption teasing this, 3-5 short lines, no URL or hashtags",
+  "tags": ["tag1", "tag2", "tag3"],
+  "category": "one of: care-guide, style-tips, leather-knowledge, news, general",
+  "meta_title": "SEO title under 60 chars — Artisan Leather Oman",
+  "meta_description": "SEO description 140-160 chars"
+}
+MSG;
+    }
+
+    private function buildShortTranslationMessage(string $title, string $excerpt, string $content, string $socialCaption, string $language, string $suffix): string
+    {
+        $captionBlock = blank($socialCaption) ? '' : "\nSocial caption: \"{$socialCaption}\"";
+        $captionKey   = blank($socialCaption) ? '' : ",\n  \"social_caption_{$suffix}\": \"Translation of the social caption, same tone and length\"";
+
+        return <<<MSG
+Translate the following into {$language}. Preserve all HTML tags and structure in the content exactly as given — only translate the visible text. Translate the full content in its entirety, do not summarize or shorten it.
+
+Title: "{$title}"
+
+Excerpt: "{$excerpt}"
+{$captionBlock}
+
+Content (HTML):
+{$content}
+
+Return a single JSON object with exactly these keys:
+{
+  "title_{$suffix}": "Translation of the title",
+  "excerpt_{$suffix}": "Translation of the excerpt",
+  "content_{$suffix}": "Translation of the content, same HTML structure, translated in full"{$captionKey}
+}
+MSG;
+    }
+
     private function buildOutlineMessage(string $prompt, string $category, ?string $referenceUrl): string
     {
         $existing       = Post::latest()->limit(30)->pluck('title')->toArray();
@@ -455,6 +590,49 @@ Return a single JSON object with exactly this key:
   "html": "The fully translated HTML for this excerpt, same structure, translated in full"
 }
 MSG;
+    }
+
+    /**
+     * Splits arbitrary post HTML into ~500-word chunks along top-level tag
+     * boundaries (never mid-tag) so each translation call stays inside the
+     * length a model can translate in full without silently truncating.
+     */
+    private function chunkHtmlForTranslation(string $html, int $maxWordsPerChunk = 500): array
+    {
+        $dom = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="utf-8" ?><div>' . $html . '</div>');
+        libxml_use_internal_errors(false);
+
+        $container = $dom->getElementsByTagName('div')->item(0);
+
+        if (! $container || ! $container->hasChildNodes()) {
+            return [$html];
+        }
+
+        $chunks       = [];
+        $current      = '';
+        $currentWords = 0;
+
+        foreach ($container->childNodes as $node) {
+            $nodeHtml  = $dom->saveHTML($node);
+            $nodeWords = str_word_count(strip_tags($nodeHtml));
+
+            if ($currentWords > 0 && $currentWords + $nodeWords > $maxWordsPerChunk) {
+                $chunks[] = $current;
+                $current      = '';
+                $currentWords = 0;
+            }
+
+            $current      .= $nodeHtml;
+            $currentWords += $nodeWords;
+        }
+
+        if (trim(strip_tags($current)) !== '') {
+            $chunks[] = $current;
+        }
+
+        return $chunks ?: [$html];
     }
 
     private function buildProductMessage(string $prompt): string
