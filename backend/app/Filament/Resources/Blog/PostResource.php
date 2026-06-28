@@ -170,6 +170,57 @@ class PostResource extends Resource
                                 }
                             }),
 
+                        Action::make('translate_content')
+                            ->label('Translate to Arabic & Bangla')
+                            ->icon('heroicon-o-language')
+                            ->color('success')
+                            ->requiresConfirmation()
+                            ->modalHeading('Translate to Arabic & Bangla')
+                            ->modalDescription('Translates the Title, Excerpt and Content fields above into Arabic and Bangla, overwriting those tabs. Continue?')
+                            ->modalSubmitActionLabel('Yes, translate')
+                            ->action(function ($get, $set) {
+                                $title   = $get('title');
+                                $content = $get('content');
+
+                                if (blank($title) || blank($content)) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Please fill in Title and Content first.')
+                                        ->warning()->send();
+                                    return;
+                                }
+
+                                try {
+                                    $data = app(AiPostService::class)->translateContentBundle(
+                                        'openai',
+                                        $title,
+                                        $get('excerpt') ?? '',
+                                        $content,
+                                        $get('_social_caption') ?? ''
+                                    );
+
+                                    $set('title_ar', $data['title_ar']);
+                                    $set('excerpt_ar', $data['excerpt_ar']);
+                                    $set('content_ar', $data['content_ar']);
+                                    $set('title_bn', $data['title_bn']);
+                                    $set('excerpt_bn', $data['excerpt_bn']);
+                                    $set('content_bn', $data['content_bn']);
+
+                                    if (filled($data['social_caption_ar'])) {
+                                        $set('_social_caption_ar', $data['social_caption_ar']);
+                                    }
+
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('✅ Translated to Arabic & Bangla!')
+                                        ->body('Review the Arabic and Bangla tabs before saving.')
+                                        ->success()->send();
+                                } catch (\Throwable $e) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Translation failed')
+                                        ->body($e->getMessage())
+                                        ->danger()->send();
+                                }
+                            }),
+
                     ]),
                 ]),
 
