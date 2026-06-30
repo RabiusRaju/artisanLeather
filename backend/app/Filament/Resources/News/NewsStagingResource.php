@@ -45,17 +45,17 @@ class NewsStagingResource extends Resource
                 TextColumn::make('source_name')->label('Source')->searchable(),
                 TextColumn::make('published_at')->label('Published')->dateTime('d M Y')->sortable()->placeholder('—'),
                 TextColumn::make('status')->badge()->color(fn ($state) => match ($state) {
-                    'new' => 'warning',
-                    'generated' => 'success',
+                    'new'       => 'warning',
+                    'generated' => 'info',
+                    'published' => 'success',
                     'dismissed' => 'gray',
-                    default => 'gray',
+                    default     => 'gray',
                 }),
             ])
             ->defaultSort('published_at', 'desc')
             ->filters([
                 SelectFilter::make('status')
-                    ->options(['new' => 'New', 'generated' => 'Generated', 'dismissed' => 'Dismissed'])
-                    ->default('new'),
+                    ->options(['new' => 'New', 'generated' => 'Generated', 'published' => 'Published', 'dismissed' => 'Dismissed']),
 
                 SelectFilter::make('source_name')
                     ->label('Source')
@@ -152,6 +152,67 @@ class NewsStagingResource extends Resource
                                 ->send();
                         }
                     }),
+
+                Action::make('review_draft')
+                    ->label('Review Draft')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('info')
+                    ->visible(fn (NewsStagingItem $record) => $record->status === 'generated' && $record->generated_post_id)
+                    ->url(fn (NewsStagingItem $record) => PostResource::getUrl('edit', ['record' => $record->generated_post_id]))
+                    ->openUrlInNewTab(),
+
+                Action::make('publish')
+                    ->label('Publish')
+                    ->icon('heroicon-o-globe-alt')
+                    ->color('success')
+                    ->visible(fn (NewsStagingItem $record) => $record->status === 'generated')
+                    ->requiresConfirmation()
+                    ->modalHeading('Publish this article?')
+                    ->modalDescription('This will set the linked blog post to Published and make it visible on the website.')
+                    ->modalSubmitActionLabel('Yes, publish')
+                    ->action(function (NewsStagingItem $record) {
+                        if (! $record->generated_post_id) {
+                            Notification::make()->title('No linked post found')->danger()->send();
+                            return;
+                        }
+
+                        $post = Post::find($record->generated_post_id);
+
+                        if (! $post) {
+                            Notification::make()->title('Linked post no longer exists')->danger()->send();
+                            return;
+                        }
+
+                        $post->update([
+                            'is_published' => true,
+                            'published_at' => $post->published_at ?? now(),
+                        ]);
+
+                        $record->update(['status' => 'published']);
+
+                        Notification::make()
+                            ->title('Article published!')
+                            ->body('"' . $post->title . '" is now live on the website.')
+                            ->success()
+                            ->actions([
+                                Action::make('view')
+                                    ->label('View Post')
+                                    ->url(PostResource::getUrl('edit', ['record' => $post]))
+                                    ->button(),
+                            ])
+                            ->send();
+                    }),
+
+                Action::make('mark_published')
+                    ->label('Mark as Published')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (NewsStagingItem $record) => $record->status === 'new')
+                    ->requiresConfirmation()
+                    ->modalHeading('Mark as Published')
+                    ->modalDescription('This marks the item as done. Use this after you have manually written and published the article yourself.')
+                    ->modalSubmitActionLabel('Yes, mark as published')
+                    ->action(fn (NewsStagingItem $record) => $record->update(['status' => 'published'])),
 
                 Action::make('dismiss')
                     ->label('Dismiss')
