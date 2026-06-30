@@ -185,6 +185,9 @@ export default function Footer() {
             <Link to="/terms" className="text-white/20 hover:text-gold/60 text-xs transition-colors">
               {t('footer.termsOfService')}
             </Link>
+            <Link to="/returns" className="text-white/20 hover:text-gold/60 text-xs transition-colors">
+              {t('footer.returnPolicy')}
+            </Link>
           </div>
         </div>
       </div>

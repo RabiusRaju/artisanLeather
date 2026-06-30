@@ -91,12 +91,53 @@ class PrerenderController extends Controller
             ? (str_starts_with($post->featured_image, 'http') ? $post->featured_image : asset('storage/' . $post->featured_image))
             : null;
 
+        $description = $post->meta_description ?: $post->excerpt;
+
+        $schema = json_encode([
+            '@context'         => 'https://schema.org',
+            '@type'            => 'Article',
+            'headline'         => $post->meta_title ?: $post->title,
+            'description'      => strip_tags($description),
+            'image'            => $image,
+            'datePublished'    => $post->published_at?->toIso8601String(),
+            'dateModified'     => $post->updated_at?->toIso8601String(),
+            'author'           => ['@type' => 'Organization', 'name' => 'Artisan Leather'],
+            'publisher'        => [
+                '@type' => 'Organization',
+                'name'  => 'Artisan Leather',
+                'logo'  => ['@type' => 'ImageObject', 'url' => 'https://artisanleatherom.com/logo.png'],
+            ],
+        ]);
+
+        // Include a plain-text excerpt of the actual content for Googlebot.
+        $bodyContent = mb_substr(strip_tags($post->content ?: $post->excerpt ?: ''), 0, 1500);
+
         return view('prerender.meta', [
             'title'       => $post->meta_title ?: $post->title,
-            'description' => $post->meta_description ?: $post->excerpt,
+            'description' => $description,
             'image'       => $image,
             'url'         => $url,
             'type'        => 'article',
+            'schema'      => $schema,
+            'bodyContent' => $bodyContent,
+        ]);
+    }
+
+    // GET /prerender/returns
+    public function returns(Request $request)
+    {
+        $url = 'https://artisanleatherom.com/returns';
+
+        if (!self::isBot($request)) {
+            return redirect($url);
+        }
+
+        return view('prerender.meta', [
+            'title'       => 'Returns & Exchanges — Artisan Leather',
+            'description' => '7-day return policy on all Artisan Leather orders. Unused, unaltered items in original packaging accepted. Exchanges welcome. Contact us via WhatsApp to initiate.',
+            'image'       => 'https://artisanleatherom.com/og-image.jpg',
+            'url'         => $url,
+            'type'        => 'website',
         ]);
     }
 
@@ -109,18 +150,44 @@ class PrerenderController extends Controller
             return redirect($url);
         }
 
-        $product   = Product::where('slug', $slug)->where('is_active', true)->firstOrFail();
+        $product   = Product::with(['images', 'brand'])->where('slug', $slug)->where('is_active', true)->firstOrFail();
         $imagePath = $product->images->first()?->url;
         $image     = $imagePath
             ? (str_starts_with($imagePath, 'http') ? $imagePath : asset('storage/' . $imagePath))
             : null;
 
+        $description = $product->meta_description ?: $product->tagline;
+
+        $schema = json_encode([
+            '@context'    => 'https://schema.org/',
+            '@type'       => 'Product',
+            'name'        => $product->name,
+            'description' => strip_tags($product->description ?: $description),
+            'image'       => $image,
+            'brand'       => [
+                '@type' => 'Brand',
+                'name'  => $product->brand?->name ?? 'Artisan Leather',
+            ],
+            'offers' => [
+                '@type'         => 'Offer',
+                'url'           => $url,
+                'priceCurrency' => 'OMR',
+                'price'         => number_format((float) $product->price, 3, '.', ''),
+                'availability'  => 'https://schema.org/InStock',
+                'seller'        => ['@type' => 'Organization', 'name' => 'Artisan Leather'],
+            ],
+        ]);
+
+        $bodyContent = strip_tags($product->description ?: '');
+
         return view('prerender.meta', [
             'title'       => $product->meta_title ?: $product->name,
-            'description' => $product->meta_description ?: $product->tagline,
+            'description' => $description,
             'image'       => $image,
             'url'         => $url,
             'type'        => 'product',
+            'schema'      => $schema,
+            'bodyContent' => $bodyContent,
         ]);
     }
 

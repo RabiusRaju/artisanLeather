@@ -275,14 +275,16 @@ PROMPT;
         if (blank($key)) {
             throw new \RuntimeException('Anthropic API key is not configured in .env (ANTHROPIC_API_KEY).');
         }
-        $content  = $this->buildClaudeContent($message, $filePaths);
-        $client   = new AnthropicClient(apiKey: $key);
-        $response = $client->messages->create(
+        $content = $this->buildClaudeContent($message, $filePaths);
+        $client  = new AnthropicClient(apiKey: $key);
+
+        $response = $this->withRateLimitRetry(fn () => $client->messages->create(
             model: 'claude-opus-4-8',
             maxTokens: 16000,
             system: $this->systemPrompt,
             messages: [['role' => 'user', 'content' => $content]],
-        );
+        ));
+
         $text = '';
         foreach ($response->content as $block) {
             if ($block->type === 'text') { $text = $block->text; break; }
@@ -303,7 +305,8 @@ PROMPT;
             ->withApiKey($key)
             ->withHttpClient(new \GuzzleHttp\Client(['timeout' => 180, 'connect_timeout' => 10]))
             ->make();
-        $response = $client->chat()->create([
+
+        $response = $this->withRateLimitRetry(fn () => $client->chat()->create([
             'model'           => 'gpt-4o',
             'messages'        => [
                 ['role' => 'system', 'content' => $this->systemPrompt],
@@ -311,8 +314,44 @@ PROMPT;
             ],
             'max_tokens'      => 16000,
             'response_format' => ['type' => 'json_object'],
-        ]);
+        ]));
+
         return $this->parseJson($response->choices[0]->message->content ?? '');
+    }
+
+    /**
+     * Our own pipelines (chunked translation, multi-batch generation, news
+     * curation) fire several API calls back-to-back for a single user click,
+     * which is exactly the pattern that trips a provider's per-minute rate
+     * limit. Retries transient 429s with backoff instead of surfacing them.
+     *
+     * Note: with our own Guzzle client passed into the OpenAI SDK, Guzzle's
+     * default http_errors handling intercepts the 429 response before the
+     * SDK's own status-code routing runs, so OpenAI 429s actually surface as
+     * a plain OpenAI\Exceptions\ErrorException (statusCode 429), not
+     * OpenAI\Exceptions\RateLimitException — both are handled here.
+     */
+    private function withRateLimitRetry(callable $callback, int $maxAttempts = 4): mixed
+    {
+        $delaySeconds = 5;
+
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            try {
+                return $callback();
+            } catch (\OpenAI\Exceptions\RateLimitException|\Anthropic\Core\Exceptions\RateLimitException $e) {
+                if ($attempt === $maxAttempts) {
+                    throw $e;
+                }
+                sleep($delaySeconds);
+                $delaySeconds *= 2;
+            } catch (\OpenAI\Exceptions\ErrorException $e) {
+                if ($e->getStatusCode() !== 429 || $attempt === $maxAttempts) {
+                    throw $e;
+                }
+                sleep($delaySeconds);
+                $delaySeconds *= 2;
+            }
+        }
     }
 
     // ── Private: multimodal content builders ──────────────────────────────

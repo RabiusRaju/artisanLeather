@@ -31,6 +31,7 @@ Route::withoutMiddleware([
     Route::get('/prerender/contact',        [PrerenderController::class, 'contact']);
     Route::get('/prerender/collections/{category?}', [PrerenderController::class, 'collections']);
     Route::get('/prerender/track',          [PrerenderController::class, 'track']);
+    Route::get('/prerender/returns',        [PrerenderController::class, 'returns']);
 });
 
 // ── Dynamic XML Sitemap ────────────────────────────────────────────────────
@@ -60,6 +61,7 @@ Route::get('/sitemap.xml', function () {
         ['/collections/accessories', 0.8, 'weekly'],
         ['/about', 0.6, 'monthly'],
         ['/contact', 0.6, 'monthly'],
+        ['/returns', 0.5, 'yearly'],
         ['/track', 0.4, 'monthly'],
     ];
 
