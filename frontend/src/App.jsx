@@ -38,6 +38,7 @@ const SharedProductsPage = lazy(() => import('./pages/SharedProductsPage'))
 const WishlistPage      = lazy(() => import('./pages/WishlistPage'))
 const PrivacyPage       = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage         = lazy(() => import('./pages/TermsPage'))
+const ReturnPolicyPage  = lazy(() => import('./pages/ReturnPolicyPage'))
 const NotFoundPage      = lazy(() => import('./pages/NotFoundPage'))
 
 function RTLSyncer() {
@@ -81,6 +82,7 @@ function Layout() {
           <Route path="/wishlist"             element={<WishlistPage />} />
           <Route path="/privacy"              element={<PrivacyPage />} />
           <Route path="/terms"                element={<TermsPage />} />
+          <Route path="/returns"              element={<ReturnPolicyPage />} />
           <Route path="*"                     element={<NotFoundPage />} />
         </Routes>
       </Suspense>

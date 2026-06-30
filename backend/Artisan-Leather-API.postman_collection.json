@@ -1,0 +1,335 @@
+{
+  "info": {
+    "name": "Artisan Leather API",
+    "description": "Public + authenticated REST API for the Artisan Leather storefront (routes/api.php, prefix /api/v1). Set {{base_url}} to your environment, then run Auth > Login (or Register) — the token auto-saves into {{token}} and every Protected request picks it up automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8001/api/v1", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "product_slug", "value": "", "type": "string" },
+    { "key": "product_id", "value": "1", "type": "string" },
+    { "key": "post_slug", "value": "", "type": "string" },
+    { "key": "survey_slug", "value": "", "type": "string" },
+    { "key": "order_number", "value": "", "type": "string" },
+    { "key": "legal_slug", "value": "", "type": "string" },
+    { "key": "share_token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] }
+          }
+        },
+        {
+          "name": "Get Product by Slug",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/{{product_slug}}", "host": ["{{base_url}}"], "path": ["products", "{{product_slug}}"] }
+          }
+        },
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/categories", "host": ["{{base_url}}"], "path": ["categories"] }
+          }
+        },
+        {
+          "name": "List Currencies",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/currencies", "host": ["{{base_url}}"], "path": ["currencies"] }
+          }
+        },
+        {
+          "name": "List Brands",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/brands", "host": ["{{base_url}}"], "path": ["brands"] }
+          }
+        },
+        {
+          "name": "List Blog Posts",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/posts", "host": ["{{base_url}}"], "path": ["posts"] }
+          }
+        },
+        {
+          "name": "Get Blog Post by Slug",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/posts/{{post_slug}}", "host": ["{{base_url}}"], "path": ["posts", "{{post_slug}}"] }
+          }
+        },
+        {
+          "name": "Get Site Settings",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/settings", "host": ["{{base_url}}"], "path": ["settings"] }
+          }
+        },
+        {
+          "name": "List Testimonials",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/testimonials", "host": ["{{base_url}}"], "path": ["testimonials"] }
+          }
+        },
+        {
+          "name": "List FAQs",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/faqs", "host": ["{{base_url}}"], "path": ["faqs"] }
+          }
+        },
+        {
+          "name": "Track Order",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/track/{{order_number}}", "host": ["{{base_url}}"], "path": ["track", "{{order_number}}"] }
+          }
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/orders", "host": ["{{base_url}}"], "path": ["orders"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Ahmed\",\n  \"last_name\": \"Al Balushi\",\n  \"email\": \"ahmed@example.com\",\n  \"phone\": \"+96891234567\",\n  \"governorate\": \"Muscat\",\n  \"city\": \"Bawshar\",\n  \"address\": \"Street 12, Building 4, Bawshar\",\n  \"notes\": \"Please call before delivery\",\n  \"payment_method\": \"cod\",\n  \"currency_code\": \"OMR\",\n  \"currency_rate\": 1,\n  \"items\": [\n    { \"product_id\": 1, \"color_name\": \"Brown\", \"color_hex\": \"#5C4033\", \"quantity\": 1 }\n  ],\n  \"coupon_code\": null,\n  \"utm_source\": \"postman\",\n  \"utm_medium\": \"api-test\",\n  \"utm_campaign\": \"manual-test\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Submit Contact Form",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/contact", "host": ["{{base_url}}"], "path": ["contact"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ahmed Al Balushi\",\n  \"email\": \"ahmed@example.com\",\n  \"phone\": \"+96891234567\",\n  \"subject\": \"Product question\",\n  \"message\": \"Do you ship to Salalah?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Validate Coupon",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/coupons/validate", "host": ["{{base_url}}"], "path": ["coupons", "validate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME10\",\n  \"subtotal\": 50\n}"
+            }
+          }
+        },
+        {
+          "name": "Featured Coupons",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/coupons/featured", "host": ["{{base_url}}"], "path": ["coupons", "featured"] }
+          }
+        },
+        {
+          "name": "List Product Reviews",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/reviews", "host": ["{{base_url}}"], "path": ["products", "{{product_id}}", "reviews"] }
+          }
+        },
+        {
+          "name": "Get Legal Page",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/legal/{{legal_slug}}", "host": ["{{base_url}}"], "path": ["legal", "{{legal_slug}}"] }
+          }
+        },
+        {
+          "name": "Get Shared Product Link",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/share/{{share_token}}", "host": ["{{base_url}}"], "path": ["share", "{{share_token}}"] }
+          }
+        },
+        {
+          "name": "Survey - Staff Unlock",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/surveys/staff-unlock", "host": ["{{base_url}}"], "path": ["surveys", "staff-unlock"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pin\": \"1234\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Survey by Slug",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/surveys/{{survey_slug}}", "host": ["{{base_url}}"], "path": ["surveys", "{{survey_slug}}"] }
+          }
+        },
+        {
+          "name": "Submit Survey Response",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/surveys/{{survey_slug}}/respond", "host": ["{{base_url}}"], "path": ["surveys", "{{survey_slug}}", "respond"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answers\": {\n    \"1\": \"Very satisfied\",\n    \"2\": [\"Quality\", \"Price\"]\n  },\n  \"respondent_name\": \"Ahmed Al Balushi\",\n  \"respondent_email\": \"ahmed@example.com\",\n  \"respondent_country\": \"Oman\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ahmed Al Balushi\",\n  \"email\": \"ahmed@example.com\",\n  \"phone\": \"+96891234567\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.token) {",
+                  "        pm.collectionVariables.set('token', body.token);",
+                  "        console.log('Saved token to {{token}}');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ahmed@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.token) {",
+                  "        pm.collectionVariables.set('token', body.token);",
+                  "        console.log('Saved token to {{token}}');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Protected (requires login)",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth", "logout"] }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "My Orders",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/auth/orders", "host": ["{{base_url}}"], "path": ["auth", "orders"] }
+          }
+        },
+        {
+          "name": "My Last Order",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/auth/last-order", "host": ["{{base_url}}"], "path": ["auth", "last-order"] }
+          }
+        },
+        {
+          "name": "Submit Product Review",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/reviews", "host": ["{{base_url}}"], "path": ["products", "{{product_id}}", "reviews"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"title\": \"Excellent quality\",\n  \"comment\": \"The leather finish is fantastic, very happy with this purchase.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Wishlist",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/wishlist", "host": ["{{base_url}}"], "path": ["wishlist"] }
+          }
+        },
+        {
+          "name": "Sync Wishlist",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/wishlist/sync", "host": ["{{base_url}}"], "path": ["wishlist", "sync"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_ids\": [1, 2, 3]\n}"
+            }
+          }
+        },
+        {
+          "name": "Toggle Wishlist Item",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/wishlist/{{product_id}}", "host": ["{{base_url}}"], "path": ["wishlist", "{{product_id}}"] }
+          }
+        }
+      ]
+    }
+  ]
+}
