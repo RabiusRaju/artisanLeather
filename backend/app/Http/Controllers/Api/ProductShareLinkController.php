@@ -23,7 +23,9 @@ class ProductShareLinkController extends Controller
 
         return response()->json([
             'data' => [
-                'name'     => $link->name,
+                'name'     => $locale === 'ar' && $link->name_ar ? $link->name_ar : $link->name,
+                'name_en'  => $link->name,
+                'name_ar'  => $link->name_ar,
                 'products' => ProductResource::collection($link->products()),
             ],
         ]);

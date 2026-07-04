@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class ProductShareLink extends Model
 {
-    protected $fillable = ['name', 'token', 'product_ids', 'expires_at'];
+    protected $fillable = ['name', 'name_ar', 'token', 'product_ids', 'expires_at'];
 
     protected $casts = [
         'product_ids' => 'array',
