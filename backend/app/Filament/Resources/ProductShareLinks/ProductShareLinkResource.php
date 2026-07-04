@@ -62,11 +62,30 @@ class ProductShareLinkResource extends Resource
                         ->columnSpanFull(),
 
                     Placeholder::make('share_url')
-                        ->label('Shareable Link')
+                        ->label('Shareable Links')
                         ->visible(fn ($record) => $record !== null)
-                        ->content(fn ($record) => $record
-                            ? new HtmlString('<a href="https://artisanleatherom.com/share/' . $record->token . '" target="_blank" style="color:#C9A84C;">https://artisanleatherom.com/share/' . $record->token . '</a>')
-                            : null)
+                        ->content(function ($record) {
+                            if (! $record) {
+                                return null;
+                            }
+
+                            $base = 'https://artisanleatherom.com/share/' . $record->token;
+                            $english = $base . '?lang=en';
+                            $arabic = $base . '?lang=ar';
+
+                            return new HtmlString('
+                                <div style="display:flex;flex-direction:column;gap:10px;font-family:sans-serif;max-width:640px;">
+                                    <div>
+                                        <div style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;">English</div>
+                                        <a href="' . e($english) . '" target="_blank" style="color:#C9A84C;">' . e($english) . '</a>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;">Arabic</div>
+                                        <a href="' . e($arabic) . '" target="_blank" style="color:#C9A84C;">' . e($arabic) . '</a>
+                                    </div>
+                                </div>
+                            ');
+                        })
                         ->columnSpanFull(),
                 ]),
         ]);
@@ -101,7 +120,7 @@ class ProductShareLinkResource extends Resource
                     ->formatStateUsing(fn ($state) => 'artisanleatherom.com/share/' . $state)
                     ->fontFamily('mono')
                     ->copyable()
-                    ->copyableState(fn ($state) => 'https://artisanleatherom.com/share/' . $state),
+                    ->copyableState(fn ($state) => 'https://artisanleatherom.com/share/' . $state . '?lang=en'),
 
                 TextColumn::make('expires_at')
                     ->label('Expires')
@@ -117,11 +136,49 @@ class ProductShareLinkResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->recordActions([
                 Action::make('open')
-                    ->label('Open')
+                    ->label('Open EN')
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->color('gray')
-                    ->url(fn ($record) => 'https://artisanleatherom.com/share/' . $record->token)
+                    ->url(fn ($record) => 'https://artisanleatherom.com/share/' . $record->token . '?lang=en')
                     ->openUrlInNewTab(),
+
+                Action::make('open_ar')
+                    ->label('Open AR')
+                    ->icon('heroicon-o-language')
+                    ->color('gray')
+                    ->url(fn ($record) => 'https://artisanleatherom.com/share/' . $record->token . '?lang=ar')
+                    ->openUrlInNewTab(),
+
+                Action::make('copy_link')
+                    ->label('Copy Link')
+                    ->icon('heroicon-o-link')
+                    ->color('gray')
+                    ->schema([
+                        Select::make('language')
+                            ->label('Which language link do you want to copy?')
+                            ->options([
+                                'en' => 'English link',
+                                'ar' => 'Arabic link',
+                            ])
+                            ->default('en')
+                            ->required()
+                            ->native(false),
+                    ])
+                    ->action(function (array $data, $record, $livewire) {
+                        $language = $data['language'] ?? 'en';
+                        $url = "https://artisanleatherom.com/share/{$record->token}?lang={$language}";
+                        $livewire->dispatch('copy-to-clipboard', text: $url);
+                    })
+                    ->modalHeading('Copy share link')
+                    ->modalSubmitActionLabel('Copy selected link')
+                    ->extraAttributes(fn () => [
+                        'x-data' => '{}',
+                        'x-on:copy-to-clipboard.window' => "
+                            navigator.clipboard.writeText(\$event.detail.text);
+                            \$el.textContent = '✓ Copied!';
+                            setTimeout(() => \$el.textContent = 'Copy Link', 2000);
+                        ",
+                    ]),
 
                 EditAction::make(),
                 DeleteAction::make(),

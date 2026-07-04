@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import SEO from '../components/SEO'
 import { fetchSurvey, submitSurvey, verifyStaffPin } from '../services/api'
@@ -261,13 +261,12 @@ export default function SurveyPage() {
   const [survey,    setSurvey]    = useState(null)
   const [loading,   setLoading]   = useState(true)
   const [error,     setError]     = useState(null)
-  const [step,      setStep]      = useState(0)      // current question index
-  const [answers,   setAnswers]   = useState({})     // { questionId: value }
+  const [answers,   setAnswers]   = useState({})
+  const [errors,    setErrors]    = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [submitting,setSubmitting]= useState(false)
   const [submitError, setSubmitError] = useState(null)
 
-  // Session token for deduplication
   const tokenKey = `survey_token_${slug}`
   const generateToken = () => {
     const t = Math.random().toString(36).substr(2) + Date.now().toString(36)
@@ -276,7 +275,6 @@ export default function SurveyPage() {
   }
   const [token, setToken] = useState(() => sessionStorage.getItem(tokenKey) || generateToken())
 
-  // Staff Mode — lets field staff submit this survey repeatedly on the same device
   const [staffUnlocked, setStaffUnlocked] = useState(() => !!localStorage.getItem(STAFF_PIN_KEY))
 
   const loadSurvey = () => {
@@ -292,7 +290,7 @@ export default function SurveyPage() {
   const startNewResponse = () => {
     setToken(generateToken())
     setAnswers({})
-    setStep(0)
+    setErrors({})
     setSubmitted(false)
     setSubmitError(null)
   }
@@ -317,34 +315,41 @@ export default function SurveyPage() {
     </div>
   )
 
-  const questions  = survey.questions || []
-  const total      = questions.length
-  const progress   = total > 0 ? Math.round(((step) / total) * 100) : 0
+  const questions   = survey.questions || []
+  const surveyTitle = (isAr && survey.title_ar) ? survey.title_ar : survey.title
+  const surveyDesc  = (isAr && survey.description_ar) ? survey.description_ar : survey.description
+  const thankYouMsg = (isAr && survey.thank_you_message_ar) ? survey.thank_you_message_ar : survey.thank_you_message
 
-  const surveyTitle   = (isAr && survey.title_ar)   ? survey.title_ar   : survey.title
-  const surveyDesc    = (isAr && survey.description_ar) ? survey.description_ar : survey.description
-  const thankYouMsg   = (isAr && survey.thank_you_message_ar) ? survey.thank_you_message_ar : survey.thank_you_message
+  const transformQuestion = (q) => ({
+    ...q,
+    question: (isAr && q.question_ar) ? q.question_ar : q.question,
+    options: q.type === 'image_choice'
+      ? (q.options || []).map(o => ({ ...o, label: (isAr && o.label_ar) ? o.label_ar : o.label }))
+      : ((isAr && q.options_ar?.length) ? q.options_ar : q.options),
+  })
 
-  const current = questions[step] && {
-    ...questions[step],
-    question: (isAr && questions[step].question_ar) ? questions[step].question_ar : questions[step].question,
-    options: questions[step].type === 'image_choice'
-      ? (questions[step].options || []).map(o => ({ ...o, label: (isAr && o.label_ar) ? o.label_ar : o.label }))
-      : ((isAr && questions[step].options_ar?.length) ? questions[step].options_ar : questions[step].options),
-  }
-
-  const setAnswer = (qId, val) => setAnswers(a => ({ ...a, [qId]: val }))
-
-  const canProceed = () => {
-    if (!current) return true
-    if (!current.is_required) return true
-    const val = answers[current.id]
-    if (val === undefined || val === null || val === '') return false
-    if (Array.isArray(val) && val.length === 0) return false
-    return true
+  const setAnswer = (qId, val) => {
+    setAnswers(a => ({ ...a, [qId]: val }))
+    if (errors[qId]) setErrors(e => ({ ...e, [qId]: null }))
   }
 
   const handleSubmit = async () => {
+    // Validate required questions
+    const newErrors = {}
+    questions.forEach(q => {
+      if (!q.is_required) return
+      const val = answers[q.id]
+      if (val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0)) {
+        newErrors[q.id] = 'This question is required.'
+      }
+    })
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      const firstId = Object.keys(newErrors)[0]
+      document.getElementById(`question-${firstId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+
     setSubmitting(true)
     setSubmitError(null)
     try {
@@ -407,110 +412,73 @@ export default function SurveyPage() {
         </div>
       </div>
 
-      {/* Progress bar */}
-      {survey.show_progress && total > 0 && (
-        <div className="sticky top-16 z-30 bg-dark/95 backdrop-blur-sm border-b border-white/5">
-          <div className="max-w-2xl mx-auto px-6 py-3 flex items-center gap-4">
-            <span className="text-[10px] text-white/30 tracking-widest uppercase flex-shrink-0">
-              {step + 1} of {total}
-            </span>
-            <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
-              <motion.div className="h-full bg-gold rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.4 }} />
-            </div>
-            <span className="text-[10px] text-gold/60 flex-shrink-0">{progress}%</span>
-          </div>
-        </div>
-      )}
+      {/* All questions */}
+      <div className="max-w-2xl mx-auto px-6 lg:px-12 pt-10 space-y-10">
+        {questions.map((q, index) => {
+          const tq = transformQuestion(q)
+          return (
+            <motion.div
+              key={q.id}
+              id={`question-${q.id}`}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+              className={`p-6 rounded-lg border transition-colors duration-200 ${
+                errors[q.id] ? 'border-red-500/40 bg-red-500/5' : 'border-white/8 bg-dark-100/40'
+              }`}>
 
-      {/* Question card */}
-      <div className="max-w-2xl mx-auto px-6 lg:px-12 pt-12">
-        <AnimatePresence mode="wait">
-          {current && (
-            <motion.div key={step}
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
-              transition={{ duration: 0.3 }}>
-
-              <div className="mb-8">
-                <div className="flex items-start gap-4 mb-2">
-                  <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center text-gold text-xs font-bold">
-                    {step + 1}
-                  </span>
-                  <div>
-                    <h2 className="font-serif text-xl text-white font-light leading-snug">
-                      {current.question}
-                      {current.is_required && <span className="text-gold ml-1">*</span>}
-                    </h2>
-                    {current.description && (
-                      <p className="text-white/40 text-sm mt-2 leading-relaxed">{current.description}</p>
-                    )}
-                  </div>
+              {/* Question header */}
+              <div className="flex items-start gap-4 mb-5">
+                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center text-gold text-xs font-bold">
+                  {index + 1}
+                </span>
+                <div className="flex-1">
+                  <h2 className="font-serif text-lg text-white font-light leading-snug">
+                    {tq.question}
+                    {tq.is_required && <span className="text-gold ml-1">*</span>}
+                  </h2>
+                  {tq.description && (
+                    <p className="text-white/40 text-sm mt-1.5 leading-relaxed">{tq.description}</p>
+                  )}
                 </div>
-                {current.image && (
-                  <img src={current.image} alt={current.question}
-                    className="ml-12 mt-4 max-h-72 w-auto rounded-lg border border-white/10 object-cover" />
-                )}
               </div>
+
+              {tq.image && (
+                <img src={tq.image} alt={tq.question}
+                  className="ml-12 mb-4 max-h-60 w-auto rounded-lg border border-white/10 object-cover" />
+              )}
 
               <div className="ml-12">
                 <QuestionInput
-                  question={current}
-                  value={answers[current.id]}
-                  onChange={val => setAnswer(current.id, val)}
+                  question={tq}
+                  value={answers[q.id]}
+                  onChange={val => setAnswer(q.id, val)}
                 />
               </div>
 
-              {/* Required notice */}
-              {current.is_required && !canProceed() && answers[current.id] !== undefined && (
-                <p className="ml-12 mt-3 text-red-400 text-xs">Please answer this question to continue.</p>
+              {errors[q.id] && (
+                <p className="ml-12 mt-3 text-red-400 text-xs">{errors[q.id]}</p>
               )}
-
             </motion.div>
-          )}
-        </AnimatePresence>
+          )
+        })}
 
-        {/* Navigation */}
-        <div className="flex items-center justify-between mt-12 pt-8 border-t border-white/8">
+        {/* Submit */}
+        <div className="pt-4 pb-8 border-t border-white/8">
+          {submitError && (
+            <p className="text-center text-red-400 text-sm mb-4">{submitError}</p>
+          )}
           <button
-            onClick={() => setStep(s => Math.max(0, s - 1))}
-            disabled={step === 0}
-            className="text-white/30 hover:text-white text-sm tracking-widest uppercase transition-colors duration-200 disabled:opacity-0 disabled:cursor-default">
-            ← Previous
+            onClick={handleSubmit}
+            disabled={submitting}
+            className={`w-full py-4 text-[11px] tracking-[0.35em] uppercase font-bold transition-all duration-200
+              ${submitting ? 'bg-white/10 text-white/30 cursor-not-allowed' : 'bg-gold text-dark hover:bg-amber-400'}`}>
+            {submitting ? 'Submitting…' : 'Submit Survey ✓'}
           </button>
-
-          <div className="flex gap-2">
-            {questions.map((_, i) => (
-              <div key={i} className={`w-2 h-2 rounded-full transition-all duration-300
-                ${i === step ? 'bg-gold scale-125' : i < step ? 'bg-gold/40' : 'bg-white/15'}`} />
-            ))}
-          </div>
-
-          {step < total - 1 ? (
-            <button
-              onClick={() => { if (canProceed()) setStep(s => s + 1) }}
-              disabled={!canProceed()}
-              className={`px-8 py-3 text-[10px] tracking-[0.3em] uppercase font-bold transition-all duration-200
-                ${canProceed() ? 'bg-gold text-dark hover:bg-amber-400' : 'bg-white/10 text-white/30 cursor-not-allowed'}`}>
-              Next →
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmit}
-              disabled={!canProceed() || submitting}
-              className={`px-8 py-3 text-[10px] tracking-[0.3em] uppercase font-bold transition-all duration-200
-                ${canProceed() && !submitting ? 'bg-gold text-dark hover:bg-amber-400' : 'bg-white/10 text-white/30 cursor-not-allowed'}`}>
-              {submitting ? 'Submitting…' : 'Submit Survey ✓'}
-            </button>
-          )}
+          <p className="text-center text-white/20 text-xs mt-3">
+            Fields marked <span className="text-gold">*</span> are required
+          </p>
         </div>
-
-        {submitError && (
-          <p className="text-center text-red-400 text-sm mt-4">{submitError}</p>
-        )}
 
         <StaffModeControl unlocked={staffUnlocked} onUnlock={() => setStaffUnlocked(true)} />
       </div>
