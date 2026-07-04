@@ -38,8 +38,15 @@ class ProductShareLinkResource extends Resource
                 ->description('Pick the products to include, then share the generated link with a customer or friend — no login required to view it.')
                 ->schema([
                     TextInput::make('name')
-                        ->label('Name (for your reference only)')
+                        ->label('Name (English)')
                         ->placeholder('e.g. Eid Gift Picks for Ahmed')
+                        ->required()
+                        ->columnSpanFull(),
+
+                    TextInput::make('name_ar')
+                        ->label('Arabic Name')
+                        ->placeholder('e.g. اختيارات هدايا العيد لأحمد')
+                        ->required()
                         ->columnSpanFull(),
 
                     Select::make('product_ids')
@@ -96,9 +103,15 @@ class ProductShareLinkResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Name')
+                    ->label('English Name')
                     ->placeholder('(untitled)')
                     ->searchable(),
+
+                TextColumn::make('name_ar')
+                    ->label('Arabic Name')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->toggleable(),
 
                 TextColumn::make('product_ids')
                     ->label('Products')

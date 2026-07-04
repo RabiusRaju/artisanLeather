@@ -249,7 +249,9 @@ class PrerenderController extends Controller
             : null;
 
         $count = $products->count();
-        $title = $link->name ?: ($isArabic ? 'مجموعة مختارة — آرتيزان ليذر' : 'A Curated Selection — Artisan Leather');
+        $title = $isArabic && $link->name_ar
+            ? $link->name_ar
+            : ($link->name ?: ($isArabic ? 'مجموعة مختارة — آرتيزان ليذر' : 'A Curated Selection — Artisan Leather'));
         $description = match (true) {
             $isArabic && $count > 0 => "مجموعة مختارة من {$count} منتج من آرتيزان ليذر.",
             $isArabic => 'مجموعة مختارة من منتجات آرتيزان ليذر.',
