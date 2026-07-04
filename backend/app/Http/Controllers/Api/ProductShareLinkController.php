@@ -5,12 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Models\ProductShareLink;
+use Illuminate\Http\Request;
 
 class ProductShareLinkController extends Controller
 {
     // GET /api/v1/share/{token}
-    public function show(string $token)
+    public function show(Request $request, string $token)
     {
+        $locale = str_starts_with($request->header('Accept-Language', 'en'), 'ar') ? 'ar' : 'en';
+        app()->setLocale($locale);
+
         $link = ProductShareLink::where('token', $token)->first();
 
         if (! $link || $link->isExpired()) {

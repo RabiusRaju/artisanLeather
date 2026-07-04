@@ -21,12 +21,13 @@ function ProductSlide({ product, index, reverse }) {
   const images = (product.images || []).slice(0, 4)
   const tiers = product.bulk_pricing || []
   const categoryName = product.category?.name || 'Leather Goods'
+  const productUrl = `/product/${product.slug}?lang=${isAr ? 'ar' : 'en'}`
 
   const details = [
-    { label: 'Materials', value: product.material },
-    { label: 'Size', value: product.dimensions },
-    { label: 'Category', value: categoryName },
-    { label: 'Product Code', value: product.sku },
+    { label: isAr ? 'الخامة' : 'Materials', value: product.material },
+    { label: isAr ? 'المقاس' : 'Size', value: product.dimensions },
+    { label: isAr ? 'الفئة' : 'Category', value: categoryName },
+    { label: isAr ? 'رمز المنتج' : 'Product Code', value: product.sku },
   ].filter((d) => d.value)
 
   return (
@@ -51,7 +52,7 @@ function ProductSlide({ product, index, reverse }) {
           )}
 
           <p className="text-[11px] font-bold tracking-[0.2em] text-gold/70 uppercase mb-3">
-            Product Details
+            {isAr ? 'تفاصيل المنتج' : 'Product Details'}
           </p>
 
           <dl className="space-y-1.5 mb-5">
@@ -67,8 +68,8 @@ function ProductSlide({ product, index, reverse }) {
             <div className="text-[14px] text-white/55 mb-5 space-y-0.5">
               {tiers.map((tier, i) => (
                 <p key={i}>
-                  {i === 0 ? 'Quantity- ' : <span className="inline-block w-[68px]" />}
-                  {tier.label} &nbsp; <span className="text-gold">Price- {tier.price}</span> (Per Colour)
+                  {i === 0 ? (isAr ? 'الكمية- ' : 'Quantity- ') : <span className="inline-block w-[68px]" />}
+                  {tier.label} &nbsp; <span className="text-gold">{isAr ? 'السعر' : 'Price'}- {tier.price}</span> {isAr ? '(لكل لون)' : '(Per Colour)'}
                 </p>
               ))}
             </div>
@@ -77,15 +78,15 @@ function ProductSlide({ product, index, reverse }) {
           )}
 
           <Link
-            to={`/product/${product.slug}`}
+            to={productUrl}
             className="inline-block text-[11px] tracking-[0.25em] uppercase text-gold border-b border-gold/40 pb-0.5 hover:text-white hover:border-white/40 transition-colors duration-300"
           >
-            View Product →
+            {isAr ? 'عرض المنتج' : 'View Product'} →
           </Link>
         </div>
 
         {/* ── Image column ──────────────────────────────────────────── */}
-        <Link to={`/product/${product.slug}`} className="block">
+        <Link to={productUrl} className="block">
           {images.length > 1 ? (
             <div className="grid grid-cols-3 grid-rows-2 gap-2.5 h-[340px] sm:h-[420px]">
               <div className="col-span-2 row-span-2 bg-dark-100 overflow-hidden">
@@ -112,16 +113,20 @@ function ProductSlide({ product, index, reverse }) {
 
 export default function SharedProductsPage() {
   const { token } = useParams()
+  const { i18n } = useTranslation()
+  const isAr = i18n.language?.startsWith('ar')
   const [data, setData] = useState(null)
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    setLoading(true)
+    setError(false)
     fetchSharedProducts(token)
       .then((res) => setData(res.data.data))
       .catch(() => setError(true))
       .finally(() => setLoading(false))
-  }, [token])
+  }, [token, i18n.language])
 
   if (loading) {
     return <div className="min-h-screen bg-dark" />
@@ -132,7 +137,9 @@ export default function SharedProductsPage() {
       <div className="min-h-screen bg-dark flex items-center justify-center">
         <div className="text-center px-6">
           <p className="text-5xl mb-6">🔗</p>
-          <p className="font-serif text-2xl text-white/40 font-light mb-6">This link is invalid or has expired.</p>
+          <p className="font-serif text-2xl text-white/40 font-light mb-6">
+            {isAr ? 'هذا الرابط غير صالح أو انتهت صلاحيته.' : 'This link is invalid or has expired.'}
+          </p>
           <Link to="/" className="text-gold text-sm tracking-widest uppercase">← artisanleatherom.com</Link>
         </div>
       </div>
@@ -141,7 +148,12 @@ export default function SharedProductsPage() {
 
   return (
     <div className="min-h-screen bg-dark">
-      <SEO title={data.name || 'Shared Products'} description="A curated selection of products from Artisan Leather." url={`/share/${token}`} noIndex />
+      <SEO
+        title={data.name || (isAr ? 'منتجات مختارة' : 'Shared Products')}
+        description={isAr ? 'مجموعة مختارة من منتجات آرتيزان ليذر.' : 'A curated selection of products from Artisan Leather.'}
+        url={`/share/${token}?lang=${isAr ? 'ar' : 'en'}`}
+        noIndex
+      />
 
       {/* ── Cover slide ─────────────────────────────────────────────── */}
       <section className="px-6 lg:px-16 pt-32 pb-16 bg-dark-100">
@@ -150,7 +162,7 @@ export default function SharedProductsPage() {
             {data.products[0]?.images?.[0]?.url && (
               <img
                 src={data.products[0].images[0].url}
-                alt={data.name || 'Artisan Leather curated selection'}
+                alt={data.name || (isAr ? 'مجموعة مختارة من آرتيزان ليذر' : 'Artisan Leather curated selection')}
                 className="w-full h-full object-cover"
               />
             )}
@@ -158,12 +170,12 @@ export default function SharedProductsPage() {
           <div>
             <div className="flex items-start justify-between gap-4 mb-5">
               <h1 className="font-serif text-[40px] sm:text-[52px] leading-[1.05] font-light tracking-tight text-white uppercase">
-                {data.name || 'Product Presentation'}
+                {data.name || (isAr ? 'عرض المنتجات' : 'Product Presentation')}
               </h1>
-              <ShareButton url={window.location.href} title={data.name || 'A Curated Selection — Artisan Leather'} />
+              <ShareButton url={window.location.href} title={data.name || (isAr ? 'مجموعة مختارة — آرتيزان ليذر' : 'A Curated Selection — Artisan Leather')} />
             </div>
             <p className="text-[15px] text-white/40">
-              Experience the Art of Genuine Leather Craftsmanship
+              {isAr ? 'اختبر جمال الحرفية في الجلد الطبيعي' : 'Experience the Art of Genuine Leather Craftsmanship'}
             </p>
           </div>
         </div>
@@ -179,7 +191,7 @@ export default function SharedProductsPage() {
       {/* ── Closing slide ───────────────────────────────────────────── */}
       <section className="px-6 lg:px-16 py-24 text-center bg-dark-100">
         <p className="font-serif text-[40px] sm:text-[56px] font-light tracking-tight text-white uppercase mb-3">
-          Thank You
+          {isAr ? 'شكرا لكم' : 'Thank You'}
         </p>
         <p className="text-[14px] text-white/40">Artisan Leather — Muscat, Oman</p>
       </section>

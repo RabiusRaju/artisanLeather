@@ -76,7 +76,9 @@ class PrerenderController extends Controller
     // GET /prerender/blog/{slug}
     public function blogPost(Request $request, string $slug)
     {
-        $url = "https://artisanleatherom.com/blog/{$slug}";
+        $language = $request->query('lang') === 'ar' ? 'ar' : 'en';
+        $isArabic = $language === 'ar';
+        $url = "https://artisanleatherom.com/blog/{$slug}?lang={$language}";
 
         // Defence in depth: if a human reaches this route directly (Caddy
         // misconfigured, or someone shared this URL), send them straight to
@@ -91,12 +93,14 @@ class PrerenderController extends Controller
             ? (str_starts_with($post->featured_image, 'http') ? $post->featured_image : asset('storage/' . $post->featured_image))
             : null;
 
-        $description = $post->meta_description ?: $post->excerpt;
+        $title = $isArabic && $post->title_ar ? $post->title_ar : ($post->meta_title ?: $post->title);
+        $description = $isArabic && $post->excerpt_ar ? $post->excerpt_ar : ($post->meta_description ?: $post->excerpt);
+        $content = $isArabic && $post->content_ar ? $post->content_ar : ($post->content ?: $post->excerpt ?: '');
 
         $schema = json_encode([
             '@context'         => 'https://schema.org',
             '@type'            => 'Article',
-            'headline'         => $post->meta_title ?: $post->title,
+            'headline'         => $title,
             'description'      => strip_tags($description),
             'image'            => $image,
             'datePublished'    => $post->published_at?->toIso8601String(),
@@ -110,10 +114,10 @@ class PrerenderController extends Controller
         ]);
 
         // Include a plain-text excerpt of the actual content for Googlebot.
-        $bodyContent = mb_substr(strip_tags($post->content ?: $post->excerpt ?: ''), 0, 1500);
+        $bodyContent = mb_substr(strip_tags($content), 0, 1500);
 
         return view('prerender.meta', [
-            'title'       => $post->meta_title ?: $post->title,
+            'title'       => $title,
             'description' => $description,
             'image'       => $image,
             'url'         => $url,
@@ -144,7 +148,9 @@ class PrerenderController extends Controller
     // GET /prerender/product/{slug}
     public function product(Request $request, string $slug)
     {
-        $url = "https://artisanleatherom.com/product/{$slug}";
+        $language = $request->query('lang') === 'ar' ? 'ar' : 'en';
+        $isArabic = $language === 'ar';
+        $url = "https://artisanleatherom.com/product/{$slug}?lang={$language}";
 
         if (!self::isBot($request)) {
             return redirect($url);
@@ -156,17 +162,20 @@ class PrerenderController extends Controller
             ? (str_starts_with($imagePath, 'http') ? $imagePath : asset('storage/' . $imagePath))
             : null;
 
-        $description = $product->meta_description ?: $product->tagline;
+        $title = $isArabic && $product->name_ar ? $product->name_ar : ($product->meta_title ?: $product->name);
+        $description = $isArabic && $product->tagline_ar ? $product->tagline_ar : ($product->meta_description ?: $product->tagline);
+        $bodyDescription = $isArabic && $product->description_ar ? $product->description_ar : ($product->description ?: $description);
+        $brandName = $isArabic && $product->brand?->name_ar ? $product->brand->name_ar : ($product->brand?->name ?? 'Artisan Leather');
 
         $schema = json_encode([
             '@context'    => 'https://schema.org/',
             '@type'       => 'Product',
-            'name'        => $product->name,
-            'description' => strip_tags($product->description ?: $description),
+            'name'        => $title,
+            'description' => strip_tags($bodyDescription),
             'image'       => $image,
             'brand'       => [
                 '@type' => 'Brand',
-                'name'  => $product->brand?->name ?? 'Artisan Leather',
+                'name'  => $brandName,
             ],
             'offers' => [
                 '@type'         => 'Offer',
@@ -178,10 +187,10 @@ class PrerenderController extends Controller
             ],
         ]);
 
-        $bodyContent = strip_tags($product->description ?: '');
+        $bodyContent = strip_tags($bodyDescription ?: '');
 
         return view('prerender.meta', [
-            'title'       => $product->meta_title ?: $product->name,
+            'title'       => $title,
             'description' => $description,
             'image'       => $image,
             'url'         => $url,
@@ -219,7 +228,9 @@ class PrerenderController extends Controller
     // GET /prerender/share/{token}
     public function shareLink(Request $request, string $token)
     {
-        $url = "https://artisanleatherom.com/share/{$token}";
+        $language = $request->query('lang') === 'ar' ? 'ar' : 'en';
+        $isArabic = $language === 'ar';
+        $url = "https://artisanleatherom.com/share/{$token}?lang={$language}";
 
         if (!self::isBot($request)) {
             return redirect($url);
@@ -238,12 +249,16 @@ class PrerenderController extends Controller
             : null;
 
         $count = $products->count();
-        $description = $count > 0
-            ? "A curated selection of {$count} product" . ($count === 1 ? '' : 's') . " from Artisan Leather."
-            : 'A curated selection of products from Artisan Leather.';
+        $title = $link->name ?: ($isArabic ? 'مجموعة مختارة — آرتيزان ليذر' : 'A Curated Selection — Artisan Leather');
+        $description = match (true) {
+            $isArabic && $count > 0 => "مجموعة مختارة من {$count} منتج من آرتيزان ليذر.",
+            $isArabic => 'مجموعة مختارة من منتجات آرتيزان ليذر.',
+            $count > 0 => "A curated selection of {$count} product" . ($count === 1 ? '' : 's') . " from Artisan Leather.",
+            default => 'A curated selection of products from Artisan Leather.',
+        };
 
         return view('prerender.meta', [
-            'title'       => $link->name ?: 'A Curated Selection — Artisan Leather',
+            'title'       => $title,
             'description' => $description,
             'image'       => $image,
             'url'         => $url,

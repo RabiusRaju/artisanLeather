@@ -559,7 +559,7 @@ class PostResource extends Resource
                         ]),
 
                     Section::make('🔗 Share Links (UTM-tagged)')
-                        ->description('Copy a tracked link per platform — visits and orders from these links will show up in Web Analytics.')
+                        ->description('Copy tracked English or Arabic links per platform — visits and orders from these links will show up in Web Analytics.')
                         ->collapsed()
                         ->schema([
                             Placeholder::make('_share_links_card')
@@ -572,6 +572,10 @@ class PostResource extends Resource
                                     }
 
                                     $base = "https://artisanleatherom.com/blog/{$slug}";
+                                    $languages = [
+                                        'en' => 'English',
+                                        'ar' => 'Arabic',
+                                    ];
                                     $platforms = [
                                         'linkedin'  => '💼 LinkedIn',
                                         'facebook'  => '📘 Facebook',
@@ -581,16 +585,24 @@ class PostResource extends Resource
 
                                     $rows = '';
                                     foreach ($platforms as $key => $label) {
-                                        $url = $base . '?utm_source=' . $key . '&utm_medium=social&utm_campaign=' . $slug;
-                                        $id  = 'share_link_' . $key;
                                         $rows .= '
-                                            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;">
-                                                <div style="min-width:0;flex:1;">
-                                                    <div style="font-size:12px;font-weight:600;color:#374151;">' . $label . '</div>
-                                                    <input id="' . $id . '" readonly value="' . e($url) . '" onclick="this.select()" style="width:100%;font-size:11px;color:#6b7280;border:none;background:transparent;padding:0;">
-                                                </div>
-                                                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById(\'' . $id . '\').value); this.textContent=\'Copied!\'; setTimeout(()=>this.textContent=\'Copy\',1500);" style="flex-shrink:0;font-size:11px;font-weight:600;color:#fff;background:#d97706;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;">Copy</button>
-                                            </div>';
+                                            <div style="padding:10px 0;border-bottom:1px solid #f3f4f6;">
+                                                <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">' . $label . '</div>';
+
+                                        foreach ($languages as $lang => $languageLabel) {
+                                            $url = $base . '?lang=' . $lang . '&utm_source=' . $key . '&utm_medium=social&utm_campaign=' . $slug;
+                                            $id  = 'share_link_' . $key . '_' . $lang;
+                                            $rows .= '
+                                                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 0;">
+                                                    <div style="min-width:0;flex:1;">
+                                                        <div style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;">' . $languageLabel . '</div>
+                                                        <input id="' . $id . '" readonly value="' . e($url) . '" onclick="this.select()" style="width:100%;font-size:11px;color:#6b7280;border:none;background:transparent;padding:0;">
+                                                    </div>
+                                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById(\'' . $id . '\').value); this.textContent=\'Copied!\'; setTimeout(()=>this.textContent=\'Copy\',1500);" style="flex-shrink:0;font-size:11px;font-weight:600;color:#fff;background:#d97706;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;">Copy</button>
+                                                </div>';
+                                        }
+
+                                        $rows .= '</div>';
                                     }
 
                                     return new HtmlString('<div style="font-family:sans-serif;max-width:640px;">' . $rows . '</div>');
@@ -785,7 +797,7 @@ class PostResource extends Resource
                             "📖 New article from Artisan Leather:\n\n" .
                             "*{$record->title}*\n" .
                             ($record->excerpt ? "_{$record->excerpt}_\n\n" : "\n") .
-                            "👉 https://artisanleatherom.com/blog/{$record->slug}\n\n" .
+                            "👉 https://artisanleatherom.com/blog/{$record->slug}?lang=en\n\n" .
                             "#{$record->category} #ArtisanLeather #Oman"
                         )
                     )
@@ -796,10 +808,24 @@ class PostResource extends Resource
                     ->label('Copy Link')
                     ->icon('heroicon-o-link')
                     ->color('gray')
-                    ->action(function ($record, $livewire) {
-                        $url = "https://artisanleatherom.com/blog/{$record->slug}";
+                    ->schema([
+                        Select::make('language')
+                            ->label('Which language link do you want to copy?')
+                            ->options([
+                                'en' => 'English link',
+                                'ar' => 'Arabic link',
+                            ])
+                            ->default('en')
+                            ->required()
+                            ->native(false),
+                    ])
+                    ->action(function (array $data, $record, $livewire) {
+                        $language = $data['language'] ?? 'en';
+                        $url = "https://artisanleatherom.com/blog/{$record->slug}?lang={$language}";
                         $livewire->dispatch('copy-to-clipboard', text: $url);
                     })
+                    ->modalHeading('Copy post link')
+                    ->modalSubmitActionLabel('Copy selected link')
                     ->extraAttributes(fn($record) => [
                         'x-data' => '{}',
                         'x-on:copy-to-clipboard.window' => "
