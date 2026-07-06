@@ -1,10 +1,17 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { HiX, HiOutlineClipboard, HiOutlineClipboardCheck } from 'react-icons/hi'
-import { fetchFeaturedCoupon } from '../services/api'
+import { fetchFeaturedCoupon, subscribeNewsletter } from '../services/api'
+import { getUtmParams } from '../lib/utm'
+import { trackLead } from '../lib/tracking'
 
-const SESSION_KEY = 'al_coupon_popup_shown'
+const DISMISSED_KEY = 'al_coupon_popup_dismissed_until'
+const SUBSCRIBED_KEY = 'al_coupon_popup_subscribed'
+const DISMISS_DAYS = 14
+const DELAY_MS = 12000
+const SCROLL_THRESHOLD = 0.5
+const EXCLUDED_PATHS = ['/cart', '/checkout', '/login', '/register', '/order-confirmation']
 
 function getRemaining(expiresAt) {
   const diff = new Date(expiresAt).getTime() - Date.now()
@@ -27,13 +34,23 @@ function CountdownUnit({ value, label }) {
 }
 
 export default function CouponPopup() {
+  const { pathname } = useLocation()
   const [coupon, setCoupon] = useState(null)
   const [visible, setVisible] = useState(false)
   const [remaining, setRemaining] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [email, setEmail] = useState('')
+  const [subscribed, setSubscribed] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    if (sessionStorage.getItem(SESSION_KEY)) return
+    if (typeof window === 'undefined') return
+    if (EXCLUDED_PATHS.includes(pathname)) return
+    if (localStorage.getItem(SUBSCRIBED_KEY)) return
+
+    const dismissedUntil = Number(localStorage.getItem(DISMISSED_KEY) || 0)
+    if (dismissedUntil && dismissedUntil > Date.now()) return
 
     fetchFeaturedCoupon()
       .then(({ data }) => {
@@ -41,10 +58,46 @@ export default function CouponPopup() {
         if (!featured || !featured.expires_at) return
         if (!getRemaining(featured.expires_at)) return
         setCoupon(featured)
-        setVisible(true)
       })
       .catch(() => {})
-  }, [])
+  }, [pathname])
+
+  useEffect(() => {
+    if (EXCLUDED_PATHS.includes(pathname)) {
+      setVisible(false)
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    if (!coupon || visible) return
+    if (EXCLUDED_PATHS.includes(pathname)) return
+    if (localStorage.getItem(SUBSCRIBED_KEY)) return
+    const dismissedUntil = Number(localStorage.getItem(DISMISSED_KEY) || 0)
+    if (dismissedUntil && dismissedUntil > Date.now()) return
+
+    let shown = false
+
+    const show = () => {
+      if (shown) return
+      shown = true
+      setVisible(true)
+    }
+
+    const timer = setTimeout(show, DELAY_MS)
+    const onScroll = () => {
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight
+      if (scrollable <= 0) return
+      if (window.scrollY / scrollable >= SCROLL_THRESHOLD) show()
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [coupon, pathname, visible])
 
   useEffect(() => {
     if (!coupon) return
@@ -60,7 +113,7 @@ export default function CouponPopup() {
 
   const close = useCallback(() => {
     setVisible(false)
-    sessionStorage.setItem(SESSION_KEY, '1')
+    localStorage.setItem(DISMISSED_KEY, String(Date.now() + DISMISS_DAYS * 86400000))
   }, [])
 
   const copyCode = useCallback(() => {
@@ -69,6 +122,30 @@ export default function CouponPopup() {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }, [coupon])
+
+  const submitEmail = useCallback(async (event) => {
+    event.preventDefault()
+    if (!coupon || submitting) return
+
+    setError('')
+    setSubmitting(true)
+    try {
+      await subscribeNewsletter({
+        email,
+        coupon_code: coupon.code,
+        source: 'coupon_popup',
+        utm: getUtmParams(),
+      })
+      localStorage.setItem(SUBSCRIBED_KEY, '1')
+      setSubscribed(true)
+      trackLead('coupon_popup')
+      copyCode()
+    } catch (err) {
+      setError(err.response?.data?.message || 'Please enter a valid email address.')
+    } finally {
+      setSubmitting(false)
+    }
+  }, [coupon, copyCode, email, submitting])
 
   if (!coupon) return null
 
@@ -116,17 +193,46 @@ export default function CouponPopup() {
                 <p className="mt-2 text-sm text-ivory-faint font-light leading-relaxed">{coupon.description}</p>
               )}
 
-              <button
-                onClick={copyCode}
-                className="mt-5 w-full flex items-center justify-between gap-2 border border-dashed border-gold/40 px-4 py-3 hover:border-gold/70 transition-colors duration-200 group"
-              >
-                <span className="font-mono text-gold tracking-widest text-lg">{coupon.code}</span>
-                {copied ? (
-                  <span className="flex items-center gap-1 text-xs text-emerald-400"><HiOutlineClipboardCheck size={18} /> Copied</span>
-                ) : (
-                  <span className="flex items-center gap-1 text-xs text-white/50 group-hover:text-white/80"><HiOutlineClipboard size={18} /> Copy</span>
-                )}
-              </button>
+              {!subscribed ? (
+                <form onSubmit={submitEmail} className="mt-5 space-y-3 text-left">
+                  <label className="block text-[10px] uppercase tracking-[0.22em] text-ivory-faint">
+                    Email Address
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      required
+                      placeholder="email@example.com"
+                      className="min-w-0 flex-1 bg-dark border border-white/10 px-4 py-3 text-sm text-ivory placeholder:text-white/25 focus:outline-none focus:border-gold/60"
+                    />
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="bg-gold text-dark font-medium px-5 py-3 hover:bg-gold-300 disabled:opacity-60 transition-colors duration-200"
+                    >
+                      {submitting ? 'Saving...' : 'Get My Code'}
+                    </button>
+                  </div>
+                  {error && <p className="text-xs text-red-300">{error}</p>}
+                  <p className="text-[11px] text-white/35 leading-relaxed">
+                    Join for leather care notes, private offers, and collection previews. You can unsubscribe anytime.
+                  </p>
+                </form>
+              ) : (
+                <button
+                  onClick={copyCode}
+                  className="mt-5 w-full flex items-center justify-between gap-2 border border-dashed border-gold/40 px-4 py-3 hover:border-gold/70 transition-colors duration-200 group"
+                >
+                  <span className="font-mono text-gold tracking-widest text-lg">{coupon.code}</span>
+                  {copied ? (
+                    <span className="flex items-center gap-1 text-xs text-emerald-400"><HiOutlineClipboardCheck size={18} /> Copied</span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-xs text-white/50 group-hover:text-white/80"><HiOutlineClipboard size={18} /> Copy</span>
+                  )}
+                </button>
+              )}
 
               {remaining && (
                 <div className="mt-5 flex items-center justify-center gap-3">
@@ -142,7 +248,7 @@ export default function CouponPopup() {
                 onClick={close}
                 className="mt-6 inline-block w-full bg-gold text-dark font-medium py-3 hover:bg-gold-300 transition-colors duration-200"
               >
-                Shop Now
+                {subscribed ? 'Shop Now' : 'Browse Collection'}
               </Link>
             </div>
           </motion.div>

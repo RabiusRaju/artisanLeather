@@ -46,6 +46,7 @@ export const fetchSharedProducts = (token)      => api.get(`/share/${token}`)
 // Coupons
 export const validateCoupon = (code, subtotal) => api.post('/coupons/validate', { code, subtotal })
 export const fetchFeaturedCoupon = () => api.get('/coupons/featured')
+export const subscribeNewsletter = (data) => api.post('/newsletter/subscribe', data)
 
 // Reviews
 export const fetchProductReviews = (productId, params = {}) => api.get(`/products/${productId}/reviews`, { params })

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import SEO from '../components/SEO'
 import ShareButton from '../components/ShareButton'
 import { usePost } from '../hooks/usePost'
+import { usePosts } from '../hooks/usePosts'
 
 const CATEGORY_KEYS = {
   '': 'blog.categoryAll',
@@ -26,6 +27,98 @@ function Skeleton() {
         {[1,2,3,4,5].map(i => <div key={i} className="h-3 bg-dark-100 w-full mb-3" />)}
       </div>
     </div>
+  )
+}
+
+function RelatedBlogs({ currentPost }) {
+  const { t, i18n } = useTranslation()
+  const isAr = i18n.language?.startsWith('ar')
+  const { posts: categoryPosts, loading: categoryLoading } = usePosts(
+    currentPost.category ? { category: currentPost.category } : {}
+  )
+  const { posts: latestPosts, loading: latestLoading } = usePosts({})
+
+  const related = categoryPosts
+    .filter((item) => item.slug !== currentPost.slug)
+    .slice(0, 3)
+
+  const fallback = latestPosts
+    .filter((item) => item.slug !== currentPost.slug && !related.some((rel) => rel.slug === item.slug))
+    .slice(0, Math.max(0, 3 - related.length))
+
+  const posts = [...related, ...fallback]
+  const loading = categoryLoading || (related.length < 3 && latestLoading)
+
+  if (loading || posts.length === 0) return null
+
+  return (
+    <section className="mt-14 pt-10 border-t border-gold/15">
+      <div className="flex items-end justify-between gap-4 mb-7">
+        <div>
+          <p className="text-[10px] text-gold/50 tracking-[0.35em] uppercase mb-2">
+            {isAr ? 'اقرأ أيضا' : 'Continue Reading'}
+          </p>
+          <h2 className="font-serif text-2xl md:text-3xl text-white font-light">
+            {isAr ? 'مقالات ذات صلة' : 'Relevant Blogs'}
+          </h2>
+        </div>
+        <Link to="/blog" className="hidden sm:inline text-[10px] text-white/30 hover:text-gold tracking-[0.25em] uppercase transition-colors duration-300">
+          {t('blog.journal')} →
+        </Link>
+      </div>
+
+      <div className="grid gap-5">
+        {posts.map((item, index) => {
+          const date = item.published_at
+            ? new Date(item.published_at).toLocaleDateString(isAr ? 'ar-OM' : 'en-OM', { day: 'numeric', month: 'short', year: 'numeric' })
+            : ''
+          const category = CATEGORY_KEYS[item.category] ? t(CATEGORY_KEYS[item.category]) : item.category?.replace(/-/g, ' ')
+
+          return (
+            <motion.article
+              key={item.slug}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.35, delay: index * 0.06 }}
+              className="group"
+            >
+              <Link to={`/blog/${item.slug}`} className="grid sm:grid-cols-[160px_1fr] gap-4 p-3 border border-white/8 hover:border-gold/25 bg-dark-100/35 hover:bg-dark-100/60 transition-colors duration-300">
+                <div className="relative overflow-hidden bg-dark" style={{ aspectRatio: '16/10' }}>
+                  {item.featured_image ? (
+                    <img
+                      src={item.featured_image}
+                      alt={item.title}
+                      className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-white/15 text-4xl">✍️</div>
+                  )}
+                </div>
+
+                <div className="min-w-0 py-1">
+                  <div className="flex flex-wrap items-center gap-2 text-[9px] text-white/30 tracking-[0.2em] uppercase mb-2">
+                    {category && <span className="text-gold/65">{category}</span>}
+                    {category && date && <span>·</span>}
+                    {date && <span>{date}</span>}
+                    {item.read_time && <><span>·</span><span>{item.read_time} {t('blog.minRead')}</span></>}
+                  </div>
+                  <h3 className="font-serif text-lg md:text-xl text-white font-light leading-snug group-hover:text-gold transition-colors duration-300">
+                    {item.title}
+                  </h3>
+                  {item.excerpt && (
+                    <p className="mt-2 text-sm text-white/40 leading-relaxed line-clamp-2">{item.excerpt}</p>
+                  )}
+                  <div className="mt-3 text-[10px] text-gold tracking-[0.25em] uppercase">
+                    {t('blog.readArticle')} →
+                  </div>
+                </div>
+              </Link>
+            </motion.article>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 
@@ -134,7 +227,7 @@ export default function BlogPostPage() {
                 </>
               )}
             </div>
-            <ShareButton url={typeof window !== 'undefined' ? window.location.href : ''} title={post.title} />
+            <ShareButton url={typeof window !== 'undefined' ? window.location.href : ''} title={post.title} menuAlign="left" />
           </div>
         </div>
       </section>
@@ -179,6 +272,8 @@ export default function BlogPostPage() {
             ))}
           </div>
         )}
+
+        <RelatedBlogs currentPost={post} />
 
         {/* Back to blog */}
         <div className="mt-12 pt-8 border-t border-white/8">
