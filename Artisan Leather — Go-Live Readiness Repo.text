@@ -59,3 +59,10 @@ These don't break the build (Vite build ≠ ESLint), but are worth cleaning up a
 
 
 APP_ENV=production / APP_DEBUG=false in local .env — fine if intentional, but means error pages won't show stack traces during local debugging.
+
+Best Priority Fix
+Add aria-label to icon buttons/links in navbar.
+Fix llms.txt with Markdown H1 and important links.
+Optimize images, especially homepage/hero/product images.
+Reduce/lazy-load unused JS.
+Improve text contrast where Google flagged.

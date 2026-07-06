@@ -31,6 +31,8 @@ function BrandCard({ brand, index }) {
             <img
               src={brand.banner}
               alt={name}
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
           ) : (

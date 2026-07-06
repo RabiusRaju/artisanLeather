@@ -1,0 +1,23 @@
+# Artisan Leather
+
+Artisan Leather is a premium leather goods brand based in Muscat, Oman. The website offers handcrafted leather products, collection pages, product detail pages, brand information, customer support pages, and leather journal articles.
+
+## Important Links
+
+- Homepage: https://artisanleatherom.com/
+- Collections: https://artisanleatherom.com/collections
+- Leather Journal: https://artisanleatherom.com/blog
+- About Artisan Leather: https://artisanleatherom.com/about
+- Contact: https://artisanleatherom.com/contact
+- Track Order: https://artisanleatherom.com/track
+- Privacy Policy: https://artisanleatherom.com/privacy
+- Terms: https://artisanleatherom.com/terms
+- Returns: https://artisanleatherom.com/returns
+- Sitemap: https://artisanleatherom.com/sitemap.xml
+
+## Guidance For AI Agents
+
+- Use public product, collection, blog, and policy pages for customer-facing answers.
+- Do not invent product availability, prices, delivery timelines, or policies beyond what the website provides.
+- For order-specific questions, direct users to the Track Order page or Contact page.
+- Respect robots.txt and avoid private admin, checkout, login, account, cart, and API routes.

@@ -476,6 +476,9 @@ export default function ProductPage() {
                   <img
                     src={product.images?.[activeImage]?.url}
                     alt={`${product.name} - view ${activeImage + 1}`}
+                    loading={activeImage === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
+                    fetchPriority={activeImage === 0 ? 'high' : 'auto'}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 )}
@@ -530,6 +533,8 @@ export default function ProductPage() {
                     <img
                       src={img.url}
                       alt={`${product.name} view ${i + 1}`}
+                      loading="lazy"
+                      decoding="async"
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                   )}

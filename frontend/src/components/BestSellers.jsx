@@ -23,6 +23,8 @@ function ProductCard({ product, index }) {
         <div className="aspect-square relative overflow-hidden bg-dark-100">
           {firstImage && (
             <img src={firstImage} alt={name}
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
           )}
           {product.badge && (

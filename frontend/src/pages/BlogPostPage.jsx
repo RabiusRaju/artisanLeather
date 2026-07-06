@@ -242,6 +242,9 @@ export default function BlogPostPage() {
             <img
               src={post.featured_image}
               alt={post.title}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
               className="absolute inset-0 w-full h-full object-contain"
             />
           </div>
