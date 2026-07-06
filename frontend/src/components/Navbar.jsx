@@ -82,7 +82,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between">
 
           {/* Logo */}
-          <Link to="/" className="flex-shrink-0 flex items-center gap-3">
+          <Link to="/" className="flex-shrink-0 flex items-center gap-3" aria-label="Artisan Leather home">
             <img src="/logo-icon-transparent.png" alt="Artisan Leather" className="h-14 w-14 lg:h-16 lg:w-16 object-contain" />
             <span className="hidden lg:block font-serif leading-none">
               <span className="block text-lg tracking-[0.2em] text-gold/90 uppercase">Artisan</span>
@@ -107,6 +107,9 @@ export default function Navbar() {
             <div ref={prefsRef} className="hidden md:block relative">
               <button
                 onClick={() => setPrefsOpen(!prefsOpen)}
+                aria-expanded={prefsOpen}
+                aria-haspopup="menu"
+                aria-label={isAr ? 'تغيير اللغة والعملة' : 'Change language and currency'}
                 className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-white/40 hover:text-gold transition-colors px-2 py-1"
               >
                 <span>{isAr ? 'عربي' : 'EN'}</span>
@@ -165,7 +168,12 @@ export default function Navbar() {
             </div>
 
             {/* Wishlist */}
-            <Link to="/wishlist" className="relative text-white/50 hover:text-gold transition-colors duration-300 p-1" title={t('nav.wishlist')}>
+            <Link
+              to="/wishlist"
+              className="relative text-white/50 hover:text-gold transition-colors duration-300 p-1"
+              title={t('nav.wishlist')}
+              aria-label={t('nav.wishlist')}
+            >
               <HiHeart size={20} />
               {wishlistIds.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-gold text-dark text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
@@ -177,12 +185,17 @@ export default function Navbar() {
             {/* Account */}
             <Link to={user ? '/account' : '/login'}
               className="hidden md:block text-white/50 hover:text-gold transition-colors duration-300 p-1"
-              title={user ? user.name : 'Sign In'}>
+              title={user ? user.name : 'Sign In'}
+              aria-label={user ? 'My account' : 'Sign in'}>
               <HiUser size={20} />
             </Link>
 
             {/* Cart */}
-            <Link to="/cart" className="relative text-white/70 hover:text-gold transition-colors duration-300 p-1">
+            <Link
+              to="/cart"
+              className="relative text-white/70 hover:text-gold transition-colors duration-300 p-1"
+              aria-label={`${t('nav.cart')}${totalItems > 0 ? `, ${totalItems} ${totalItems === 1 ? 'item' : 'items'}` : ''}`}
+            >
               <motion.div animate={cartBump ? { scale: [1, 1.3, 1] } : { scale: 1 }} transition={{ duration: 0.35 }}>
                 <HiShoppingBag size={22} />
               </motion.div>
@@ -201,6 +214,9 @@ export default function Navbar() {
 
             {/* Mobile menu toggle */}
             <button className="md:hidden text-white/80 hover:text-gold transition-colors p-1"
+              type="button"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
               onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <HiX size={22} /> : <HiMenu size={22} />}
             </button>

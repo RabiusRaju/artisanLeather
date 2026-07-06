@@ -58,6 +58,8 @@ function CollectionCard({ item, index }) {
             <img
               src={item.image}
               alt={t(item.titleKey)}
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
           )}
