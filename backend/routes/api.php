@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\LegalPageController;
 use App\Http\Controllers\Api\ProductShareLinkController;
+use App\Http\Controllers\Api\NewsletterSubscriberController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
@@ -38,6 +39,7 @@ Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
     Route::get('/track/{orderNumber}', [TrackOrderController::class, 'show'])->middleware('throttle:20,1');
     Route::post('/orders',           [OrderController::class, 'store'])->middleware('throttle:10,1');
     Route::post('/contact',          [ContactController::class, 'store'])->middleware('throttle:5,1');
+    Route::post('/newsletter/subscribe', [NewsletterSubscriberController::class, 'store'])->middleware('throttle:5,1');
     Route::post('/coupons/validate', [CouponController::class, 'validateCode'])->middleware('throttle:20,1');
     Route::get('/coupons/featured',  [CouponController::class, 'featured']);
     Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);

@@ -6,11 +6,12 @@ import { FaXTwitter } from 'react-icons/fa6'
 import { useToast } from '../context/ToastContext'
 import { trackShare } from '../lib/tracking'
 
-export default function ShareButton({ url, title, className = '' }) {
+export default function ShareButton({ url, title, className = '', menuAlign = 'right' }) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const ref = useRef(null)
   const toast = useToast()
+  const menuPosition = menuAlign === 'left' ? 'left-0 origin-top-left' : 'right-0 origin-top-right'
 
   useEffect(() => {
     if (!open) return
@@ -64,7 +65,7 @@ export default function ShareButton({ url, title, className = '' }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.96 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-48 bg-dark-200 border border-gold/20 shadow-xl z-20 py-2"
+            className={`absolute ${menuPosition} mt-2 w-48 bg-dark-200 border border-gold/20 shadow-xl z-50 py-2`}
           >
             {links.map(({ label, method, icon: Icon, color, href, popup }) => (
               popup ? (

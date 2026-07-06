@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useSettings } from '../hooks/useSettings'
@@ -24,6 +24,10 @@ function injectScriptSrc(id, src) {
 export default function Analytics() {
   const s = useSettings()
   const { pathname } = useLocation()
+  const [analyticsAllowed, setAnalyticsAllowed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('al_cookie_consent') === 'accepted'
+  })
 
   const ga4     = (s['seo.google_analytics']  || '').trim()
   const gtm     = (s['seo.google_tag_manager'] || '').trim()
@@ -32,6 +36,20 @@ export default function Analytics() {
   const gsc     = (s['seo.search_console']    || '').trim()
 
   useEffect(() => {
+    const updateConsent = () => {
+      setAnalyticsAllowed(localStorage.getItem('al_cookie_consent') === 'accepted')
+    }
+    window.addEventListener('al-cookie-consent', updateConsent)
+    window.addEventListener('storage', updateConsent)
+    return () => {
+      window.removeEventListener('al-cookie-consent', updateConsent)
+      window.removeEventListener('storage', updateConsent)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!analyticsAllowed) return
+
     // ── Google Analytics 4 ───────────────────────────────────────────────
     if (ga4) {
       injectScriptSrc('ga4-loader', `https://www.googletagmanager.com/gtag/js?id=${ga4}`)
@@ -76,7 +94,7 @@ export default function Analytics() {
         })(window,document,"clarity","script","${clarity}");
       `)
     }
-  }, [ga4, gtm, pixel, clarity])
+  }, [analyticsAllowed, ga4, gtm, pixel, clarity])
 
   // ── Fire a page view on every route change (initial load + in-app nav) ──
   // SPA navigation never reloads the document, so without this, GA4/Meta only
@@ -84,9 +102,10 @@ export default function Analytics() {
   // that goes untracked. A short delay lets each page's <SEO>/Helmet title
   // commit first so page_title isn't stale from the previous page.
   useEffect(() => {
+    if (!analyticsAllowed) return
     const timer = setTimeout(() => trackPageView(pathname, document.title), 50)
     return () => clearTimeout(timer)
-  }, [pathname])
+  }, [analyticsAllowed, pathname])
 
   // Google Search Console only needs a meta tag — no script
   return gsc ? (
