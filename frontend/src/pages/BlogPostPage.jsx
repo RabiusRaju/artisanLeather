@@ -52,13 +52,13 @@ function RelatedBlogs({ currentPost }) {
   if (loading || posts.length === 0) return null
 
   return (
-    <section className="mt-14 pt-10 border-t border-gold/15">
-      <div className="flex items-end justify-between gap-4 mb-7">
+    <section className="mt-16 pt-12 border-t border-gold/15">
+      <div className="flex items-end justify-between gap-4 mb-8">
         <div>
           <p className="text-[10px] text-gold/50 tracking-[0.35em] uppercase mb-2">
             {isAr ? 'اقرأ أيضا' : 'Continue Reading'}
           </p>
-          <h2 className="font-serif text-2xl md:text-3xl text-white font-light">
+          <h2 className="font-serif text-3xl md:text-4xl text-white font-light">
             {isAr ? 'مقالات ذات صلة' : 'Relevant Blogs'}
           </h2>
         </div>
@@ -67,7 +67,7 @@ function RelatedBlogs({ currentPost }) {
         </Link>
       </div>
 
-      <div className="grid gap-5">
+      <div className="grid md:grid-cols-3 gap-5">
         {posts.map((item, index) => {
           const date = item.published_at
             ? new Date(item.published_at).toLocaleDateString(isAr ? 'ar-OM' : 'en-OM', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -81,10 +81,10 @@ function RelatedBlogs({ currentPost }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-80px' }}
               transition={{ duration: 0.35, delay: index * 0.06 }}
-              className="group"
+              className="group h-full"
             >
-              <Link to={`/blog/${item.slug}`} className="grid sm:grid-cols-[160px_1fr] gap-4 p-3 border border-white/8 hover:border-gold/25 bg-dark-100/35 hover:bg-dark-100/60 transition-colors duration-300">
-                <div className="relative overflow-hidden bg-dark" style={{ aspectRatio: '16/10' }}>
+              <Link to={`/blog/${item.slug}`} className="flex h-full flex-col border border-white/8 hover:border-gold/30 bg-dark-100/35 hover:bg-dark-100/65 transition-colors duration-300">
+                <div className="relative overflow-hidden bg-dark border-b border-white/8" style={{ aspectRatio: '16/10' }}>
                   {item.featured_image ? (
                     <img
                       src={item.featured_image}
@@ -94,22 +94,25 @@ function RelatedBlogs({ currentPost }) {
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-white/15 text-4xl">✍️</div>
                   )}
+                  {category && (
+                    <span className="absolute left-3 top-3 bg-dark/80 border border-gold/25 px-2 py-1 text-[8px] text-gold tracking-[0.18em] uppercase backdrop-blur-sm">
+                      {category}
+                    </span>
+                  )}
                 </div>
 
-                <div className="min-w-0 py-1">
+                <div className="flex flex-1 flex-col p-4">
                   <div className="flex flex-wrap items-center gap-2 text-[9px] text-white/30 tracking-[0.2em] uppercase mb-2">
-                    {category && <span className="text-gold/65">{category}</span>}
-                    {category && date && <span>·</span>}
                     {date && <span>{date}</span>}
                     {item.read_time && <><span>·</span><span>{item.read_time} {t('blog.minRead')}</span></>}
                   </div>
-                  <h3 className="font-serif text-lg md:text-xl text-white font-light leading-snug group-hover:text-gold transition-colors duration-300">
+                  <h3 className="font-serif text-lg text-white font-light leading-snug group-hover:text-gold transition-colors duration-300">
                     {item.title}
                   </h3>
                   {item.excerpt && (
-                    <p className="mt-2 text-sm text-white/40 leading-relaxed line-clamp-2">{item.excerpt}</p>
+                    <p className="mt-2 text-sm text-white/40 leading-relaxed line-clamp-3">{item.excerpt}</p>
                   )}
-                  <div className="mt-3 text-[10px] text-gold tracking-[0.25em] uppercase">
+                  <div className="mt-auto pt-4 text-[10px] text-gold tracking-[0.25em] uppercase">
                     {t('blog.readArticle')} →
                   </div>
                 </div>
