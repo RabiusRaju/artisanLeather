@@ -26,9 +26,11 @@ class BrandController extends Controller
                 'logo'        => $b->logo
                     ? (str_starts_with($b->logo, 'http') ? $b->logo : asset('storage/' . $b->logo))
                     : null,
+                'logo_alt'    => $b->logo_alt ?: (($locale === 'ar' && $b->name_ar ? $b->name_ar : $b->name) . ' logo | Artisan Leather Oman'),
                 'banner'      => $b->banner
                     ? (str_starts_with($b->banner, 'http') ? $b->banner : asset('storage/' . $b->banner))
                     : null,
+                'banner_alt'  => $b->banner_alt ?: (($locale === 'ar' && $b->name_ar ? $b->name_ar : $b->name) . ' collection | Artisan Leather Oman'),
                 'is_featured' => $b->is_featured,
                 'products_count' => $b->products_count,
             ]);

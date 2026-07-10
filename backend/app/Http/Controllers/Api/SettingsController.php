@@ -79,6 +79,7 @@ class SettingsController extends Controller
 
             // Homepage Story
             'home.story.image'               => !empty($settings['home.story.image']) ? asset('storage/' . $settings['home.story.image']) : null,
+            'home.story.image_alt'           => $settings['home.story.image_alt']      ?? 'Artisan Leather handcrafted leather workshop story',
             'home.story.eyebrow'             => $settings['home.story.eyebrow']         ?? 'Our Story',
             'home.story.title1'              => $settings['home.story.title1']          ?? 'Crafted with Passion,',
             'home.story.title2'              => $settings['home.story.title2']          ?? 'Built to Last',
@@ -105,6 +106,7 @@ class SettingsController extends Controller
 
             // About — Story
             'about.story.image'              => !empty($settings['about.story.image']) ? asset('storage/' . $settings['about.story.image']) : null,
+            'about.story.image_alt'          => $settings['about.story.image_alt']          ?? 'Artisan Leather craftsmanship and workshop detail',
             'about.story.eyebrow'            => $settings['about.story.eyebrow']            ?? 'Our Story',
             'about.story.headline'           => $settings['about.story.headline']           ?? 'Born from a Love',
             'about.story.headline_accent'    => $settings['about.story.headline_accent']    ?? 'of the Craft',
@@ -137,14 +139,17 @@ class SettingsController extends Controller
             'about.material.1.subtitle'      => $settings['about.material.1.subtitle'] ?? 'The Pinnacle of Leather',
             'about.material.1.desc'          => $settings['about.material.1.desc']     ?? 'The outermost layer of the hide — untouched by sanding or buffing. Full grain retains every natural mark, developing a rich unique patina over decades.',
             'about.material.1.image'         => !empty($settings['about.material.1.image']) ? asset('storage/' . $settings['about.material.1.image']) : null,
+            'about.material.1.image_alt'     => $settings['about.material.1.image_alt'] ?? 'Full grain leather texture used by Artisan Leather Oman',
             'about.material.2.name'          => $settings['about.material.2.name']     ?? 'Vegetable Tanned',
             'about.material.2.subtitle'      => $settings['about.material.2.subtitle'] ?? 'Slow-Made & Sustainable',
             'about.material.2.desc'          => $settings['about.material.2.desc']     ?? 'Tanned using plant extracts — bark, leaves, roots — over 30–60 days. The result is leather with remarkable firmness that softens and deepens with age.',
             'about.material.2.image'         => !empty($settings['about.material.2.image']) ? asset('storage/' . $settings['about.material.2.image']) : null,
+            'about.material.2.image_alt'     => $settings['about.material.2.image_alt'] ?? 'Vegetable tanned leather material for handcrafted leather goods',
             'about.material.3.name'          => $settings['about.material.3.name']     ?? 'Italian Calfskin',
             'about.material.3.subtitle'      => $settings['about.material.3.subtitle'] ?? 'Silken & Refined',
             'about.material.3.desc'          => $settings['about.material.3.desc']     ?? 'Sourced from the finest Italian tanneries. Calfskin offers an unmatched surface — fine-grained, almost silk-like, ideal for slim wallets and dress pieces.',
             'about.material.3.image'         => !empty($settings['about.material.3.image']) ? asset('storage/' . $settings['about.material.3.image']) : null,
+            'about.material.3.image_alt'     => $settings['about.material.3.image_alt'] ?? 'Italian calfskin leather material used in Artisan Leather products',
 
             // About — Values
             'about.value.section_eyebrow'    => $settings['about.value.section_eyebrow'] ?? 'What We Stand For',

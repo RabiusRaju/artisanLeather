@@ -290,6 +290,12 @@ class PostResource extends Resource
                                 ->maxSize(5120)
                                 ->helperText('Recommended: 1200×630px (16:9). Shown in blog listing and social shares. Max 5MB.')
                                 ->columnSpanFull(),
+                            TextInput::make('featured_image_alt')
+                                ->label('Cover Image ALT Text')
+                                ->placeholder('e.g. Turkish leather industry marketing event speaker portrait')
+                                ->helperText('Describe the cover image for Google Images and accessibility.')
+                                ->maxLength(125)
+                                ->columnSpanFull(),
                         ]),
 
                 ]),

@@ -37,6 +37,7 @@ function WishlistCard({ product }) {
   const isAr = i18n.language === 'ar'
   const name = isAr && product.name_ar ? product.name_ar : product.name
   const firstImage = product.images?.[0]?.url
+  const firstImageAlt = product.images?.[0]?.alt_text || name
 
   return (
     <motion.div
@@ -60,7 +61,7 @@ function WishlistCard({ product }) {
           {firstImage && (
             <img
               src={firstImage}
-              alt={name}
+              alt={firstImageAlt}
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
           )}

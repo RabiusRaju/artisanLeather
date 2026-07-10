@@ -114,6 +114,11 @@ class BrandResource extends Resource
                             ->maxSize(2048)
                             ->helperText('Square logo — min 400×400px, max 2MB')
                             ->columnSpan(1),
+                        TextInput::make('logo_alt')
+                            ->label('Logo ALT Text')
+                            ->placeholder('e.g. Heritage Collection logo by Artisan Leather Oman')
+                            ->maxLength(125)
+                            ->columnSpan(1),
                         FileUpload::make('banner')
                             ->label('Banner Image')
                             ->image()
@@ -124,6 +129,11 @@ class BrandResource extends Resource
                             ->disk('public')
                             ->maxSize(5120)
                             ->helperText('Wide banner for collection page — 16:9 or 3:1 ratio, max 5MB')
+                            ->columnSpan(1),
+                        TextInput::make('banner_alt')
+                            ->label('Banner ALT Text')
+                            ->placeholder('e.g. Heritage Collection leather goods banner by Artisan Leather Oman')
+                            ->maxLength(125)
                             ->columnSpan(1),
                     ])->columns(2),
                 ]),

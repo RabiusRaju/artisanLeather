@@ -47,7 +47,7 @@ function MaterialCard({ mat, index }) {
           <>
             <img
               src={mat.image}
-              alt={mat.name}
+              alt={mat.imageAlt || mat.name}
               loading="lazy"
               decoding="async"
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -135,6 +135,7 @@ function StorySection() {
   const p2             = s['about.story.p2']              || 'The first workshop was a single room in Muscat. Three craftsmen. One set of tools. No shortcuts. That ethos has never changed, even as the brand has grown across the GCC.'
   const p3             = s['about.story.p3']              || 'Today, every piece that leaves our workshop is still inspected by hand, still stitched by hand, and still conditioned by hand — because the day we stop caring is the day we stop being Artisan Leather.'
   const storyImage     = s['about.story.image']
+  const storyImageAlt  = s['about.story.image_alt']       || 'Artisan Leather craftsmanship and workshop detail'
 
   return (
     <section className="py-28 px-6 lg:px-12 max-w-7xl mx-auto">
@@ -148,7 +149,7 @@ function StorySection() {
         >
           <div className="relative overflow-hidden" style={{ aspectRatio: '4/5', background: storyImage ? undefined : 'linear-gradient(135deg, #3A2210, #240F06, #160E06)' }}>
             {storyImage ? (
-              <img src={storyImage} alt="Artisan Leather craftsmanship" className="w-full h-full object-cover" />
+              <img src={storyImage} alt={storyImageAlt} className="w-full h-full object-cover" />
             ) : (
               <>
                 <div className="absolute inset-8 border border-dashed border-gold/8" />
@@ -251,9 +252,9 @@ export default function About() {
   ]
 
   const materials = [
-    { name: s['about.material.1.name'] || 'Full Grain',       subtitle: s['about.material.1.subtitle'] || 'The Pinnacle of Leather',   desc: s['about.material.1.desc'] || 'The outermost layer of the hide — untouched by sanding or buffing. Full grain retains every natural mark, developing a rich unique patina over decades.',   image: s['about.material.1.image'], gradient: 'linear-gradient(135deg, #5A2C10, #3A1A08, #1E0C04)' },
-    { name: s['about.material.2.name'] || 'Vegetable Tanned', subtitle: s['about.material.2.subtitle'] || 'Slow-Made & Sustainable',    desc: s['about.material.2.desc'] || 'Tanned using plant extracts — bark, leaves, roots — over 30–60 days. The result is leather with remarkable firmness that softens and deepens with age.',    image: s['about.material.2.image'], gradient: 'linear-gradient(135deg, #3D2010, #261408, #160A04)' },
-    { name: s['about.material.3.name'] || 'Italian Calfskin', subtitle: s['about.material.3.subtitle'] || 'Silken & Refined',           desc: s['about.material.3.desc'] || 'Sourced from the finest Italian tanneries. Calfskin offers an unmatched surface — fine-grained, almost silk-like, ideal for slim wallets and dress pieces.',    image: s['about.material.3.image'], gradient: 'linear-gradient(135deg, #2A1A0A, #1A1006, #0C0803)' },
+    { name: s['about.material.1.name'] || 'Full Grain',       subtitle: s['about.material.1.subtitle'] || 'The Pinnacle of Leather',   desc: s['about.material.1.desc'] || 'The outermost layer of the hide — untouched by sanding or buffing. Full grain retains every natural mark, developing a rich unique patina over decades.',   image: s['about.material.1.image'], imageAlt: s['about.material.1.image_alt'], gradient: 'linear-gradient(135deg, #5A2C10, #3A1A08, #1E0C04)' },
+    { name: s['about.material.2.name'] || 'Vegetable Tanned', subtitle: s['about.material.2.subtitle'] || 'Slow-Made & Sustainable',    desc: s['about.material.2.desc'] || 'Tanned using plant extracts — bark, leaves, roots — over 30–60 days. The result is leather with remarkable firmness that softens and deepens with age.',    image: s['about.material.2.image'], imageAlt: s['about.material.2.image_alt'], gradient: 'linear-gradient(135deg, #3D2010, #261408, #160A04)' },
+    { name: s['about.material.3.name'] || 'Italian Calfskin', subtitle: s['about.material.3.subtitle'] || 'Silken & Refined',           desc: s['about.material.3.desc'] || 'Sourced from the finest Italian tanneries. Calfskin offers an unmatched surface — fine-grained, almost silk-like, ideal for slim wallets and dress pieces.',    image: s['about.material.3.image'], imageAlt: s['about.material.3.image_alt'], gradient: 'linear-gradient(135deg, #2A1A0A, #1A1006, #0C0803)' },
   ]
 
   const values = [

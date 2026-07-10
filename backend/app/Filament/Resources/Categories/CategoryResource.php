@@ -38,6 +38,11 @@ class CategoryResource extends Resource
             TextInput::make('name_ar')->label('Name (Arabic)'),
             TextInput::make('slug')->required()->unique(ignoreRecord: true),
             FileUpload::make('image')->image()->directory('categories')->disk('public')->visibility('public'),
+            TextInput::make('image_alt')
+                ->label('Image ALT Text')
+                ->placeholder('e.g. Handcrafted leather wallets collection by Artisan Leather Oman')
+                ->helperText('Describe the category image for SEO and screen readers.')
+                ->maxLength(125),
             TextInput::make('sort_order')->numeric()->default(0),
             Toggle::make('is_active')->default(true),
         ]);

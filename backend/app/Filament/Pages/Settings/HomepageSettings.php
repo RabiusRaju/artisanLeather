@@ -229,6 +229,12 @@ class HomepageSettings extends Page implements HasSchemas
                                         ->maxSize(5120)
                                         ->columnSpanFull(),
 
+                                    TextInput::make('home.story.image_alt')
+                                        ->label('Story Image ALT Text')
+                                        ->placeholder('e.g. Artisan Leather craftsman hand-stitching a leather wallet')
+                                        ->maxLength(125)
+                                        ->columnSpanFull(),
+
                                     TextInput::make('home.story.eyebrow')
                                         ->label('Eyebrow')
                                         ->placeholder('Our Story')

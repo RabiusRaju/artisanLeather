@@ -55,6 +55,7 @@ function AccordionItem({ title, children, defaultOpen = false }) {
 function RelatedCard({ product, index }) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-40px' })
+  const firstImageAlt = product.images?.[0]?.alt_text || product.name
 
   return (
     <motion.div
@@ -67,7 +68,7 @@ function RelatedCard({ product, index }) {
       <Link to={`/product/${product.slug}`}>
         <div className="aspect-square relative overflow-hidden bg-dark-100" style={{ background: 'linear-gradient(160deg, #2A1A08, #1A1008)' }}>
           {product.images?.[0]?.url && (
-            <img src={product.images[0].url} alt={product.name}
+            <img src={product.images[0].url} alt={firstImageAlt}
               className="absolute inset-0 w-full h-full object-cover" />
           )}
           {product.badge && product.badge !== 'null' && (
@@ -475,7 +476,7 @@ export default function ProductPage() {
                 {product.images?.[activeImage] && (
                   <img
                     src={product.images?.[activeImage]?.url}
-                    alt={`${product.name} - view ${activeImage + 1}`}
+                    alt={product.images?.[activeImage]?.alt_text || `${product.name} - view ${activeImage + 1}`}
                     loading={activeImage === 0 ? 'eager' : 'lazy'}
                     decoding="async"
                     fetchPriority={activeImage === 0 ? 'high' : 'auto'}
@@ -532,7 +533,7 @@ export default function ProductPage() {
                   {product.images?.[i] && (
                     <img
                       src={img.url}
-                      alt={`${product.name} view ${i + 1}`}
+                      alt={img.alt_text || `${product.name} view ${i + 1}`}
                       loading="lazy"
                       decoding="async"
                       className="absolute inset-0 w-full h-full object-cover"

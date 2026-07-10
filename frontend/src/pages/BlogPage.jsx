@@ -38,7 +38,7 @@ function PostCard({ post, index }) {
           {post.featured_image ? (
             <img
               src={post.featured_image}
-              alt={post.title}
+              alt={post.featured_image_alt || post.title}
               loading={index < 2 ? 'eager' : 'lazy'}
               decoding="async"
               className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"

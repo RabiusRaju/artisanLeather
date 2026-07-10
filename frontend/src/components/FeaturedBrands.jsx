@@ -30,7 +30,7 @@ function BrandCard({ brand, index }) {
           {brand.banner ? (
             <img
               src={brand.banner}
-              alt={name}
+              alt={brand.banner_alt || name}
               loading="lazy"
               decoding="async"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"

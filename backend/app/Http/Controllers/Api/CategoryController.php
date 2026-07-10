@@ -25,6 +25,7 @@ class CategoryController extends Controller
                 'image' => $c->image
                     ? (str_starts_with($c->image, 'http') ? $c->image : asset('storage/' . $c->image))
                     : null,
+                'image_alt' => $c->image_alt ?: (($locale === 'ar' && $c->name_ar ? $c->name_ar : $c->name) . ' | Artisan Leather Oman'),
             ]);
 
         return response()->json(['data' => $categories]);
