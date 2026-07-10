@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom'
 import { motion, useInView } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useBrands } from '../hooks/useBrands'
+import { useSettings } from '../hooks/useSettings'
 
-function BrandCard({ brand, index }) {
+function BrandCard({ brand, index, cardCta, piecesLabel }) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-60px' })
   const { i18n } = useTranslation()
@@ -52,9 +53,11 @@ function BrandCard({ brand, index }) {
           <div className="absolute bottom-4 right-4 w-6 h-6 border-b border-r border-gold/30 group-hover:border-gold/70 transition-colors duration-500" />
 
           {/* Product count badge */}
-          <div className="absolute top-5 right-5 bg-dark/80 border border-gold/30 text-gold/80 text-[8px] tracking-[0.25em] uppercase px-2.5 py-1 backdrop-blur-sm z-10">
-            {brand.products_count} pieces
-          </div>
+          {piecesLabel && (
+            <div className="absolute top-5 right-5 bg-dark/80 border border-gold/30 text-gold/80 text-[8px] tracking-[0.25em] uppercase px-2.5 py-1 backdrop-blur-sm z-10">
+              {brand.products_count} {piecesLabel}
+            </div>
+          )}
 
           {/* Bottom text */}
           <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
@@ -67,10 +70,12 @@ function BrandCard({ brand, index }) {
                 {tagline}
               </p>
             )}
-            <div className="flex items-center gap-2 mt-3 text-gold/70 text-[10px] tracking-[0.25em] uppercase group-hover:text-gold transition-colors duration-300">
-              <span>Explore</span>
-              <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
-            </div>
+            {cardCta && (
+              <div className="flex items-center gap-2 mt-3 text-gold/70 text-[10px] tracking-[0.25em] uppercase group-hover:text-gold transition-colors duration-300">
+                <span>{cardCta}</span>
+                <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
+              </div>
+            )}
           </div>
         </div>
       </Link>
@@ -81,11 +86,16 @@ function BrandCard({ brand, index }) {
 export default function FeaturedBrands() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true })
-  const { t, i18n } = useTranslation()
-  const isAr = i18n.language === 'ar'
+  const s = useSettings()
   const { brands, loading } = useBrands()
 
   const featured = brands.filter(b => b.is_featured)
+  const eyebrow = s['home.brands.eyebrow'] || ''
+  const title = s['home.brands.title'] || ''
+  const viewAllLabel = s['home.brands.view_all_label'] || ''
+  const viewAllUrl = s['home.brands.view_all_url'] || ''
+  const cardCta = s['home.brands.card_cta'] || ''
+  const piecesLabel = s['home.brands.pieces_label'] || ''
 
   // Don't render if no featured brands
   if (!loading && featured.length === 0) return null
@@ -102,20 +112,26 @@ export default function FeaturedBrands() {
           className="flex items-end justify-between"
         >
           <div>
-            <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-4">
-              {isAr ? 'مجموعاتنا' : 'Our Collections'}
-            </p>
-            <h2 className="font-serif text-4xl md:text-5xl text-white font-light">
-              {isAr ? 'اكتشف خطوطنا' : 'Explore Our Lines'}
-            </h2>
+            {eyebrow && (
+              <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-4">
+                {eyebrow}
+              </p>
+            )}
+            {title && (
+              <h2 className="font-serif text-4xl md:text-5xl text-white font-light">
+                {title}
+              </h2>
+            )}
           </div>
-          <Link
-            to="/collections"
-            className="hidden md:flex items-center gap-2 text-gold/60 text-[10px] tracking-[0.3em] uppercase hover:text-gold transition-colors group"
-          >
-            <span>{t('common.viewAll')}</span>
-            <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
-          </Link>
+          {viewAllLabel && viewAllUrl && (
+            <Link
+              to={viewAllUrl}
+              className="hidden md:flex items-center gap-2 text-gold/60 text-[10px] tracking-[0.3em] uppercase hover:text-gold transition-colors group"
+            >
+              <span>{viewAllLabel}</span>
+              <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
+            </Link>
+          )}
         </motion.div>
         <div className="w-16 h-px bg-gold mt-6" />
       </div>
@@ -133,7 +149,7 @@ export default function FeaturedBrands() {
         <div className="px-6 lg:px-12 max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             {featured.map((brand, i) => (
-              <BrandCard key={brand.id} brand={brand} index={i} />
+              <BrandCard key={brand.id} brand={brand} index={i} cardCta={cardCta} piecesLabel={piecesLabel} />
             ))}
           </div>
         </div>

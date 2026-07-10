@@ -8,16 +8,18 @@ export default function Stats() {
   const s = useSettings()
 
   const stats = [
-    { value: s['stats.1.value'] || '100%', label: s['stats.1.label'] || 'Handcrafted' },
-    { value: s['stats.2.value'] || '15+',  label: s['stats.2.label'] || 'Years of Excellence' },
-    { value: s['stats.3.value'] || '50+',  label: s['stats.3.label'] || 'Unique Designs' },
-    { value: s['stats.4.value'] || 'GCC',  label: s['stats.4.label'] || 'Wide Delivery' },
-  ]
+    { value: s['stats.1.value'], label: s['stats.1.label'] },
+    { value: s['stats.2.value'], label: s['stats.2.label'] },
+    { value: s['stats.3.value'], label: s['stats.3.label'] },
+    { value: s['stats.4.value'], label: s['stats.4.label'] },
+  ].filter(stat => stat.value && stat.label)
+
+  if (stats.length === 0) return null
 
   return (
     <section ref={ref} className="py-20 border-y border-gold/10">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="grid grid-cols-2 md:grid-cols-4">
+        <div className={`grid grid-cols-2 ${stats.length >= 4 ? 'md:grid-cols-4' : stats.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
           {stats.map((stat, i) => (
             <motion.div
               key={i}

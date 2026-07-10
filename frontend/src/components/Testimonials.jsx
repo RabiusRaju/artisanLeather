@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { fetchTestimonials } from '../services/api'
+import { useSettings } from '../hooks/useSettings'
 
 function Stars({ rating }) {
   return (
@@ -26,8 +27,11 @@ export default function Testimonials() {
   const [current, setCurrent]           = useState(0)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true })
-  const { t: translate, i18n } = useTranslation()
+  const { i18n } = useTranslation()
+  const s = useSettings()
   const isAr = i18n.language?.startsWith('ar')
+  const eyebrow = s['home.testimonials.eyebrow'] || ''
+  const title = s['home.testimonials.title'] || ''
 
   useEffect(() => {
     fetchTestimonials()
@@ -56,16 +60,18 @@ export default function Testimonials() {
     <section ref={ref} className="py-24 bg-dark-100">
       <div className="max-w-4xl mx-auto px-6 lg:px-12 text-center">
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
-          className="mb-16"
-        >
-          <p className="text-gold/70 tracking-[0.5em] uppercase text-[10px] mb-4">{translate('home.testimonials.eyebrow')}</p>
-          <h2 className="font-serif text-4xl text-white font-light">{translate('home.testimonials.title')}</h2>
-          <div className="w-16 h-px bg-gold mx-auto mt-6" />
-        </motion.div>
+        {(eyebrow || title) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7 }}
+            className="mb-16"
+          >
+            {eyebrow && <p className="text-gold/70 tracking-[0.5em] uppercase text-[10px] mb-4">{eyebrow}</p>}
+            {title && <h2 className="font-serif text-4xl text-white font-light">{title}</h2>}
+            <div className="w-16 h-px bg-gold mx-auto mt-6" />
+          </motion.div>
+        )}
 
         {/* Quote card */}
         <div className="min-h-[280px] flex flex-col justify-center">

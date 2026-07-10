@@ -4,8 +4,9 @@ import { motion, useInView } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useCurrency }  from '../context/CurrencyContext'
 import { useProducts }  from '../hooks/useProducts'
+import { useSettings } from '../hooks/useSettings'
 
-function ProductCard({ product, index }) {
+function ProductCard({ product, index, cardCta }) {
   const ref      = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-50px' })
   const { format }  = useCurrency()
@@ -30,14 +31,16 @@ function ProductCard({ product, index }) {
           )}
           {product.badge && (
             <div className="absolute top-3 left-3 z-10 bg-gold text-dark text-[8px] tracking-[0.2em] uppercase px-2.5 py-0.5 font-semibold">
-              {product.badge === 'bestseller' ? 'Bestseller' : 'New'}
+              {product.badge}
             </div>
           )}
           <div className="absolute top-2.5 left-2.5 w-4 h-4 border-t border-l border-gold/25 group-hover:border-gold/70 transition-colors duration-400" />
           <div className="absolute bottom-2.5 right-2.5 w-4 h-4 border-b border-r border-gold/25 group-hover:border-gold/70 transition-colors duration-400" />
-          <div className="absolute inset-0 bg-dark/55 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-400">
-            <span className="border border-gold text-gold px-5 py-2 text-[10px] tracking-[0.3em] uppercase">View Details</span>
-          </div>
+          {cardCta && (
+            <div className="absolute inset-0 bg-dark/55 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-400">
+              <span className="border border-gold text-gold px-5 py-2 text-[10px] tracking-[0.3em] uppercase">{cardCta}</span>
+            </div>
+          )}
         </div>
         <div className="mt-4 px-0.5">
           <p className="text-white/35 text-[10px] tracking-[0.3em] uppercase mb-1.5">{product.category?.name}</p>
@@ -52,9 +55,16 @@ function ProductCard({ product, index }) {
 export default function BestSellers() {
   const ref      = useRef(null)
   const isInView = useInView(ref, { once: true })
-  const { t }    = useTranslation()
+  const s        = useSettings()
 
   const { products, loading } = useProducts({ featured: 1 })
+  const eyebrow = s['home.products.eyebrow'] || ''
+  const title = s['home.products.title'] || ''
+  const viewAllLabel = s['home.products.view_all_label'] || ''
+  const viewAllUrl = s['home.products.view_all_url'] || ''
+  const cardCta = s['home.products.card_cta'] || ''
+
+  if (!loading && products.length === 0) return null
 
   return (
     <section className="py-24 px-6 lg:px-12 max-w-7xl mx-auto">
@@ -63,14 +73,16 @@ export default function BestSellers() {
         transition={{ duration: 0.7 }}
         className="flex items-end justify-between mb-16">
         <div>
-          <p className="text-gold/70 tracking-[0.5em] uppercase text-[10px] mb-4">{t('common.bestseller')}</p>
-          <h2 className="font-serif text-4xl md:text-5xl text-white font-light">{t('product.relatedTitle')}</h2>
+          {eyebrow && <p className="text-gold/70 tracking-[0.5em] uppercase text-[10px] mb-4">{eyebrow}</p>}
+          {title && <h2 className="font-serif text-4xl md:text-5xl text-white font-light">{title}</h2>}
         </div>
-        <Link to="/collections"
-          className="hidden md:flex items-center gap-3 text-gold text-[10px] tracking-[0.3em] uppercase group">
-          <span>{t('common.viewAll')}</span>
-          <span className="transition-all duration-300 group-hover:translate-x-1">→</span>
-        </Link>
+        {viewAllLabel && viewAllUrl && (
+          <Link to={viewAllUrl}
+            className="hidden md:flex items-center gap-3 text-gold text-[10px] tracking-[0.3em] uppercase group">
+            <span>{viewAllLabel}</span>
+            <span className="transition-all duration-300 group-hover:translate-x-1">→</span>
+          </Link>
+        )}
       </motion.div>
 
       {loading ? (
@@ -87,7 +99,7 @@ export default function BestSellers() {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-          {products.slice(0, 4).map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+          {products.slice(0, 4).map((p, i) => <ProductCard key={p.id} product={p} index={i} cardCta={cardCta} />)}
         </div>
       )}
     </section>
