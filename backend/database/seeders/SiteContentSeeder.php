@@ -44,6 +44,26 @@ class SiteContentSeeder extends Seeder
             'stats.4.label'               => 'Wide Delivery',
             'stats.4.label_ar'            => 'توصيل واسع',
 
+            // Homepage — Story
+            'home.story.eyebrow'           => 'Our Story',
+            'home.story.eyebrow_ar'        => 'قصتنا',
+            'home.story.title1'            => 'Crafted with Passion,',
+            'home.story.title1_ar'         => 'صُنعت بشغف،',
+            'home.story.title2'            => 'Built to Last',
+            'home.story.title2_ar'         => 'وصُممت لتدوم',
+            'home.story.p1'                => 'At Artisan Leather, every piece begins with a single vision — to create something that transcends the ordinary. Founded in the heart of Oman, we source only the finest full-grain leathers from around the world.',
+            'home.story.p1_ar'             => 'في آرتيزان ليذر، تبدأ كل قطعة برؤية واحدة — ابتكار شيء يتجاوز العادي. من قلب عُمان، نختار أجود أنواع الجلود الكاملة من حول العالم.',
+            'home.story.p2'                => 'Each stitch is placed by hand. Each edge is burnished to perfection. We believe that luxury is not just in the material — it is in the mastery of those who shape it.',
+            'home.story.p2_ar'             => 'كل غرزة تُنفذ يدوياً، وكل حافة تُصقل بعناية. نؤمن أن الفخامة ليست في الخامة فقط، بل في مهارة الأيدي التي تشكلها.',
+            'home.story.years'             => 'Building for the Future',
+            'home.story.years_ar'          => 'نبني للمستقبل',
+            'home.story.years_label'       => 'Years of Craft',
+            'home.story.years_label_ar'    => 'أعوام من الحرفة',
+            'home.story.button_label'      => 'Discover Our Heritage',
+            'home.story.button_label_ar'   => 'اكتشف إرثنا',
+            'home.story.button_url'        => '/about',
+            'home.story.button_url_ar'     => '/about?lang=ar',
+
             // Footer
             'footer.tagline'              => 'Premium handcrafted leather goods. Made in Oman. Delivered across the GCC.',
             'footer.tagline_ar'           => 'منتجات جلدية فاخرة مصنوعة يدوياً. صُنعت في عُمان. تُوصَّل إلى دول الخليج.',
