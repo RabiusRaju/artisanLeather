@@ -49,6 +49,7 @@ class PostController extends Controller
                     ? $post->featured_image
                     : asset('storage/' . $post->featured_image))
                 : null,
+            'featured_image_alt' => $post->featured_image_alt ?: (($isAr && $post->title_ar ? $post->title_ar : $post->title) . ' | Artisan Leather Journal'),
             'category'        => $post->category,
             'tags'            => $post->tags ?? [],
             'author'          => $post->author,

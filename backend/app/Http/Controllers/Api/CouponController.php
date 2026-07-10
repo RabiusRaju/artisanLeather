@@ -54,6 +54,7 @@ class CouponController extends Controller
                 'title'       => $coupon->popup_title,
                 'description' => $coupon->description,
                 'image'       => $coupon->popup_image ? asset('storage/' . $coupon->popup_image) : null,
+                'image_alt'   => $coupon->popup_image_alt ?: (($coupon->popup_title ?: $coupon->description ?: $coupon->code) . ' | Artisan Leather Oman'),
                 'expires_at'  => $coupon->expires_at?->toIso8601String(),
             ],
         ]);

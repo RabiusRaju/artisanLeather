@@ -6,6 +6,7 @@ import { useSettings } from '../hooks/useSettings'
 export default function Story() {
   const s = useSettings()
   const image = s['home.story.image']
+  const imageAlt = s['home.story.image_alt'] || 'Artisan Leather handcrafted leather workshop story'
   const eyebrow = s['home.story.eyebrow'] || 'Our Story'
   const title1 = s['home.story.title1'] || 'Crafted with Passion,'
   const title2 = s['home.story.title2'] || 'Built to Last'
@@ -34,7 +35,7 @@ export default function Story() {
               {image ? (
                 <img
                   src={image}
-                  alt={title1}
+                  alt={imageAlt}
                   loading="lazy"
                   decoding="async"
                   className="absolute inset-0 h-full w-full object-cover"

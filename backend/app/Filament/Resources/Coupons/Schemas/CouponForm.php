@@ -98,6 +98,13 @@ class CouponForm
                             ->visible(fn (callable $get) => (bool) $get('show_as_popup'))
                             ->helperText('Optional. If left empty, the popup falls back to a clean text-only design.')
                             ->columnSpanFull(),
+
+                        TextInput::make('popup_image_alt')
+                            ->label('Banner Image ALT Text')
+                            ->placeholder('e.g. Artisan Leather newsletter discount leather accessories banner')
+                            ->visible(fn (callable $get) => (bool) $get('show_as_popup'))
+                            ->maxLength(125)
+                            ->columnSpanFull(),
                     ]),
             ]);
     }

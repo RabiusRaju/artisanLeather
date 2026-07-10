@@ -13,6 +13,7 @@ function ProductCard({ product, index }) {
   const isAr        = i18n.language === 'ar'
   const name        = isAr && product.name_ar ? product.name_ar : product.name
   const firstImage  = product.images?.[0]?.url
+  const firstImageAlt = product.images?.[0]?.alt_text || name
 
   return (
     <motion.div ref={ref} initial={{ opacity: 0, y: 30 }}
@@ -22,7 +23,7 @@ function ProductCard({ product, index }) {
       <Link to={`/product/${product.slug}`}>
         <div className="aspect-square relative overflow-hidden bg-dark-100">
           {firstImage && (
-            <img src={firstImage} alt={name}
+            <img src={firstImage} alt={firstImageAlt}
               loading="lazy"
               decoding="async"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />

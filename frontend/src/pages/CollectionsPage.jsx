@@ -43,6 +43,7 @@ function ProductCard({ product, index }) {
   const isAr         = i18n.language === 'ar'
   const name         = isAr && product.name_ar ? product.name_ar : product.name
   const firstImage   = product.images?.[0]?.url
+  const firstImageAlt = product.images?.[0]?.alt_text || name
 
   const handleWishlistClick = (e) => {
     e.preventDefault()
@@ -67,7 +68,7 @@ function ProductCard({ product, index }) {
           {firstImage && (
             <img
               src={firstImage}
-              alt={name}
+              alt={firstImageAlt}
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
           )}
@@ -230,7 +231,7 @@ export default function CollectionsPage() {
         <div className="flex gap-6 overflow-x-auto pb-2 mb-10 -mx-6 px-6 lg:mx-0 lg:px-0 scrollbar-hide snap-x snap-mandatory justify-center">
           {[
             { id: 'all', label: t('collections.allPieces'), path: '/collections', image: null },
-            ...categories.map(c => ({ id: c.slug, label: c.name, path: `/collections/${c.slug}`, image: c.image })),
+            ...categories.map(c => ({ id: c.slug, label: c.name, path: `/collections/${c.slug}`, image: c.image, imageAlt: c.image_alt })),
           ].map((cat) => {
             const active = (category || 'all') === cat.id
             const Icon = CATEGORY_ICONS[cat.id]
@@ -244,7 +245,7 @@ export default function CollectionsPage() {
                     {cat.id === 'all' ? (
                       <img src="/logo-icon-transparent.png" alt="" className="w-2/3 h-2/3 object-contain" />
                     ) : cat.image ? (
-                      <img src={cat.image} alt="" className="w-full h-full object-cover" />
+                      <img src={cat.image} alt={cat.imageAlt || cat.label} className="w-full h-full object-cover" />
                     ) : Icon ? (
                       <Icon className="w-2/5 h-2/5 text-gold/70" />
                     ) : (
@@ -289,7 +290,7 @@ export default function CollectionsPage() {
                         className={`w-full flex items-center gap-2.5 text-left px-5 py-3 text-[10px] tracking-[0.25em] uppercase transition-colors duration-200 ${
                           brandFilter === b.slug ? 'text-gold bg-gold/5' : 'text-white/40 hover:text-gold hover:bg-white/5'
                         }`}>
-                        {b.logo && <img src={b.logo} alt="" className="w-4 h-4 rounded-full object-cover flex-shrink-0" />}
+                        {b.logo && <img src={b.logo} alt={b.logo_alt || `${b.name} logo`} className="w-4 h-4 rounded-full object-cover flex-shrink-0" />}
                         <span className="truncate">{b.name}</span>
                       </button>
                     ))}

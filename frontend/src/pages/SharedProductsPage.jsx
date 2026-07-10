@@ -90,18 +90,18 @@ function ProductSlide({ product, index, reverse }) {
           {images.length > 1 ? (
             <div className="grid grid-cols-3 grid-rows-2 gap-2.5 h-[340px] sm:h-[420px]">
               <div className="col-span-2 row-span-2 bg-dark-100 overflow-hidden">
-                <img src={images[0].url} alt={name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                <img src={images[0].url} alt={images[0].alt_text || name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
               {images.slice(1, 4).map((img, i) => (
                 <div key={i} className="bg-dark-100 overflow-hidden">
-                  <img src={img.url} alt={name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                  <img src={img.url} alt={img.alt_text || name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
           ) : (
             <div className="bg-dark-100 overflow-hidden h-[340px] sm:h-[420px]">
               {images[0] && (
-                <img src={images[0].url} alt={name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                <img src={images[0].url} alt={images[0].alt_text || name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               )}
             </div>
           )}
@@ -162,7 +162,7 @@ export default function SharedProductsPage() {
             {data.products[0]?.images?.[0]?.url && (
               <img
                 src={data.products[0].images[0].url}
-                alt={data.name || (isAr ? 'مجموعة مختارة من آرتيزان ليذر' : 'Artisan Leather curated selection')}
+                alt={data.products[0].images[0].alt_text || data.name || (isAr ? 'مجموعة مختارة من آرتيزان ليذر' : 'Artisan Leather curated selection')}
                 loading="eager"
                 decoding="async"
                 fetchPriority="high"

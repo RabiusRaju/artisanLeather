@@ -88,7 +88,7 @@ function RelatedBlogs({ currentPost }) {
                   {item.featured_image ? (
                     <img
                       src={item.featured_image}
-                      alt={item.title}
+                      alt={item.featured_image_alt || item.title}
                       className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
                     />
                   ) : (
@@ -241,7 +241,7 @@ export default function BlogPostPage() {
           <div className="relative w-full bg-dark-100" style={{ aspectRatio: '16/9' }}>
             <img
               src={post.featured_image}
-              alt={post.title}
+              alt={post.featured_image_alt || post.title}
               loading="eager"
               decoding="async"
               fetchPriority="high"

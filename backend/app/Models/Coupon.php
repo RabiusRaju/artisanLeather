@@ -8,7 +8,7 @@ class Coupon extends Model
 {
     protected $fillable = [
         'code', 'description', 'type', 'value', 'is_active',
-        'show_as_popup', 'expires_at', 'popup_title', 'popup_image',
+        'show_as_popup', 'expires_at', 'popup_title', 'popup_image', 'popup_image_alt',
     ];
 
     protected $casts = [

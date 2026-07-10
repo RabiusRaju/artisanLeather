@@ -59,6 +59,8 @@ class ProductResource extends JsonResource
                 'slug'        => $this->brand->slug,
                 'tagline'     => $locale === 'ar' && $this->brand->tagline_ar ? $this->brand->tagline_ar : $this->brand->tagline,
                 'logo'        => $this->brand->logo ? asset('storage/' . $this->brand->logo) : null,
+                'logo_alt'    => $this->brand->logo_alt ?: (($locale === 'ar' && $this->brand->name_ar ? $this->brand->name_ar : $this->brand->name) . ' logo | Artisan Leather Oman'),
+                'banner_alt'  => $this->brand->banner_alt ?: (($locale === 'ar' && $this->brand->name_ar ? $this->brand->name_ar : $this->brand->name) . ' collection | Artisan Leather Oman'),
                 'is_featured' => $this->brand->is_featured,
             ] : null,
             'images' => $this->images->map(fn($img) => [

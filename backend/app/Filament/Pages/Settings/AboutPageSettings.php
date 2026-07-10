@@ -296,6 +296,12 @@ class AboutPageSettings extends Page implements HasSchemas
                         ->maxSize(5120)
                         ->columnSpanFull(),
 
+                    TextInput::make('about.story.image_alt')
+                        ->label('Story Image ALT Text')
+                        ->placeholder('e.g. Artisan Leather workshop detail showing handcrafted leather goods')
+                        ->maxLength(125)
+                        ->columnSpanFull(),
+
                     TextInput::make('about.story.eyebrow')
                         ->label('Story Eyebrow')
                         ->placeholder('Our Story'),
@@ -406,6 +412,10 @@ class AboutPageSettings extends Page implements HasSchemas
                         ->imageEditor()
                         ->maxSize(5120)
                         ->columnSpanFull(),
+                    TextInput::make('about.material.1.image_alt')
+                        ->label('Material 1 — Image ALT Text')
+                        ->maxLength(125)
+                        ->columnSpanFull(),
                     Textarea::make('about.material.1.desc')
                         ->label('Material 1 — Description')->rows(2)->columnSpanFull(),
 
@@ -422,6 +432,10 @@ class AboutPageSettings extends Page implements HasSchemas
                         ->imageEditor()
                         ->maxSize(5120)
                         ->columnSpanFull(),
+                    TextInput::make('about.material.2.image_alt')
+                        ->label('Material 2 — Image ALT Text')
+                        ->maxLength(125)
+                        ->columnSpanFull(),
                     Textarea::make('about.material.2.desc')
                         ->label('Material 2 — Description')->rows(2)->columnSpanFull(),
 
@@ -437,6 +451,10 @@ class AboutPageSettings extends Page implements HasSchemas
                         ->directory('about/materials')
                         ->imageEditor()
                         ->maxSize(5120)
+                        ->columnSpanFull(),
+                    TextInput::make('about.material.3.image_alt')
+                        ->label('Material 3 — Image ALT Text')
+                        ->maxLength(125)
                         ->columnSpanFull(),
                     Textarea::make('about.material.3.desc')
                         ->label('Material 3 — Description')->rows(2)->columnSpanFull(),

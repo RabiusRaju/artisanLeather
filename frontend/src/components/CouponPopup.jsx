@@ -180,7 +180,7 @@ export default function CouponPopup() {
             </button>
 
             {coupon.image && (
-              <img src={coupon.image} alt="" className="w-full h-40 object-cover" />
+              <img src={coupon.image} alt={coupon.image_alt || coupon.title || coupon.description || 'Artisan Leather offer'} className="w-full h-40 object-cover" />
             )}
 
             <div className="p-6 text-center">

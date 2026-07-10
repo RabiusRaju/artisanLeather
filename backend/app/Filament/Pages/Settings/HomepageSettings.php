@@ -196,9 +196,19 @@ class HomepageSettings extends Page implements HasSchemas
                                         ->label('Primary Button Label')
                                         ->placeholder('Explore Collection'),
 
+                                    TextInput::make('hero.cta_primary_url')
+                                        ->label('Primary Button URL')
+                                        ->placeholder('/collections')
+                                        ->helperText('Use an internal path like /collections or a full URL.'),
+
                                     TextInput::make('hero.cta_secondary')
                                         ->label('Secondary Button Label')
                                         ->placeholder('Our Story'),
+
+                                    TextInput::make('hero.cta_secondary_url')
+                                        ->label('Secondary Button URL')
+                                        ->placeholder('/about')
+                                        ->helperText('Use an internal path like /about or a full URL.'),
                                 ]),
 
                             Section::make('📊 Stats Bar')
@@ -227,6 +237,12 @@ class HomepageSettings extends Page implements HasSchemas
                                         ->directory('homepage/story')
                                         ->imageEditor()
                                         ->maxSize(5120)
+                                        ->columnSpanFull(),
+
+                                    TextInput::make('home.story.image_alt')
+                                        ->label('Story Image ALT Text')
+                                        ->placeholder('e.g. Artisan Leather craftsman hand-stitching a leather wallet')
+                                        ->maxLength(125)
                                         ->columnSpanFull(),
 
                                     TextInput::make('home.story.eyebrow')
@@ -283,7 +299,9 @@ class HomepageSettings extends Page implements HasSchemas
                                     ['hero.headline_accent_ar', 'Headline — Line 2 (Arabic)', 'text'],
                                     ['hero.subtitle_ar', 'Subtitle (Arabic)', 'textarea', 2, true],
                                     ['hero.cta_primary_ar', 'Primary Button Label (Arabic)', 'text'],
+                                    ['hero.cta_primary_url_ar', 'Primary Button URL (Arabic)', 'text'],
                                     ['hero.cta_secondary_ar', 'Secondary Button Label (Arabic)', 'text'],
+                                    ['hero.cta_secondary_url_ar', 'Secondary Button URL (Arabic)', 'text'],
                                 ])),
 
                             Section::make('📊 Stats Bar (Arabic)')

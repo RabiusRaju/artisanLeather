@@ -8,7 +8,7 @@ class Brand extends Model
 {
     protected $fillable = [
         'name','name_ar','slug','tagline','tagline_ar',
-        'description','description_ar','logo','banner','website',
+        'description','description_ar','logo','logo_alt','banner','banner_alt','website',
         'is_active','is_featured','sort_order',
         'meta_title','meta_description',
     ];
