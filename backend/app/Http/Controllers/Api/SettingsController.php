@@ -65,7 +65,9 @@ class SettingsController extends Controller
             'hero.headline_accent'           => $settings['hero.headline_accent']        ?? 'Becomes Legacy',
             'hero.subtitle'                  => $settings['hero.subtitle']               ?? 'Handcrafted premium leather goods for those who appreciate the art of timeless elegance.',
             'hero.cta_primary'               => $settings['hero.cta_primary']            ?? 'Explore Collection',
+            'hero.cta_primary_url'           => $settings['hero.cta_primary_url']        ?? '/collections',
             'hero.cta_secondary'             => $settings['hero.cta_secondary']          ?? 'Our Story',
+            'hero.cta_secondary_url'         => $settings['hero.cta_secondary_url']      ?? '/about',
 
             // Homepage Stats
             'stats.1.value'                  => $settings['stats.1.value']              ?? '100%',

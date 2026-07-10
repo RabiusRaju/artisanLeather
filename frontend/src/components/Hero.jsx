@@ -2,13 +2,33 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useSetting } from '../hooks/useSettings'
 
+function HeroLink({ to, className, children }) {
+  const isExternal = /^https?:\/\//i.test(to)
+
+  if (isExternal) {
+    return (
+      <a href={to} className={className} target="_blank" rel="noopener noreferrer">
+        {children}
+      </a>
+    )
+  }
+
+  return (
+    <Link to={to} className={className}>
+      {children}
+    </Link>
+  )
+}
+
 export default function Hero() {
   const eyebrow        = useSetting('hero.eyebrow',         'Muscat · Sultanate of Oman')
   const headline       = useSetting('hero.headline',         'Where Leather')
   const headlineAccent = useSetting('hero.headline_accent',  'Becomes Legacy')
   const subtitle       = useSetting('hero.subtitle',         'Handcrafted premium leather goods for those who appreciate the art of timeless elegance.')
   const ctaPrimary     = useSetting('hero.cta_primary',      'Explore Collection')
+  const ctaPrimaryUrl  = useSetting('hero.cta_primary_url',  '/collections')
   const ctaSecondary   = useSetting('hero.cta_secondary',    'Our Story')
+  const ctaSecondaryUrl = useSetting('hero.cta_secondary_url', '/about')
 
   return (
     <section className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
@@ -75,18 +95,18 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.9 }}
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
-          <Link
-            to="/collections"
+          <HeroLink
+            to={ctaPrimaryUrl || '/collections'}
             className="px-12 py-4 bg-gold text-dark text-xs tracking-[0.3em] uppercase font-semibold hover:bg-gold-300 transition-all duration-300"
           >
             {ctaPrimary}
-          </Link>
-          <Link
-            to="/about"
+          </HeroLink>
+          <HeroLink
+            to={ctaSecondaryUrl || '/about'}
             className="px-12 py-4 border border-white/25 text-white text-xs tracking-[0.3em] uppercase hover:border-gold hover:text-gold transition-all duration-300"
           >
             {ctaSecondary}
-          </Link>
+          </HeroLink>
         </motion.div>
       </div>
 
