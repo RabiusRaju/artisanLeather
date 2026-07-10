@@ -21,14 +21,19 @@ function HeroLink({ to, className, children }) {
 }
 
 export default function Hero() {
-  const eyebrow        = useSetting('hero.eyebrow',         'Muscat · Sultanate of Oman')
-  const headline       = useSetting('hero.headline',         'Where Leather')
-  const headlineAccent = useSetting('hero.headline_accent',  'Becomes Legacy')
-  const subtitle       = useSetting('hero.subtitle',         'Handcrafted premium leather goods for those who appreciate the art of timeless elegance.')
-  const ctaPrimary     = useSetting('hero.cta_primary',      'Explore Collection')
-  const ctaPrimaryUrl  = useSetting('hero.cta_primary_url',  '/collections')
-  const ctaSecondary   = useSetting('hero.cta_secondary',    'Our Story')
-  const ctaSecondaryUrl = useSetting('hero.cta_secondary_url', '/about')
+  const eyebrow        = useSetting('hero.eyebrow')
+  const headline       = useSetting('hero.headline')
+  const headlineAccent = useSetting('hero.headline_accent')
+  const subtitle       = useSetting('hero.subtitle')
+  const ctaPrimary     = useSetting('hero.cta_primary')
+  const ctaPrimaryUrl  = useSetting('hero.cta_primary_url')
+  const ctaSecondary   = useSetting('hero.cta_secondary')
+  const ctaSecondaryUrl = useSetting('hero.cta_secondary_url')
+  const scrollLabel = useSetting('hero.scroll_label')
+
+  if (!eyebrow && !headline && !headlineAccent && !subtitle && !ctaPrimary && !ctaSecondary) {
+    return null
+  }
 
   return (
     <section className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
@@ -53,25 +58,29 @@ export default function Hero() {
 
       {/* Main content */}
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-gold/80 tracking-[0.6em] uppercase text-xs mb-10"
-        >
-          {eyebrow}
-        </motion.p>
+        {eyebrow && (
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-gold/80 tracking-[0.6em] uppercase text-xs mb-10"
+          >
+            {eyebrow}
+          </motion.p>
+        )}
 
-        <motion.h1
-          initial={{ opacity: 0, y: 36 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.2 }}
-          className="font-serif text-6xl md:text-8xl lg:text-[7rem] font-light text-white leading-[1.05] mb-8"
-        >
-          {headline}
-          <br />
-          <span className="text-gradient-gold italic">{headlineAccent}</span>
-        </motion.h1>
+        {(headline || headlineAccent) && (
+          <motion.h1
+            initial={{ opacity: 0, y: 36 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="font-serif text-6xl md:text-8xl lg:text-[7rem] font-light text-white leading-[1.05] mb-8"
+          >
+            {headline}
+            {headline && headlineAccent && <br />}
+            {headlineAccent && <span className="text-gradient-gold italic">{headlineAccent}</span>}
+          </motion.h1>
+        )}
 
         <motion.div
           initial={{ scaleX: 0 }}
@@ -80,50 +89,59 @@ export default function Hero() {
           className="w-20 h-px bg-gold mx-auto mb-10 origin-center"
         />
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.9, delay: 0.7 }}
-          className="text-white/50 text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto mb-14 leading-relaxed"
-        >
-          {subtitle}
-        </motion.p>
+        {subtitle && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.9, delay: 0.7 }}
+            className="text-white/50 text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto mb-14 leading-relaxed"
+          >
+            {subtitle}
+          </motion.p>
+        )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.9 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center"
-        >
-          <HeroLink
-            to={ctaPrimaryUrl || '/collections'}
-            className="px-12 py-4 bg-gold text-dark text-xs tracking-[0.3em] uppercase font-semibold hover:bg-gold-300 transition-all duration-300"
+        {((ctaPrimary && ctaPrimaryUrl) || (ctaSecondary && ctaSecondaryUrl)) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.9 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            {ctaPrimary}
-          </HeroLink>
-          <HeroLink
-            to={ctaSecondaryUrl || '/about'}
-            className="px-12 py-4 border border-white/25 text-white text-xs tracking-[0.3em] uppercase hover:border-gold hover:text-gold transition-all duration-300"
-          >
-            {ctaSecondary}
-          </HeroLink>
-        </motion.div>
+            {ctaPrimary && ctaPrimaryUrl && (
+              <HeroLink
+                to={ctaPrimaryUrl}
+                className="px-12 py-4 bg-gold text-dark text-xs tracking-[0.3em] uppercase font-semibold hover:bg-gold-300 transition-all duration-300"
+              >
+                {ctaPrimary}
+              </HeroLink>
+            )}
+            {ctaSecondary && ctaSecondaryUrl && (
+              <HeroLink
+                to={ctaSecondaryUrl}
+                className="px-12 py-4 border border-white/25 text-white text-xs tracking-[0.3em] uppercase hover:border-gold hover:text-gold transition-all duration-300"
+              >
+                {ctaSecondary}
+              </HeroLink>
+            )}
+          </motion.div>
+        )}
       </div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.8 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-white/25"
-      >
-        <span className="text-[10px] tracking-[0.4em] uppercase">Scroll</span>
+      {scrollLabel && (
         <motion.div
-          animate={{ y: [0, 7, 0] }}
-          transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
-          className="w-px h-10 bg-gradient-to-b from-gold/40 to-transparent"
-        />
-      </motion.div>
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.8 }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-white/25"
+        >
+          <span className="text-[10px] tracking-[0.4em] uppercase">{scrollLabel}</span>
+          <motion.div
+            animate={{ y: [0, 7, 0] }}
+            transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
+            className="w-px h-10 bg-gradient-to-b from-gold/40 to-transparent"
+          />
+        </motion.div>
+      )}
     </section>
   )
 }
