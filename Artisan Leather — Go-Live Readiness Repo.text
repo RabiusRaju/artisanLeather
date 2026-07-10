@@ -66,3 +66,26 @@ Fix llms.txt with Markdown H1 and important links.
 Optimize images, especially homepage/hero/product images.
 Reduce/lazy-load unused JS.
 Improve text contrast where Google flagged.
+
+
+Yes, a few points still pending.
+
+**High Priority**
+- **Homepage performance:** LCP still around `4.4s`; need image compression/resizing and maybe homepage section lazy loading.
+- **Render-blocking:** PageSpeed showed around `1.5s` render-blocking; CSS/initial bundle can be improved.
+- **Unused JS:** Around `394 KiB`; need reduce first-load JS, especially homepage imports/providers.
+- **Cookie deploy check:** After cookie delay fix, push live and rerun PageSpeed.
+
+**Medium Priority**
+- **Accessibility final check:** It improved to around `90`, but still not `100`; need open failed details and patch exact remaining items.
+- **Agentic Browsing:** Improved to `2/3`; likely one remaining item, need screenshot of failed detail.
+- **Image delivery:** PageSpeed showed large savings; product/home images should be converted/resized, ideally WebP/AVIF.
+
+**Already Done**
+- `llms.txt` live.
+- Navbar icon accessibility labels.
+- Related blogs on blog detail.
+- Newsletter subscriber flow/admin.
+- Cookie banner delayed/compact locally.
+
+Best next action: deploy latest cookie fix, rerun PageSpeed, then send screenshots of remaining failed Accessibility + Agentic items.

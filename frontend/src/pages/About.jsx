@@ -42,8 +42,21 @@ function MaterialCard({ mat, index }) {
       transition={{ duration: 0.7, delay: index * 0.15 }}
       className="group border border-gold/10 hover:border-gold/30 transition-all duration-500 overflow-hidden"
     >
-      <div className="relative" style={{ aspectRatio: '4/2', background: mat.gradient }}>
-        <div className="absolute inset-4 border border-dashed border-white/[0.04]" />
+      <div className="relative overflow-hidden" style={{ aspectRatio: '4/2', background: mat.image ? undefined : mat.gradient }}>
+        {mat.image ? (
+          <>
+            <img
+              src={mat.image}
+              alt={mat.name}
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-dark/60 via-dark/15 to-transparent" />
+          </>
+        ) : (
+          <div className="absolute inset-4 border border-dashed border-white/[0.04]" />
+        )}
         <div className="absolute bottom-4 left-4 right-4 h-px bg-gradient-to-r from-gold/30 to-transparent" />
       </div>
       <div className="p-8">
@@ -116,6 +129,8 @@ function StorySection() {
   const headline       = s['about.story.headline']        || 'Born from a Love'
   const headlineAccent = s['about.story.headline_accent'] || 'of the Craft'
   const years          = s['about.story.years']           || '16+'
+  const eyebrow        = s['about.story.eyebrow']         || 'Our Story'
+  const yearsLabel     = s['about.story.years_label']     || 'Years of Craft'
   const p1             = s['about.story.p1']              || 'Artisan Leather began not as a business plan, but as an obsession. Our founder spent years studying leatherwork — in Italy, in Morocco, and eventually in Oman — learning what makes a piece truly last.'
   const p2             = s['about.story.p2']              || 'The first workshop was a single room in Muscat. Three craftsmen. One set of tools. No shortcuts. That ethos has never changed, even as the brand has grown across the GCC.'
   const p3             = s['about.story.p3']              || 'Today, every piece that leaves our workshop is still inspected by hand, still stitched by hand, and still conditioned by hand — because the day we stop caring is the day we stop being Artisan Leather.'
@@ -152,7 +167,7 @@ function StorySection() {
             className="absolute -bottom-8 -right-6 bg-dark border border-gold/20 px-8 py-6 hidden md:block"
           >
             <div className="font-serif text-5xl text-gradient-gold">{years}</div>
-            <div className="text-white/35 text-[9px] tracking-[0.35em] uppercase mt-1.5">Years of Craft</div>
+            <div className="text-white/35 text-[9px] tracking-[0.35em] uppercase mt-1.5">{yearsLabel}</div>
           </motion.div>
         </motion.div>
 
@@ -162,7 +177,7 @@ function StorySection() {
           animate={rightInView ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.9, delay: 0.15 }}
         >
-          <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-5">Our Story</p>
+          <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-5">{eyebrow}</p>
           <h2 className="font-serif text-4xl md:text-5xl text-white font-light leading-tight mb-8">
             {headline}
             <br />
@@ -180,8 +195,13 @@ function StorySection() {
 
 function CTASection() {
   const s = useSettings()
+  const eyebrow = s['about.cta.eyebrow'] || 'Start Your Journey'
   const heading = s['about.cta.heading'] || 'Own a Piece of the Craft'
   const text    = s['about.cta.text']    || 'Every wallet, bag, and belt we make is a promise — that the hands behind it cared as much as the hands that will carry it.'
+  const shopLabel = s['about.cta.shop_label'] || 'Shop Collection'
+  const contactLabel = s['about.cta.contact_label'] || 'Get in Touch'
+  const shopUrl = s['about.cta.shop_url'] || '/collections'
+  const contactUrl = s['about.cta.contact_url'] || '/contact'
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true })
   return (
@@ -192,7 +212,7 @@ function CTASection() {
         transition={{ duration: 0.8 }}
         className="max-w-2xl mx-auto text-center"
       >
-        <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-6">Start Your Journey</p>
+        <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-6">{eyebrow}</p>
         <h2 className="font-serif text-4xl md:text-5xl text-white font-light mb-6">
           {heading}
         </h2>
@@ -202,16 +222,16 @@ function CTASection() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            to="/collections"
+            to={shopUrl}
             className="px-12 py-4 bg-gold text-dark text-[10px] tracking-[0.35em] uppercase font-bold hover:bg-gold-300 transition-all duration-300"
           >
-            Shop Collection
+            {shopLabel}
           </Link>
           <Link
-            to="/contact"
+            to={contactUrl}
             className="px-12 py-4 border border-white/20 text-white text-[10px] tracking-[0.35em] uppercase hover:border-gold hover:text-gold transition-all duration-300"
           >
-            Get in Touch
+            {contactLabel}
           </Link>
         </div>
       </motion.div>
@@ -231,9 +251,9 @@ export default function About() {
   ]
 
   const materials = [
-    { name: s['about.material.1.name'] || 'Full Grain',       subtitle: s['about.material.1.subtitle'] || 'The Pinnacle of Leather',   desc: s['about.material.1.desc'] || 'The outermost layer of the hide — untouched by sanding or buffing. Full grain retains every natural mark, developing a rich unique patina over decades.',   gradient: 'linear-gradient(135deg, #5A2C10, #3A1A08, #1E0C04)' },
-    { name: s['about.material.2.name'] || 'Vegetable Tanned', subtitle: s['about.material.2.subtitle'] || 'Slow-Made & Sustainable',    desc: s['about.material.2.desc'] || 'Tanned using plant extracts — bark, leaves, roots — over 30–60 days. The result is leather with remarkable firmness that softens and deepens with age.',    gradient: 'linear-gradient(135deg, #3D2010, #261408, #160A04)' },
-    { name: s['about.material.3.name'] || 'Italian Calfskin', subtitle: s['about.material.3.subtitle'] || 'Silken & Refined',           desc: s['about.material.3.desc'] || 'Sourced from the finest Italian tanneries. Calfskin offers an unmatched surface — fine-grained, almost silk-like, ideal for slim wallets and dress pieces.',    gradient: 'linear-gradient(135deg, #2A1A0A, #1A1006, #0C0803)' },
+    { name: s['about.material.1.name'] || 'Full Grain',       subtitle: s['about.material.1.subtitle'] || 'The Pinnacle of Leather',   desc: s['about.material.1.desc'] || 'The outermost layer of the hide — untouched by sanding or buffing. Full grain retains every natural mark, developing a rich unique patina over decades.',   image: s['about.material.1.image'], gradient: 'linear-gradient(135deg, #5A2C10, #3A1A08, #1E0C04)' },
+    { name: s['about.material.2.name'] || 'Vegetable Tanned', subtitle: s['about.material.2.subtitle'] || 'Slow-Made & Sustainable',    desc: s['about.material.2.desc'] || 'Tanned using plant extracts — bark, leaves, roots — over 30–60 days. The result is leather with remarkable firmness that softens and deepens with age.',    image: s['about.material.2.image'], gradient: 'linear-gradient(135deg, #3D2010, #261408, #160A04)' },
+    { name: s['about.material.3.name'] || 'Italian Calfskin', subtitle: s['about.material.3.subtitle'] || 'Silken & Refined',           desc: s['about.material.3.desc'] || 'Sourced from the finest Italian tanneries. Calfskin offers an unmatched surface — fine-grained, almost silk-like, ideal for slim wallets and dress pieces.',    image: s['about.material.3.image'], gradient: 'linear-gradient(135deg, #2A1A0A, #1A1006, #0C0803)' },
   ]
 
   const values = [
@@ -255,6 +275,14 @@ export default function About() {
   const heroHeadline = s['about.hero.headline']       || 'A Story Written'
   const heroAccent   = s['about.hero.headline_accent'] || 'in Leather'
   const heroSubtitle = s['about.hero.subtitle']       || 'Sixteen years of craft. One unwavering standard.'
+  const craftEyebrow = s['about.craft.section_eyebrow'] || 'The Process'
+  const craftTitle = s['about.craft.section_title'] || 'The Art of Making'
+  const materialEyebrow = s['about.material.section_eyebrow'] || 'What We Use'
+  const materialTitle = s['about.material.section_title'] || 'Only the Finest Materials'
+  const valueEyebrow = s['about.value.section_eyebrow'] || 'What We Stand For'
+  const valueTitle = s['about.value.section_title'] || 'Our Four Pillars'
+  const timelineEyebrow = s['about.timeline.section_eyebrow'] || 'Our Journey'
+  const timelineTitle = s['about.timeline.section_title'] || 'Sixteen Years in the Making'
 
   const craftRef     = useRef(null)
   const materialsRef = useRef(null)
@@ -337,8 +365,8 @@ export default function About() {
             transition={{ duration: 0.7 }}
             className="mb-20"
           >
-            <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-4">The Process</p>
-            <h2 className="font-serif text-4xl md:text-5xl text-white font-light">The Art of Making</h2>
+            <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-4">{craftEyebrow}</p>
+            <h2 className="font-serif text-4xl md:text-5xl text-white font-light">{craftTitle}</h2>
             <div className="w-14 h-px bg-gold mt-6" />
           </motion.div>
 
@@ -362,8 +390,8 @@ export default function About() {
           transition={{ duration: 0.7 }}
           className="text-center mb-20"
         >
-          <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-4">What We Use</p>
-          <h2 className="font-serif text-4xl md:text-5xl text-white font-light">Only the Finest Materials</h2>
+          <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-4">{materialEyebrow}</p>
+          <h2 className="font-serif text-4xl md:text-5xl text-white font-light">{materialTitle}</h2>
           <div className="w-14 h-px bg-gold mx-auto mt-6" />
         </motion.div>
         <div className="grid md:grid-cols-3 gap-6">
@@ -381,8 +409,8 @@ export default function About() {
             transition={{ duration: 0.7 }}
             className="text-center mb-20"
           >
-            <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-4">What We Stand For</p>
-            <h2 className="font-serif text-4xl md:text-5xl text-white font-light">Our Four Pillars</h2>
+            <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-4">{valueEyebrow}</p>
+            <h2 className="font-serif text-4xl md:text-5xl text-white font-light">{valueTitle}</h2>
             <div className="w-14 h-px bg-gold mx-auto mt-6" />
           </motion.div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -400,8 +428,8 @@ export default function About() {
           transition={{ duration: 0.7 }}
           className="text-center mb-20"
         >
-          <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-4">Our Journey</p>
-          <h2 className="font-serif text-4xl md:text-5xl text-white font-light">Sixteen Years in the Making</h2>
+          <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-4">{timelineEyebrow}</p>
+          <h2 className="font-serif text-4xl md:text-5xl text-white font-light">{timelineTitle}</h2>
           <div className="w-14 h-px bg-gold mx-auto mt-6" />
         </motion.div>
 

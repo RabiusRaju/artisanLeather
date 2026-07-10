@@ -296,6 +296,10 @@ class AboutPageSettings extends Page implements HasSchemas
                         ->maxSize(5120)
                         ->columnSpanFull(),
 
+                    TextInput::make('about.story.eyebrow')
+                        ->label('Story Eyebrow')
+                        ->placeholder('Our Story'),
+
                     TextInput::make('about.story.headline')
                         ->label('Story Headline — Line 1 (white)')
                         ->placeholder('Born from a Love'),
@@ -308,6 +312,11 @@ class AboutPageSettings extends Page implements HasSchemas
                         ->label('Years Badge (shown on the image card)')
                         ->placeholder('16+')
                         ->helperText('e.g. 16+  — updates automatically once a year if you keep it current.')
+                        ->columnSpan(1),
+
+                    TextInput::make('about.story.years_label')
+                        ->label('Years Badge Label')
+                        ->placeholder('Years of Craft')
                         ->columnSpanFull(),
 
                     Textarea::make('about.story.p1')
@@ -334,6 +343,14 @@ class AboutPageSettings extends Page implements HasSchemas
                 ->description('The 4 steps shown in "The Art of Making" section.')
                 ->columns(3)
                 ->schema([
+                    TextInput::make('about.craft.section_eyebrow')
+                        ->label('Section Eyebrow')
+                        ->placeholder('The Process'),
+                    TextInput::make('about.craft.section_title')
+                        ->label('Section Title')
+                        ->placeholder('The Art of Making')
+                        ->columnSpan(2),
+
                     TextInput::make('about.craft.1.num')
                         ->label('Step 1 — Number')->placeholder('01'),
                     TextInput::make('about.craft.1.title')
@@ -368,10 +385,27 @@ class AboutPageSettings extends Page implements HasSchemas
                 ->description('The 3 leather material cards shown on the About page.')
                 ->columns(3)
                 ->schema([
+                    TextInput::make('about.material.section_eyebrow')
+                        ->label('Section Eyebrow')
+                        ->placeholder('What We Use'),
+                    TextInput::make('about.material.section_title')
+                        ->label('Section Title')
+                        ->placeholder('Only the Finest Materials')
+                        ->columnSpan(2),
+
                     TextInput::make('about.material.1.name')
                         ->label('Material 1 — Name')->placeholder('Full Grain'),
                     TextInput::make('about.material.1.subtitle')
                         ->label('Material 1 — Subtitle')->placeholder('The Pinnacle of Leather')->columnSpan(2),
+                    FileUpload::make('about.material.1.image')
+                        ->label('Material 1 — Image')
+                        ->helperText('Optional. Shown above the material text. Recommended: wide leather texture/detail image, e.g. 1200×600px.')
+                        ->image()
+                        ->disk('public')
+                        ->directory('about/materials')
+                        ->imageEditor()
+                        ->maxSize(5120)
+                        ->columnSpanFull(),
                     Textarea::make('about.material.1.desc')
                         ->label('Material 1 — Description')->rows(2)->columnSpanFull(),
 
@@ -379,6 +413,15 @@ class AboutPageSettings extends Page implements HasSchemas
                         ->label('Material 2 — Name')->placeholder('Vegetable Tanned'),
                     TextInput::make('about.material.2.subtitle')
                         ->label('Material 2 — Subtitle')->placeholder('Slow-Made & Sustainable')->columnSpan(2),
+                    FileUpload::make('about.material.2.image')
+                        ->label('Material 2 — Image')
+                        ->helperText('Optional. Shown above the material text. Recommended: wide leather texture/detail image, e.g. 1200×600px.')
+                        ->image()
+                        ->disk('public')
+                        ->directory('about/materials')
+                        ->imageEditor()
+                        ->maxSize(5120)
+                        ->columnSpanFull(),
                     Textarea::make('about.material.2.desc')
                         ->label('Material 2 — Description')->rows(2)->columnSpanFull(),
 
@@ -386,6 +429,15 @@ class AboutPageSettings extends Page implements HasSchemas
                         ->label('Material 3 — Name')->placeholder('Italian Calfskin'),
                     TextInput::make('about.material.3.subtitle')
                         ->label('Material 3 — Subtitle')->placeholder('Silken & Refined')->columnSpan(2),
+                    FileUpload::make('about.material.3.image')
+                        ->label('Material 3 — Image')
+                        ->helperText('Optional. Shown above the material text. Recommended: wide leather texture/detail image, e.g. 1200×600px.')
+                        ->image()
+                        ->disk('public')
+                        ->directory('about/materials')
+                        ->imageEditor()
+                        ->maxSize(5120)
+                        ->columnSpanFull(),
                     Textarea::make('about.material.3.desc')
                         ->label('Material 3 — Description')->rows(2)->columnSpanFull(),
                 ]),
@@ -395,6 +447,13 @@ class AboutPageSettings extends Page implements HasSchemas
                 ->description('The 4 value pillars (Heritage, Precision, Longevity, Authenticity).')
                 ->columns(2)
                 ->schema([
+                    TextInput::make('about.value.section_eyebrow')
+                        ->label('Section Eyebrow')
+                        ->placeholder('What We Stand For'),
+                    TextInput::make('about.value.section_title')
+                        ->label('Section Title')
+                        ->placeholder('Our Four Pillars'),
+
                     TextInput::make('about.value.1.number')
                         ->label('Value 1 — Roman Numeral')->placeholder('I'),
                     TextInput::make('about.value.1.title')
@@ -429,6 +488,14 @@ class AboutPageSettings extends Page implements HasSchemas
                 ->description('The 5 milestone events shown in the timeline.')
                 ->columns(3)
                 ->schema([
+                    TextInput::make('about.timeline.section_eyebrow')
+                        ->label('Section Eyebrow')
+                        ->placeholder('Our Journey'),
+                    TextInput::make('about.timeline.section_title')
+                        ->label('Section Title')
+                        ->placeholder('Sixteen Years in the Making')
+                        ->columnSpan(2),
+
                     TextInput::make('about.timeline.1.year')
                         ->label('Event 1 — Year')->placeholder('2009'),
                     TextInput::make('about.timeline.1.title')
@@ -468,16 +535,41 @@ class AboutPageSettings extends Page implements HasSchemas
             // ── CTA ───────────────────────────────────────────────────────
             Section::make('💬 Call to Action')
                 ->description('The bottom banner encouraging visitors to shop.')
-                ->columns(1)
+                ->columns(2)
                 ->schema([
+                    TextInput::make('about.cta.eyebrow')
+                        ->label('Eyebrow')
+                        ->placeholder('Start Your Journey')
+                        ->columnSpanFull(),
+
                     TextInput::make('about.cta.heading')
                         ->label('Heading')
-                        ->placeholder('Own a Piece of the Craft'),
+                        ->placeholder('Own a Piece of the Craft')
+                        ->columnSpanFull(),
 
                     Textarea::make('about.cta.text')
                         ->label('Body Text')
                         ->rows(3)
-                        ->placeholder('Every wallet, bag, and belt we make is a promise...'),
+                        ->placeholder('Every wallet, bag, and belt we make is a promise...')
+                        ->columnSpanFull(),
+
+                    TextInput::make('about.cta.shop_label')
+                        ->label('Shop Button Label')
+                        ->placeholder('Shop Collection'),
+
+                    TextInput::make('about.cta.shop_url')
+                        ->label('Shop Button URL')
+                        ->placeholder('/collections')
+                        ->helperText('Use an internal path like /collections or a full URL like https://example.com.'),
+
+                    TextInput::make('about.cta.contact_label')
+                        ->label('Contact Button Label')
+                        ->placeholder('Get in Touch'),
+
+                    TextInput::make('about.cta.contact_url')
+                        ->label('Contact Button URL')
+                        ->placeholder('/contact')
+                        ->helperText('Use an internal path like /contact or a full URL like https://example.com.'),
                 ]),
 
             // ── SEO ───────────────────────────────────────────────────────
@@ -535,8 +627,11 @@ class AboutPageSettings extends Page implements HasSchemas
                             Section::make('📖 Our Story (Arabic)')
                                 ->columns(2)
                                 ->schema(self::arabicFields([
+                                    ['about.story.eyebrow_ar', 'Story Eyebrow (Arabic)', 'text'],
                                     ['about.story.headline_ar', 'Story Headline — Line 1 (Arabic)', 'text'],
                                     ['about.story.headline_accent_ar', 'Story Headline — Line 2 (Arabic)', 'text'],
+                                    ['about.story.years_ar', 'Years Badge (Arabic)', 'text'],
+                                    ['about.story.years_label_ar', 'Years Badge Label (Arabic)', 'text', null, true],
                                     ['about.story.p1_ar', 'Paragraph 1 (Arabic)', 'textarea', 3, true],
                                     ['about.story.p2_ar', 'Paragraph 2 (Arabic)', 'textarea', 3, true],
                                     ['about.story.p3_ar', 'Paragraph 3 (Arabic)', 'textarea', 3, true],
@@ -545,12 +640,18 @@ class AboutPageSettings extends Page implements HasSchemas
                             Section::make('🔨 Craft Steps (Arabic)')
                                 ->columns(2)
                                 ->schema(self::arabicFields([
+                                    ['about.craft.section_eyebrow_ar', 'Section Eyebrow (Arabic)', 'text'],
+                                    ['about.craft.section_title_ar', 'Section Title (Arabic)', 'text'],
+                                    ['about.craft.1.num_ar', 'Step 1 — Number (Arabic)', 'text'],
                                     ['about.craft.1.title_ar', 'Step 1 — Title (Arabic)', 'text'],
                                     ['about.craft.1.body_ar', 'Step 1 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.craft.2.num_ar', 'Step 2 — Number (Arabic)', 'text'],
                                     ['about.craft.2.title_ar', 'Step 2 — Title (Arabic)', 'text'],
                                     ['about.craft.2.body_ar', 'Step 2 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.craft.3.num_ar', 'Step 3 — Number (Arabic)', 'text'],
                                     ['about.craft.3.title_ar', 'Step 3 — Title (Arabic)', 'text'],
                                     ['about.craft.3.body_ar', 'Step 3 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.craft.4.num_ar', 'Step 4 — Number (Arabic)', 'text'],
                                     ['about.craft.4.title_ar', 'Step 4 — Title (Arabic)', 'text'],
                                     ['about.craft.4.body_ar', 'Step 4 — Description (Arabic)', 'textarea', 2, true],
                                 ])),
@@ -558,6 +659,8 @@ class AboutPageSettings extends Page implements HasSchemas
                             Section::make('🧵 Materials (Arabic)')
                                 ->columns(2)
                                 ->schema(self::arabicFields([
+                                    ['about.material.section_eyebrow_ar', 'Section Eyebrow (Arabic)', 'text'],
+                                    ['about.material.section_title_ar', 'Section Title (Arabic)', 'text'],
                                     ['about.material.1.name_ar', 'Material 1 — Name (Arabic)', 'text'],
                                     ['about.material.1.subtitle_ar', 'Material 1 — Subtitle (Arabic)', 'text'],
                                     ['about.material.1.desc_ar', 'Material 1 — Description (Arabic)', 'textarea', 2, true],
@@ -572,12 +675,18 @@ class AboutPageSettings extends Page implements HasSchemas
                             Section::make('⚖️ Our Values (Arabic)')
                                 ->columns(2)
                                 ->schema(self::arabicFields([
+                                    ['about.value.section_eyebrow_ar', 'Section Eyebrow (Arabic)', 'text'],
+                                    ['about.value.section_title_ar', 'Section Title (Arabic)', 'text'],
+                                    ['about.value.1.number_ar', 'Value 1 — Number (Arabic)', 'text'],
                                     ['about.value.1.title_ar', 'Value 1 — Title (Arabic)', 'text'],
                                     ['about.value.1.desc_ar', 'Value 1 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.value.2.number_ar', 'Value 2 — Number (Arabic)', 'text'],
                                     ['about.value.2.title_ar', 'Value 2 — Title (Arabic)', 'text'],
                                     ['about.value.2.desc_ar', 'Value 2 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.value.3.number_ar', 'Value 3 — Number (Arabic)', 'text'],
                                     ['about.value.3.title_ar', 'Value 3 — Title (Arabic)', 'text'],
                                     ['about.value.3.desc_ar', 'Value 3 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.value.4.number_ar', 'Value 4 — Number (Arabic)', 'text'],
                                     ['about.value.4.title_ar', 'Value 4 — Title (Arabic)', 'text'],
                                     ['about.value.4.desc_ar', 'Value 4 — Description (Arabic)', 'textarea', 2, true],
                                 ])),
@@ -585,14 +694,21 @@ class AboutPageSettings extends Page implements HasSchemas
                             Section::make('📅 Our Journey (Arabic)')
                                 ->columns(2)
                                 ->schema(self::arabicFields([
+                                    ['about.timeline.section_eyebrow_ar', 'Section Eyebrow (Arabic)', 'text'],
+                                    ['about.timeline.section_title_ar', 'Section Title (Arabic)', 'text'],
+                                    ['about.timeline.1.year_ar', 'Event 1 — Year (Arabic)', 'text'],
                                     ['about.timeline.1.title_ar', 'Event 1 — Title (Arabic)', 'text'],
                                     ['about.timeline.1.desc_ar', 'Event 1 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.timeline.2.year_ar', 'Event 2 — Year (Arabic)', 'text'],
                                     ['about.timeline.2.title_ar', 'Event 2 — Title (Arabic)', 'text'],
                                     ['about.timeline.2.desc_ar', 'Event 2 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.timeline.3.year_ar', 'Event 3 — Year (Arabic)', 'text'],
                                     ['about.timeline.3.title_ar', 'Event 3 — Title (Arabic)', 'text'],
                                     ['about.timeline.3.desc_ar', 'Event 3 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.timeline.4.year_ar', 'Event 4 — Year (Arabic)', 'text'],
                                     ['about.timeline.4.title_ar', 'Event 4 — Title (Arabic)', 'text'],
                                     ['about.timeline.4.desc_ar', 'Event 4 — Description (Arabic)', 'textarea', 2, true],
+                                    ['about.timeline.5.year_ar', 'Event 5 — Year (Arabic)', 'text'],
                                     ['about.timeline.5.title_ar', 'Event 5 — Title (Arabic)', 'text'],
                                     ['about.timeline.5.desc_ar', 'Event 5 — Description (Arabic)', 'textarea', 2, true],
                                 ])),
@@ -600,8 +716,13 @@ class AboutPageSettings extends Page implements HasSchemas
                             Section::make('💬 Call to Action (Arabic)')
                                 ->columns(1)
                                 ->schema(self::arabicFields([
+                                    ['about.cta.eyebrow_ar', 'Eyebrow (Arabic)', 'text'],
                                     ['about.cta.heading_ar', 'Heading (Arabic)', 'text'],
                                     ['about.cta.text_ar', 'Body Text (Arabic)', 'textarea', 3, true],
+                                    ['about.cta.shop_label_ar', 'Shop Button Label (Arabic)', 'text'],
+                                    ['about.cta.shop_url_ar', 'Shop Button URL (Arabic)', 'text'],
+                                    ['about.cta.contact_label_ar', 'Contact Button Label (Arabic)', 'text'],
+                                    ['about.cta.contact_url_ar', 'Contact Button URL (Arabic)', 'text'],
                                 ])),
 
                             Section::make('🔍 SEO (Arabic)')

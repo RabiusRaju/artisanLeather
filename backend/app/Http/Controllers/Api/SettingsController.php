@@ -93,14 +93,18 @@ class SettingsController extends Controller
 
             // About — Story
             'about.story.image'              => !empty($settings['about.story.image']) ? asset('storage/' . $settings['about.story.image']) : null,
+            'about.story.eyebrow'            => $settings['about.story.eyebrow']            ?? 'Our Story',
             'about.story.headline'           => $settings['about.story.headline']           ?? 'Born from a Love',
             'about.story.headline_accent'    => $settings['about.story.headline_accent']    ?? 'of the Craft',
             'about.story.years'              => $settings['about.story.years']              ?? '16+',
+            'about.story.years_label'        => $settings['about.story.years_label']        ?? 'Years of Craft',
             'about.story.p1'                 => $settings['about.story.p1']                 ?? 'Artisan Leather began not as a business plan, but as an obsession. Our founder spent years studying leatherwork — in Italy, in Morocco, and eventually in Oman — learning what makes a piece truly last.',
             'about.story.p2'                 => $settings['about.story.p2']                 ?? 'The first workshop was a single room in Muscat. Three craftsmen. One set of tools. No shortcuts. That ethos has never changed, even as the brand has grown across the GCC.',
             'about.story.p3'                 => $settings['about.story.p3']                 ?? 'Today, every piece that leaves our workshop is still inspected by hand, still stitched by hand, and still conditioned by hand — because the day we stop caring is the day we stop being Artisan Leather.',
 
             // About — Craft Steps
+            'about.craft.section_eyebrow'    => $settings['about.craft.section_eyebrow'] ?? 'The Process',
+            'about.craft.section_title'      => $settings['about.craft.section_title']   ?? 'The Art of Making',
             'about.craft.1.num'              => $settings['about.craft.1.num']   ?? '01',
             'about.craft.1.title'            => $settings['about.craft.1.title'] ?? 'Select the Hide',
             'about.craft.1.body'             => $settings['about.craft.1.body']  ?? 'Every hide is hand-inspected for natural grain, firmness, and character. Only the top 15% passes our standard — the rest is returned.',
@@ -115,17 +119,24 @@ class SettingsController extends Controller
             'about.craft.4.body'             => $settings['about.craft.4.body']  ?? 'Edges are bevelled, burnished, and hand-painted. The piece is conditioned with natural beeswax and left to settle — becoming truly itself.',
 
             // About — Materials
+            'about.material.section_eyebrow' => $settings['about.material.section_eyebrow'] ?? 'What We Use',
+            'about.material.section_title'   => $settings['about.material.section_title']   ?? 'Only the Finest Materials',
             'about.material.1.name'          => $settings['about.material.1.name']     ?? 'Full Grain',
             'about.material.1.subtitle'      => $settings['about.material.1.subtitle'] ?? 'The Pinnacle of Leather',
             'about.material.1.desc'          => $settings['about.material.1.desc']     ?? 'The outermost layer of the hide — untouched by sanding or buffing. Full grain retains every natural mark, developing a rich unique patina over decades.',
+            'about.material.1.image'         => !empty($settings['about.material.1.image']) ? asset('storage/' . $settings['about.material.1.image']) : null,
             'about.material.2.name'          => $settings['about.material.2.name']     ?? 'Vegetable Tanned',
             'about.material.2.subtitle'      => $settings['about.material.2.subtitle'] ?? 'Slow-Made & Sustainable',
             'about.material.2.desc'          => $settings['about.material.2.desc']     ?? 'Tanned using plant extracts — bark, leaves, roots — over 30–60 days. The result is leather with remarkable firmness that softens and deepens with age.',
+            'about.material.2.image'         => !empty($settings['about.material.2.image']) ? asset('storage/' . $settings['about.material.2.image']) : null,
             'about.material.3.name'          => $settings['about.material.3.name']     ?? 'Italian Calfskin',
             'about.material.3.subtitle'      => $settings['about.material.3.subtitle'] ?? 'Silken & Refined',
             'about.material.3.desc'          => $settings['about.material.3.desc']     ?? 'Sourced from the finest Italian tanneries. Calfskin offers an unmatched surface — fine-grained, almost silk-like, ideal for slim wallets and dress pieces.',
+            'about.material.3.image'         => !empty($settings['about.material.3.image']) ? asset('storage/' . $settings['about.material.3.image']) : null,
 
             // About — Values
+            'about.value.section_eyebrow'    => $settings['about.value.section_eyebrow'] ?? 'What We Stand For',
+            'about.value.section_title'      => $settings['about.value.section_title']   ?? 'Our Four Pillars',
             'about.value.1.number'           => $settings['about.value.1.number'] ?? 'I',
             'about.value.1.title'            => $settings['about.value.1.title']  ?? 'Heritage',
             'about.value.1.desc'             => $settings['about.value.1.desc']   ?? 'Rooted in centuries of leather tradition. Every technique we use can be traced back further than any trend.',
@@ -140,6 +151,8 @@ class SettingsController extends Controller
             'about.value.4.desc'             => $settings['about.value.4.desc']   ?? 'No shortcuts. No synthetic blends. No compromise. What you hold is exactly what it claims to be.',
 
             // About — Timeline
+            'about.timeline.section_eyebrow' => $settings['about.timeline.section_eyebrow'] ?? 'Our Journey',
+            'about.timeline.section_title'   => $settings['about.timeline.section_title']   ?? 'Sixteen Years in the Making',
             'about.timeline.1.year'          => $settings['about.timeline.1.year']  ?? '2009',
             'about.timeline.1.title'         => $settings['about.timeline.1.title'] ?? 'First Workshop',
             'about.timeline.1.desc'          => $settings['about.timeline.1.desc']  ?? 'A small atelier opened in the heart of Muscat. Three craftsmen. One mission.',
@@ -157,8 +170,13 @@ class SettingsController extends Controller
             'about.timeline.5.desc'          => $settings['about.timeline.5.desc']  ?? 'Bringing our full collection online — crafted in Oman, delivered to the world.',
 
             // About — CTA
+            'about.cta.eyebrow'              => $settings['about.cta.eyebrow'] ?? 'Start Your Journey',
             'about.cta.heading'              => $settings['about.cta.heading'] ?? 'Own a Piece of the Craft',
             'about.cta.text'                 => $settings['about.cta.text']    ?? 'Every wallet, bag, and belt we make is a promise — that the hands behind it cared as much as the hands that will carry it.',
+            'about.cta.shop_label'           => $settings['about.cta.shop_label']    ?? 'Shop Collection',
+            'about.cta.shop_url'             => $settings['about.cta.shop_url']      ?? '/collections',
+            'about.cta.contact_label'        => $settings['about.cta.contact_label'] ?? 'Get in Touch',
+            'about.cta.contact_url'          => $settings['about.cta.contact_url']   ?? '/contact',
 
             // About — SEO
             'about.seo.meta_title'           => $settings['about.seo.meta_title']       ?? '',
