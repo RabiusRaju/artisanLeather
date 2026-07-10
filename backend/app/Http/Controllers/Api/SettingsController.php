@@ -77,6 +77,18 @@ class SettingsController extends Controller
             'stats.4.value'                  => $settings['stats.4.value']              ?? 'GCC',
             'stats.4.label'                  => $settings['stats.4.label']              ?? 'Wide Delivery',
 
+            // Homepage Story
+            'home.story.image'               => !empty($settings['home.story.image']) ? asset('storage/' . $settings['home.story.image']) : null,
+            'home.story.eyebrow'             => $settings['home.story.eyebrow']         ?? 'Our Story',
+            'home.story.title1'              => $settings['home.story.title1']          ?? 'Crafted with Passion,',
+            'home.story.title2'              => $settings['home.story.title2']          ?? 'Built to Last',
+            'home.story.p1'                  => $settings['home.story.p1']              ?? 'At Artisan Leather, every piece begins with a single vision — to create something that transcends the ordinary. Founded in the heart of Oman, we source only the finest full-grain leathers from around the world.',
+            'home.story.p2'                  => $settings['home.story.p2']              ?? 'Each stitch is placed by hand. Each edge is burnished to perfection. We believe that luxury is not just in the material — it is in the mastery of those who shape it.',
+            'home.story.years'               => $settings['home.story.years']           ?? 'Building for the Future',
+            'home.story.years_label'         => $settings['home.story.years_label']     ?? 'Years of Craft',
+            'home.story.button_label'        => $settings['home.story.button_label']    ?? 'Discover Our Heritage',
+            'home.story.button_url'          => $settings['home.story.button_url']      ?? '/about',
+
             // Footer
             'footer.tagline'                 => $settings['footer.tagline']             ?? ($locale === 'ar'
                 ? 'منتجات جلدية فاخرة مصنوعة يدوياً. صُنعت في عُمان. تُوصَّل إلى دول الخليج.'

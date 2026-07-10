@@ -5,6 +5,7 @@ use Anthropic\Client as AnthropicClient;
 use App\Enums\NavigationGroupEnum;
 use App\Models\Setting;
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -213,6 +214,61 @@ class HomepageSettings extends Page implements HasSchemas
                                     TextInput::make('stats.3.label')->label('Stat 3 — Label')->placeholder('Unique Designs'),
                                     TextInput::make('stats.4.label')->label('Stat 4 — Label')->placeholder('Wide Delivery'),
                                 ]),
+
+                            Section::make('📖 Story Section')
+                                ->description('Homepage story block below collections. Separate from the full About page story.')
+                                ->columns(2)
+                                ->schema([
+                                    FileUpload::make('home.story.image')
+                                        ->label('Story Image')
+                                        ->helperText('Optional. If empty, the AL monogram card is shown. Recommended: portrait image, e.g. 1000×1250px.')
+                                        ->image()
+                                        ->disk('public')
+                                        ->directory('homepage/story')
+                                        ->imageEditor()
+                                        ->maxSize(5120)
+                                        ->columnSpanFull(),
+
+                                    TextInput::make('home.story.eyebrow')
+                                        ->label('Eyebrow')
+                                        ->placeholder('Our Story')
+                                        ->columnSpanFull(),
+
+                                    TextInput::make('home.story.title1')
+                                        ->label('Title — Line 1')
+                                        ->placeholder('Crafted with Passion,'),
+
+                                    TextInput::make('home.story.title2')
+                                        ->label('Title — Line 2')
+                                        ->placeholder('Built to Last'),
+
+                                    Textarea::make('home.story.p1')
+                                        ->label('Paragraph 1')
+                                        ->rows(3)
+                                        ->columnSpanFull(),
+
+                                    Textarea::make('home.story.p2')
+                                        ->label('Paragraph 2')
+                                        ->rows(3)
+                                        ->columnSpanFull(),
+
+                                    TextInput::make('home.story.years')
+                                        ->label('Floating Card Title')
+                                        ->placeholder('Building for the Future'),
+
+                                    TextInput::make('home.story.years_label')
+                                        ->label('Floating Card Subtitle')
+                                        ->placeholder('Years of Craft'),
+
+                                    TextInput::make('home.story.button_label')
+                                        ->label('Button Label')
+                                        ->placeholder('Discover Our Heritage'),
+
+                                    TextInput::make('home.story.button_url')
+                                        ->label('Button URL')
+                                        ->placeholder('/about')
+                                        ->helperText('Use an internal path like /about or a full URL.'),
+                                ]),
                         ]),
 
                     Tab::make('Arabic / عربي')
@@ -238,6 +294,21 @@ class HomepageSettings extends Page implements HasSchemas
                                     ['stats.2.label_ar', 'Stat 2 — Label (Arabic)', 'text'],
                                     ['stats.3.label_ar', 'Stat 3 — Label (Arabic)', 'text'],
                                     ['stats.4.label_ar', 'Stat 4 — Label (Arabic)', 'text'],
+                                ])),
+
+                            Section::make('📖 Story Section (Arabic)')
+                                ->description('Arabic translations for the homepage story block.')
+                                ->columns(2)
+                                ->schema(self::arabicFields([
+                                    ['home.story.eyebrow_ar', 'Eyebrow (Arabic)', 'text', null, true],
+                                    ['home.story.title1_ar', 'Title — Line 1 (Arabic)', 'text'],
+                                    ['home.story.title2_ar', 'Title — Line 2 (Arabic)', 'text'],
+                                    ['home.story.p1_ar', 'Paragraph 1 (Arabic)', 'textarea', 3, true],
+                                    ['home.story.p2_ar', 'Paragraph 2 (Arabic)', 'textarea', 3, true],
+                                    ['home.story.years_ar', 'Floating Card Title (Arabic)', 'text'],
+                                    ['home.story.years_label_ar', 'Floating Card Subtitle (Arabic)', 'text'],
+                                    ['home.story.button_label_ar', 'Button Label (Arabic)', 'text'],
+                                    ['home.story.button_url_ar', 'Button URL (Arabic)', 'text'],
                                 ])),
                         ]),
 
