@@ -35,8 +35,8 @@ export default function Home() {
     <main>
       <SEO
         url="/"
-        title={s['homepage.seo.meta_title'] || "Luxury Leather Wallets, Bags & Accessories"}
-        description={s['homepage.seo.meta_description'] || "Discover premium handcrafted leather wallets, bags, belts and accessories from Artisan Leather, Muscat Oman. Free delivery across Oman and GCC. Shop now."}
+        title={s['homepage.seo.meta_title'] || undefined}
+        description={s['homepage.seo.meta_description'] || undefined}
         type="website"
       />
       <Helmet>
