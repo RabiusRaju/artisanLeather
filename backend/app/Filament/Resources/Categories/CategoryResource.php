@@ -9,6 +9,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use App\Enums\NavigationGroupEnum;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -31,20 +32,37 @@ class CategoryResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            TextInput::make('name')
-                ->required()
-                ->live(onBlur: true)
-                ->afterStateUpdated(fn($state, $set) => $set('slug', Str::slug($state))),
-            TextInput::make('name_ar')->label('Name (Arabic)'),
-            TextInput::make('slug')->required()->unique(ignoreRecord: true),
-            FileUpload::make('image')->image()->directory('categories')->disk('public')->visibility('public'),
-            TextInput::make('image_alt')
-                ->label('Image ALT Text')
-                ->placeholder('e.g. Handcrafted leather wallets collection by Artisan Leather Oman')
-                ->helperText('Describe the category image for SEO and screen readers.')
-                ->maxLength(125),
-            TextInput::make('sort_order')->numeric()->default(0),
-            Toggle::make('is_active')->default(true),
+            Section::make('Category Details')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('name')
+                        ->required()
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(fn($state, $set) => $set('slug', Str::slug($state))),
+                    TextInput::make('name_ar')->label('Name (Arabic)'),
+                    TextInput::make('slug')->required()->unique(ignoreRecord: true),
+                    TextInput::make('sort_order')->numeric()->default(0),
+                    Toggle::make('is_active')->default(true),
+                ]),
+
+            Section::make('Homepage Collection Card Image')
+                ->description('This image appears on the homepage Collections cards, like Wallets, Bags, Belts, and Accessories.')
+                ->schema([
+                    FileUpload::make('image')
+                        ->label('Upload Image')
+                        ->image()
+                        ->imageEditor()
+                        ->directory('categories')
+                        ->disk('public')
+                        ->visibility('public')
+                        ->maxSize(4096)
+                        ->helperText('Recommended: portrait image, around 900×1200px. This fills the homepage collection card.'),
+                    TextInput::make('image_alt')
+                        ->label('Image ALT Text')
+                        ->placeholder('e.g. Handcrafted leather wallets collection by Artisan Leather Oman')
+                        ->helperText('Describe the category image for SEO and screen readers.')
+                        ->maxLength(125),
+                ]),
         ]);
     }
 

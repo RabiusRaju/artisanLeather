@@ -230,27 +230,42 @@ class HomepageSettings extends Page implements HasSchemas
                                     TextInput::make('stats.4.label')->label('Stat 4 — Label')->placeholder('Wide Delivery'),
                                 ]),
 
-                            Section::make('🧩 Homepage Sections')
-                                ->description('Labels and links for dynamic homepage sections. Empty labels stay hidden on the website.')
+                            Section::make('🗂️ Collections Section')
+                                ->description('Controls the homepage category/collection cards section.')
                                 ->columns(2)
                                 ->schema([
                                     TextInput::make('home.collections.eyebrow')->label('Collections — Eyebrow'),
                                     TextInput::make('home.collections.title')->label('Collections — Title'),
                                     TextInput::make('home.collections.card_cta')->label('Collections — Card CTA'),
+                                ]),
 
+                            Section::make('⭐ Featured Products Section')
+                                ->description('Controls the featured products heading, view-all link, and product card hover CTA.')
+                                ->columns(2)
+                                ->schema([
                                     TextInput::make('home.products.eyebrow')->label('Featured Products — Eyebrow'),
                                     TextInput::make('home.products.title')->label('Featured Products — Title'),
                                     TextInput::make('home.products.view_all_label')->label('Featured Products — View All Label'),
                                     TextInput::make('home.products.view_all_url')->label('Featured Products — View All URL')->placeholder('/collections'),
                                     TextInput::make('home.products.card_cta')->label('Featured Products — Card CTA'),
+                                ]),
 
+                            Section::make('🏷️ Featured Brands Section')
+                                ->description('Controls the featured brands heading, view-all link, card CTA, and count label.')
+                                ->columns(2)
+                                ->schema([
                                     TextInput::make('home.brands.eyebrow')->label('Featured Brands — Eyebrow'),
                                     TextInput::make('home.brands.title')->label('Featured Brands — Title'),
                                     TextInput::make('home.brands.view_all_label')->label('Featured Brands — View All Label'),
                                     TextInput::make('home.brands.view_all_url')->label('Featured Brands — View All URL')->placeholder('/collections'),
                                     TextInput::make('home.brands.card_cta')->label('Featured Brands — Card CTA'),
                                     TextInput::make('home.brands.pieces_label')->label('Featured Brands — Pieces Label')->placeholder('pieces'),
+                                ]),
 
+                            Section::make('💬 Testimonials Section')
+                                ->description('Controls the homepage testimonials heading. Testimonial cards come from the Testimonials module.')
+                                ->columns(2)
+                                ->schema([
                                     TextInput::make('home.testimonials.eyebrow')->label('Testimonials — Eyebrow'),
                                     TextInput::make('home.testimonials.title')->label('Testimonials — Title'),
                                 ]),
@@ -345,24 +360,42 @@ class HomepageSettings extends Page implements HasSchemas
                                     ['stats.4.label_ar', 'Stat 4 — Label (Arabic)', 'text'],
                                 ])),
 
-                            Section::make('🧩 Homepage Sections (Arabic)')
-                                ->description('Arabic labels and links for dynamic homepage sections.')
+                            Section::make('🗂️ Collections Section (Arabic)')
+                                ->description('Arabic labels for the homepage category/collection cards section.')
                                 ->columns(2)
                                 ->schema(self::arabicFields([
                                     ['home.collections.eyebrow_ar', 'Collections — Eyebrow (Arabic)', 'text'],
                                     ['home.collections.title_ar', 'Collections — Title (Arabic)', 'text'],
                                     ['home.collections.card_cta_ar', 'Collections — Card CTA (Arabic)', 'text'],
+                                ])),
+
+                            Section::make('⭐ Featured Products Section (Arabic)')
+                                ->description('Arabic labels and links for the featured products section.')
+                                ->columns(2)
+                                ->schema(self::arabicFields([
                                     ['home.products.eyebrow_ar', 'Featured Products — Eyebrow (Arabic)', 'text'],
                                     ['home.products.title_ar', 'Featured Products — Title (Arabic)', 'text'],
                                     ['home.products.view_all_label_ar', 'Featured Products — View All Label (Arabic)', 'text'],
                                     ['home.products.view_all_url_ar', 'Featured Products — View All URL (Arabic)', 'text'],
                                     ['home.products.card_cta_ar', 'Featured Products — Card CTA (Arabic)', 'text'],
+                                ])),
+
+                            Section::make('🏷️ Featured Brands Section (Arabic)')
+                                ->description('Arabic labels and links for the featured brands section.')
+                                ->columns(2)
+                                ->schema(self::arabicFields([
                                     ['home.brands.eyebrow_ar', 'Featured Brands — Eyebrow (Arabic)', 'text'],
                                     ['home.brands.title_ar', 'Featured Brands — Title (Arabic)', 'text'],
                                     ['home.brands.view_all_label_ar', 'Featured Brands — View All Label (Arabic)', 'text'],
                                     ['home.brands.view_all_url_ar', 'Featured Brands — View All URL (Arabic)', 'text'],
                                     ['home.brands.card_cta_ar', 'Featured Brands — Card CTA (Arabic)', 'text'],
                                     ['home.brands.pieces_label_ar', 'Featured Brands — Pieces Label (Arabic)', 'text'],
+                                ])),
+
+                            Section::make('💬 Testimonials Section (Arabic)')
+                                ->description('Arabic heading for the homepage testimonials section.')
+                                ->columns(2)
+                                ->schema(self::arabicFields([
                                     ['home.testimonials.eyebrow_ar', 'Testimonials — Eyebrow (Arabic)', 'text'],
                                     ['home.testimonials.title_ar', 'Testimonials — Title (Arabic)', 'text'],
                                 ])),
