@@ -299,8 +299,8 @@ export default function About() {
     <div className="min-h-screen bg-dark">
 
       <SEO
-        title={s['about.seo.meta_title'] || "Our Story — Leather Artisans, Muscat"}
-        description={s['about.seo.meta_description'] || "Learn about Artisan Leather's heritage, craftsmanship philosophy, and the skilled artisans behind every handcrafted leather piece made in Muscat, Oman."}
+        title={s['about.seo.meta_title'] || undefined}
+        description={s['about.seo.meta_description'] || undefined}
         url="/about"
       />
 

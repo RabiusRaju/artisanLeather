@@ -592,10 +592,10 @@ class AboutPageSettings extends Page implements HasSchemas
 
             // ── SEO ───────────────────────────────────────────────────────
             Section::make('🔍 SEO')
-                ->description('Custom meta title and description for the About page. Overrides the site-wide defaults.')
+                ->description('Custom English meta title and description for the About page. Arabic SEO is in the Arabic tab.')
                 ->schema([
                     TextInput::make('about.seo.meta_title')
-                        ->label('SEO Title')
+                        ->label('SEO Title (English)')
                         ->maxLength(70)
                         ->placeholder('Our Story — Handcrafted Leather Artisans in Muscat, Oman')
                         ->helperText(fn($state) => sprintf('%d chars · Max 60 for best display %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 60 ? '⚠️' : '✅'))
@@ -603,7 +603,7 @@ class AboutPageSettings extends Page implements HasSchemas
                         ->columnSpanFull(),
 
                     Textarea::make('about.seo.meta_description')
-                        ->label('SEO Description')
+                        ->label('SEO Description (English)')
                         ->maxLength(170)
                         ->rows(3)
                         ->placeholder('Learn about Artisan Leather\'s heritage, craftsmanship philosophy, and the skilled artisans behind every handcrafted leather piece made in Muscat, Oman.')
@@ -612,10 +612,10 @@ class AboutPageSettings extends Page implements HasSchemas
                         ->columnSpanFull(),
 
                     Placeholder::make('about_google_preview')
-                        ->label('Google Preview')
+                        ->label('Google Preview (English)')
                         ->content(function ($get) {
-                            $title = $get('about.seo.meta_title') ?: 'Our Story — Handcrafted Leather Artisans in Muscat, Oman';
-                            $desc  = $get('about.seo.meta_description') ?: 'Learn about Artisan Leather\'s heritage, craftsmanship philosophy, and the skilled artisans behind every handcrafted leather piece made in Muscat, Oman.';
+                            $title = $get('about.seo.meta_title') ?: '';
+                            $desc  = $get('about.seo.meta_description') ?: '';
                             return new HtmlString('
                                 <div style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
                                     <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com › about</div>
