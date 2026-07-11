@@ -70,7 +70,7 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
-                ImageColumn::make('image')->square()->size(48),
+                ImageColumn::make('image')->disk('public')->square()->size(48),
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('name_ar')->label('Arabic'),
                 TextColumn::make('products_count')->counts('products')->label('Products'),
