@@ -330,6 +330,42 @@ class HomepageSettings extends Page implements HasSchemas
                                         ->placeholder('/about')
                                         ->helperText('Use an internal path like /about or a full URL.'),
                                 ]),
+
+                            Section::make('🔍 SEO')
+                                ->description('Custom English meta title and description for the Homepage. Overrides the site-wide defaults.')
+                                ->schema([
+                                    TextInput::make('homepage.seo.meta_title')
+                                        ->label('SEO Title (English)')
+                                        ->maxLength(70)
+                                        ->placeholder('Luxury Handcrafted Leather Goods — Wallets, Bags & Accessories | Artisan Leather Oman')
+                                        ->helperText(fn($state) => sprintf('%d chars · Max 60 for best display %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 60 ? '⚠️' : '✅'))
+                                        ->live(onBlur: true)
+                                        ->columnSpanFull(),
+
+                                    Textarea::make('homepage.seo.meta_description')
+                                        ->label('SEO Description (English)')
+                                        ->maxLength(170)
+                                        ->rows(3)
+                                        ->placeholder('Discover premium handcrafted leather wallets, bags, belts and accessories from Artisan Leather, Muscat Oman. Free delivery across Oman and GCC.')
+                                        ->helperText(fn($state) => sprintf('%d chars · Max 160 chars %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 160 ? '⚠️' : '✅'))
+                                        ->live(onBlur: true)
+                                        ->columnSpanFull(),
+
+                                    Placeholder::make('homepage_google_preview_en')
+                                        ->label('Google Preview (English)')
+                                        ->content(function ($get) {
+                                            $title = $get('homepage.seo.meta_title') ?: '';
+                                            $desc  = $get('homepage.seo.meta_description') ?: '';
+                                            return new HtmlString('
+                                                <div style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+                                                    <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com</div>
+                                                    <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
+                                                    <div style="font-size:13px;color:#545454;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
+                                                </div>
+                                            ');
+                                        })
+                                        ->columnSpanFull(),
+                                ]),
                         ]),
 
                     Tab::make('Arabic / عربي')
@@ -414,6 +450,44 @@ class HomepageSettings extends Page implements HasSchemas
                                     ['home.story.button_label_ar', 'Button Label (Arabic)', 'text'],
                                     ['home.story.button_url_ar', 'Button URL (Arabic)', 'text'],
                                 ])),
+
+                            Section::make('🔍 SEO (Arabic)')
+                                ->description('Custom Arabic meta title and description for the Homepage.')
+                                ->schema([
+                                    TextInput::make('homepage.seo.meta_title_ar')
+                                        ->label('SEO Title (Arabic)')
+                                        ->maxLength(70)
+                                        ->placeholder('منتجات جلدية فاخرة مصنوعة يدوياً | آرتيزان ليذر عُمان')
+                                        ->helperText(fn($state) => sprintf('%d chars · Max 60 for best display %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 60 ? '⚠️' : '✅'))
+                                        ->extraInputAttributes(['dir' => 'rtl'])
+                                        ->live(onBlur: true)
+                                        ->columnSpanFull(),
+
+                                    Textarea::make('homepage.seo.meta_description_ar')
+                                        ->label('SEO Description (Arabic)')
+                                        ->maxLength(170)
+                                        ->rows(3)
+                                        ->placeholder('اكتشف محافظ وحقائب وأحزمة جلدية فاخرة مصنوعة يدوياً من آرتيزان ليذر في مسقط، عُمان.')
+                                        ->helperText(fn($state) => sprintf('%d chars · Max 160 chars %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 160 ? '⚠️' : '✅'))
+                                        ->extraInputAttributes(['dir' => 'rtl'])
+                                        ->live(onBlur: true)
+                                        ->columnSpanFull(),
+
+                                    Placeholder::make('homepage_google_preview_ar')
+                                        ->label('Google Preview (Arabic)')
+                                        ->content(function ($get) {
+                                            $title = $get('homepage.seo.meta_title_ar') ?: '';
+                                            $desc  = $get('homepage.seo.meta_description_ar') ?: '';
+                                            return new HtmlString('
+                                                <div dir="rtl" style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;text-align:right;">
+                                                    <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com</div>
+                                                    <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
+                                                    <div style="font-size:13px;color:#545454;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
+                                                </div>
+                                            ');
+                                        })
+                                        ->columnSpanFull(),
+                                ]),
                         ]),
 
                     Tab::make('Preview')
@@ -461,77 +535,6 @@ class HomepageSettings extends Page implements HasSchemas
                                         ->columnSpanFull(),
                                 ]),
                         ]),
-                ]),
-
-            // ── SEO ───────────────────────────────────────────────────────
-            Section::make('🔍 SEO')
-                ->description('Custom English and Arabic meta titles/descriptions for the Homepage. Overrides the site-wide defaults.')
-                ->schema([
-                    TextInput::make('homepage.seo.meta_title')
-                        ->label('SEO Title (English)')
-                        ->maxLength(70)
-                        ->placeholder('Luxury Handcrafted Leather Goods — Wallets, Bags & Accessories | Artisan Leather Oman')
-                        ->helperText(fn($state) => sprintf('%d chars · Max 60 for best display %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 60 ? '⚠️' : '✅'))
-                        ->live(onBlur: true)
-                        ->columnSpanFull(),
-
-                    Textarea::make('homepage.seo.meta_description')
-                        ->label('SEO Description (English)')
-                        ->maxLength(170)
-                        ->rows(3)
-                        ->placeholder('Discover premium handcrafted leather wallets, bags, belts and accessories from Artisan Leather, Muscat Oman. Free delivery across Oman and GCC.')
-                        ->helperText(fn($state) => sprintf('%d chars · Max 160 chars %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 160 ? '⚠️' : '✅'))
-                        ->live(onBlur: true)
-                        ->columnSpanFull(),
-
-                    Placeholder::make('homepage_google_preview_en')
-                        ->label('Google Preview (English)')
-                        ->content(function ($get) {
-                            $title = $get('homepage.seo.meta_title') ?: '';
-                            $desc  = $get('homepage.seo.meta_description') ?: '';
-                            return new HtmlString('
-                                <div style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
-                                    <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com</div>
-                                    <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
-                                    <div style="font-size:13px;color:#545454;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
-                                </div>
-                            ');
-                        })
-                        ->columnSpanFull(),
-
-                    TextInput::make('homepage.seo.meta_title_ar')
-                        ->label('SEO Title (Arabic)')
-                        ->maxLength(70)
-                        ->placeholder('منتجات جلدية فاخرة مصنوعة يدوياً | آرتيزان ليذر عُمان')
-                        ->helperText(fn($state) => sprintf('%d chars · Max 60 for best display %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 60 ? '⚠️' : '✅'))
-                        ->extraInputAttributes(['dir' => 'rtl'])
-                        ->live(onBlur: true)
-                        ->columnSpanFull(),
-
-                    Textarea::make('homepage.seo.meta_description_ar')
-                        ->label('SEO Description (Arabic)')
-                        ->maxLength(170)
-                        ->rows(3)
-                        ->placeholder('اكتشف محافظ وحقائب وأحزمة جلدية فاخرة مصنوعة يدوياً من آرتيزان ليذر في مسقط، عُمان.')
-                        ->helperText(fn($state) => sprintf('%d chars · Max 160 chars %s', mb_strlen($state ?? ''), mb_strlen($state ?? '') > 160 ? '⚠️' : '✅'))
-                        ->extraInputAttributes(['dir' => 'rtl'])
-                        ->live(onBlur: true)
-                        ->columnSpanFull(),
-
-                    Placeholder::make('homepage_google_preview_ar')
-                        ->label('Google Preview (Arabic)')
-                        ->content(function ($get) {
-                            $title = $get('homepage.seo.meta_title_ar') ?: '';
-                            $desc  = $get('homepage.seo.meta_description_ar') ?: '';
-                            return new HtmlString('
-                                <div dir="rtl" style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;text-align:right;">
-                                    <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com</div>
-                                    <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
-                                    <div style="font-size:13px;color:#545454;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
-                                </div>
-                            ');
-                        })
-                        ->columnSpanFull(),
                 ]),
 
             // ── SEO Ranking Potential ─────────────────────────────────────
