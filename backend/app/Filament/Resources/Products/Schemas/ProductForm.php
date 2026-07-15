@@ -43,9 +43,11 @@ class ProductForm
                     ->default(null),
                 Textarea::make('care')
                     ->default(null)
+                    ->helperText('Enter one care instruction per line. Each line will show as a bullet point on the product page.')
                     ->columnSpanFull(),
                 Textarea::make('care_ar')
                     ->default(null)
+                    ->helperText('Enter one care instruction per line. Each line will show as a bullet point on the product page.')
                     ->columnSpanFull(),
                 Textarea::make('shipping')
                     ->default(null)

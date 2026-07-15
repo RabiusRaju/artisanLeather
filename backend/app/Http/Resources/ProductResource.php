@@ -44,8 +44,12 @@ class ProductResource extends JsonResource
             'review_count'   => $this->review_count,
 
             // SEO fields — custom if set, otherwise null (frontend falls back gracefully)
-            'meta_title'       => $this->meta_title ?: null,
-            'meta_description' => $this->meta_description ?: null,
+            'meta_title'       => $locale === 'ar' && $this->meta_title_ar ? $this->meta_title_ar : ($this->meta_title ?: null),
+            'meta_description' => $locale === 'ar' && $this->meta_description_ar ? $this->meta_description_ar : ($this->meta_description ?: null),
+            'meta_title_en'    => $this->meta_title ?: null,
+            'meta_description_en' => $this->meta_description ?: null,
+            'meta_title_ar'    => $this->meta_title_ar ?: null,
+            'meta_description_ar' => $this->meta_description_ar ?: null,
             'category'    => [
                 'id'   => $this->category->id,
                 'name' => $locale === 'ar' && $this->category->name_ar ? $this->category->name_ar : $this->category->name,

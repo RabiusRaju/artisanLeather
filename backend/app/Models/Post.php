@@ -14,6 +14,7 @@ class Post extends Model
         'title', 'title_ar', 'title_bn', 'slug', 'excerpt', 'excerpt_ar', 'excerpt_bn',
         'content', 'content_ar', 'content_bn', 'featured_image', 'featured_image_alt', 'category', 'tags',
         'author', 'meta_title', 'meta_description',
+        'meta_title_ar', 'meta_description_ar', 'meta_title_bn', 'meta_description_bn',
         'is_published', 'published_at', 'read_time', 'shared_platforms',
     ];
 

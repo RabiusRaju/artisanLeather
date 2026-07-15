@@ -8,7 +8,7 @@ const api = axios.create({
 // Attach language header + auth token from localStorage on every request
 api.interceptors.request.use((config) => {
   const lang = localStorage.getItem('i18nextLng') || 'en'
-  config.headers['Accept-Language'] = lang.startsWith('ar') ? 'ar' : 'en'
+  config.headers['Accept-Language'] = lang.startsWith('ar') ? 'ar' : (lang.startsWith('bn') ? 'bn' : 'en')
 
   const token = localStorage.getItem('al_token')
   if (token) {

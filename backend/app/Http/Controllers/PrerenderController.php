@@ -76,8 +76,9 @@ class PrerenderController extends Controller
     // GET /prerender/blog/{slug}
     public function blogPost(Request $request, string $slug)
     {
-        $language = $request->query('lang') === 'ar' ? 'ar' : 'en';
+        $language = in_array($request->query('lang'), ['ar', 'bn'], true) ? $request->query('lang') : 'en';
         $isArabic = $language === 'ar';
+        $isBangla = $language === 'bn';
         $url = "https://artisanleatherom.com/blog/{$slug}?lang={$language}";
 
         // Defence in depth: if a human reaches this route directly (Caddy
@@ -93,9 +94,25 @@ class PrerenderController extends Controller
             ? (str_starts_with($post->featured_image, 'http') ? $post->featured_image : asset('storage/' . $post->featured_image))
             : null;
 
-        $title = $isArabic && $post->title_ar ? $post->title_ar : ($post->meta_title ?: $post->title);
-        $description = $isArabic && $post->excerpt_ar ? $post->excerpt_ar : ($post->meta_description ?: $post->excerpt);
-        $content = $isArabic && $post->content_ar ? $post->content_ar : ($post->content ?: $post->excerpt ?: '');
+        $title = match (true) {
+            $isArabic && filled($post->meta_title_ar) => $post->meta_title_ar,
+            $isArabic && filled($post->title_ar) => $post->title_ar,
+            $isBangla && filled($post->meta_title_bn) => $post->meta_title_bn,
+            $isBangla && filled($post->title_bn) => $post->title_bn,
+            default => $post->meta_title ?: $post->title,
+        };
+        $description = match (true) {
+            $isArabic && filled($post->meta_description_ar) => $post->meta_description_ar,
+            $isArabic && filled($post->excerpt_ar) => $post->excerpt_ar,
+            $isBangla && filled($post->meta_description_bn) => $post->meta_description_bn,
+            $isBangla && filled($post->excerpt_bn) => $post->excerpt_bn,
+            default => $post->meta_description ?: $post->excerpt,
+        };
+        $content = match (true) {
+            $isArabic && filled($post->content_ar) => $post->content_ar,
+            $isBangla && filled($post->content_bn) => $post->content_bn,
+            default => $post->content ?: $post->excerpt ?: '',
+        };
 
         $schema = json_encode([
             '@context'         => 'https://schema.org',
@@ -162,8 +179,16 @@ class PrerenderController extends Controller
             ? (str_starts_with($imagePath, 'http') ? $imagePath : asset('storage/' . $imagePath))
             : null;
 
-        $title = $isArabic && $product->name_ar ? $product->name_ar : ($product->meta_title ?: $product->name);
-        $description = $isArabic && $product->tagline_ar ? $product->tagline_ar : ($product->meta_description ?: $product->tagline);
+        $title = match (true) {
+            $isArabic && filled($product->meta_title_ar) => $product->meta_title_ar,
+            $isArabic && filled($product->name_ar) => $product->name_ar,
+            default => $product->meta_title ?: $product->name,
+        };
+        $description = match (true) {
+            $isArabic && filled($product->meta_description_ar) => $product->meta_description_ar,
+            $isArabic && filled($product->tagline_ar) => $product->tagline_ar,
+            default => $product->meta_description ?: $product->tagline,
+        };
         $bodyDescription = $isArabic && $product->description_ar ? $product->description_ar : ($product->description ?: $description);
         $brandName = $isArabic && $product->brand?->name_ar ? $product->brand->name_ar : ($product->brand?->name ?? 'Artisan Leather');
 
