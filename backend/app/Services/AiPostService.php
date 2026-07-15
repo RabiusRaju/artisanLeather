@@ -159,6 +159,10 @@ PROMPT;
             'read_time'         => $readTime,
             'meta_title'        => $outline['meta_title'] ?? '',
             'meta_description'  => $outline['meta_description'] ?? '',
+            'meta_title_ar'     => $metaTranslation['meta_title_ar'] ?? '',
+            'meta_description_ar' => $metaTranslation['meta_description_ar'] ?? '',
+            'meta_title_bn'     => $metaTranslation['meta_title_bn'] ?? '',
+            'meta_description_bn' => $metaTranslation['meta_description_bn'] ?? '',
             'seo_score'         => $outline['seo_score'] ?? 0,
             'seo_notes'         => $outline['seo_notes'] ?? '',
         ];
@@ -610,8 +614,12 @@ Return a single JSON object with exactly these keys:
 {
   "title_ar": "Arabic translation of the title",
   "excerpt_ar": "Arabic translation of the excerpt",
+  "meta_title_ar": "Arabic SEO title under 60 chars",
+  "meta_description_ar": "Arabic SEO description 140-160 chars",
   "title_bn": "Bangla translation of the title",
-  "excerpt_bn": "Bangla translation of the excerpt"{$captionKey}
+  "excerpt_bn": "Bangla translation of the excerpt",
+  "meta_title_bn": "Bangla SEO title under 60 chars",
+  "meta_description_bn": "Bangla SEO description 140-160 chars"{$captionKey}
 }
 MSG;
     }
@@ -703,6 +711,8 @@ Return a single JSON object with exactly these keys:
   "shipping_ar": "Shipping info in Arabic",
   "meta_title": "SEO title under 60 chars — Artisan Leather Oman",
   "meta_description": "SEO description 140-160 chars",
+  "meta_title_ar": "Arabic SEO title under 60 chars",
+  "meta_description_ar": "Arabic SEO description 140-160 chars",
   "seo_score": 74,
   "seo_notes": "3-5 concise actionable SEO tips specific to this product listing. Each tip on its own line starting with a dash.",
   "details": [

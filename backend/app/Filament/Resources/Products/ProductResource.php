@@ -304,6 +304,49 @@ class ProductResource extends Resource
                                     ->columnSpanFull(),
                             ])->columns(3),
 
+                            Section::make('🔍 SEO (English)')
+                                ->description('Custom English meta title and description for this product.')
+                                ->schema([
+                                    TextInput::make('meta_title')
+                                        ->label('SEO Title (English)')
+                                        ->placeholder('e.g. Heritage Bifold Wallet — Handcrafted Leather | Artisan Leather Oman')
+                                        ->maxLength(70)
+                                        ->helperText(fn ($state) => sprintf(
+                                            'Max 60 chars · %d chars used %s · Leave blank to auto-generate from product name.',
+                                            mb_strlen($state ?? ''),
+                                            mb_strlen($state ?? '') > 60 ? '⚠️ TOO LONG' : '✅'
+                                        ))
+                                        ->columnSpanFull()
+                                        ->live(onBlur: true),
+
+                                    Textarea::make('meta_description')
+                                        ->label('SEO Description (English)')
+                                        ->placeholder('e.g. Handcrafted Heritage Bifold Wallet in full-grain leather. 8 card slots, 2 bill compartments. Free delivery across Oman. Shop now at Artisan Leather Muscat.')
+                                        ->maxLength(170)
+                                        ->rows(3)
+                                        ->helperText('Max 160 characters. Describe the product with keywords. Leave blank to use the tagline.')
+                                        ->columnSpanFull(),
+
+                                    Placeholder::make('google_preview')
+                                        ->label('Google Preview (English)')
+                                        ->content(function ($get, $record) {
+                                            $name  = $get('name') ?: ($record?->name ?? 'Product Name');
+                                            $title = $get('meta_title') ?: ($name . ' — Handcrafted Leather | Artisan Leather Oman');
+                                            $desc  = $get('meta_description') ?: ($get('tagline') ?: 'Premium handcrafted leather goods from Artisan Leather, Muscat Oman.');
+                                            $slug  = $get('slug') ?: 'product-slug';
+
+                                            return new HtmlString('
+                                                <div style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+                                                    <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com › product › ' . e($slug) . '</div>
+                                                    <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;font-weight:normal;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
+                                                    <div style="font-size:13px;color:#545454;line-height:1.5;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
+                                                    <div style="margin-top:8px;font-size:11px;color:' . (mb_strlen($title) > 60 ? '#dc2626' : '#059669') . ';">Title: ' . mb_strlen($title) . ' chars ' . (mb_strlen($title) > 60 ? '⚠️ too long' : '✅') . ' &nbsp;|&nbsp; Description: ' . mb_strlen($desc) . ' chars ' . (mb_strlen($desc) > 160 ? '⚠️ too long' : '✅') . '</div>
+                                                </div>
+                                            ');
+                                        })
+                                        ->columnSpanFull(),
+                                ])->columns(1),
+
                             Section::make('Pricing')->schema([
                                 TextInput::make('price')
                                     ->label('Price')
@@ -410,6 +453,7 @@ class ProductResource extends Resource
                             Section::make('Care & Shipping (Arabic)')->schema([
                                 Textarea::make('care_ar')
                                     ->label('Care Instructions (Arabic)')
+                                    ->helperText('Enter one care instruction per line. Each line will show as a bullet point on the product page.')
                                     ->rows(3)
                                     ->columnSpan(1),
 
@@ -418,6 +462,56 @@ class ProductResource extends Resource
                                     ->rows(3)
                                     ->columnSpan(1),
                             ])->columns(2),
+
+                            Section::make('🔍 SEO (Arabic)')
+                                ->description('Custom Arabic meta title and description for this product.')
+                                ->schema([
+                                    TextInput::make('meta_title_ar')
+                                        ->label('SEO Title (Arabic)')
+                                        ->placeholder('e.g. محفظة جلدية تراثية مصنوعة يدوياً | آرتيزان ليذر عُمان')
+                                        ->maxLength(70)
+                                        ->helperText(fn ($state) => sprintf(
+                                            'Max 60 chars · %d chars used %s.',
+                                            mb_strlen($state ?? ''),
+                                            mb_strlen($state ?? '') > 60 ? '⚠️ TOO LONG' : '✅'
+                                        ))
+                                        ->extraInputAttributes(['dir' => 'rtl'])
+                                        ->columnSpanFull()
+                                        ->live(onBlur: true),
+
+                                    Textarea::make('meta_description_ar')
+                                        ->label('SEO Description (Arabic)')
+                                        ->placeholder('اكتب وصفاً عربياً مختصراً للمنتج يظهر في نتائج البحث والمشاركة.')
+                                        ->maxLength(170)
+                                        ->rows(3)
+                                        ->helperText(fn ($state) => sprintf(
+                                            'Max 160 chars · %d chars used %s.',
+                                            mb_strlen($state ?? ''),
+                                            mb_strlen($state ?? '') > 160 ? '⚠️ TOO LONG' : '✅'
+                                        ))
+                                        ->extraInputAttributes(['dir' => 'rtl'])
+                                        ->columnSpanFull()
+                                        ->live(onBlur: true),
+
+                                    Placeholder::make('google_preview_ar')
+                                        ->label('Google Preview (Arabic)')
+                                        ->content(function ($get, $record) {
+                                            $name  = $get('name_ar') ?: ($record?->name_ar ?? '');
+                                            $title = $get('meta_title_ar') ?: $name;
+                                            $desc  = $get('meta_description_ar') ?: ($get('tagline_ar') ?: '');
+                                            $slug  = $get('slug') ?: 'product-slug';
+
+                                            return new HtmlString('
+                                                <div dir="rtl" style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;text-align:right;">
+                                                    <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com › product › ' . e($slug) . '</div>
+                                                    <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;font-weight:normal;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
+                                                    <div style="font-size:13px;color:#545454;line-height:1.5;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
+                                                    <div style="margin-top:8px;font-size:11px;color:' . (mb_strlen($title) > 60 ? '#dc2626' : '#059669') . ';">Title: ' . mb_strlen($title) . ' chars ' . (mb_strlen($title) > 60 ? '⚠️ too long' : '✅') . ' &nbsp;|&nbsp; Description: ' . mb_strlen($desc) . ' chars ' . (mb_strlen($desc) > 160 ? '⚠️ too long' : '✅') . '</div>
+                                                </div>
+                                            ');
+                                        })
+                                        ->columnSpanFull(),
+                                ])->columns(1),
                         ]),
 
                     // ── Tab 3: Care & Shipping ────────────────────────────
@@ -428,7 +522,8 @@ class ProductResource extends Resource
                                 Textarea::make('care')
                                     ->label('Care Instructions (English)')
                                     ->rows(4)
-                                    ->placeholder('e.g. Condition with leather balm every 6 months...')
+                                    ->placeholder("e.g.\nCondition with leather balm every 6 months.\nKeep away from prolonged sunlight.\nWipe gently with a dry soft cloth.")
+                                    ->helperText('Enter one care instruction per line. Each line will show as a bullet point on the product page.')
                                     ->columnSpan(1),
 
                                 Textarea::make('shipping')
@@ -660,55 +755,6 @@ class ProductResource extends Resource
                     Tab::make('SEO')
                         ->icon('heroicon-o-magnifying-glass')
                         ->schema([
-
-                            Section::make('Search Engine Optimisation')
-                                ->description('Custom SEO fields for this product. Leave blank to use smart defaults (product name + tagline).')
-                                ->schema([
-
-                                    TextInput::make('meta_title')
-                                        ->label('SEO Title')
-                                        ->placeholder('e.g. Heritage Bifold Wallet — Handcrafted Leather | Artisan Leather Oman')
-                                        ->maxLength(70)
-                                        ->helperText(fn ($state) => sprintf(
-                                            'Max 60 chars · %d chars used %s · Leave blank to auto-generate from product name.',
-                                            mb_strlen($state ?? ''),
-                                            mb_strlen($state ?? '') > 60 ? '⚠️ TOO LONG' : '✅'
-                                        ))
-                                        ->columnSpanFull()
-                                        ->live(onBlur: true),
-
-                                    Textarea::make('meta_description')
-                                        ->label('SEO Description')
-                                        ->placeholder('e.g. Handcrafted Heritage Bifold Wallet in full-grain leather. 8 card slots, 2 bill compartments. Free delivery across Oman. Shop now at Artisan Leather Muscat.')
-                                        ->maxLength(170)
-                                        ->rows(3)
-                                        ->helperText('Max 160 characters. Describe the product with keywords. Leave blank to use the tagline.')
-                                        ->columnSpanFull(),
-
-                                ])->columns(1),
-
-                            Section::make('Preview — How Google Sees It')
-                                ->description('Live preview of how this product will appear in Google search results.')
-                                ->schema([
-                                    Placeholder::make('google_preview')
-                                        ->label('')
-                                        ->content(function ($get, $record) {
-                                            $name  = $get('name') ?: ($record?->name ?? 'Product Name');
-                                            $title = $get('meta_title') ?: ($name . ' — Handcrafted Leather | Artisan Leather Oman');
-                                            $desc  = $get('meta_description') ?: ($get('tagline') ?: 'Premium handcrafted leather goods from Artisan Leather, Muscat Oman.');
-                                            $slug  = $get('slug') ?: 'product-slug';
-
-                                            return new HtmlString('
-                                                <div style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
-                                                    <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com › product › ' . e($slug) . '</div>
-                                                    <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;font-weight:normal;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
-                                                    <div style="font-size:13px;color:#545454;line-height:1.5;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
-                                                    <div style="margin-top:8px;font-size:11px;color:' . (mb_strlen($title) > 60 ? '#dc2626' : '#059669') . ';">Title: ' . mb_strlen($title) . ' chars ' . (mb_strlen($title) > 60 ? '⚠️ too long' : '✅') . ' &nbsp;|&nbsp; Description: ' . mb_strlen($desc) . ' chars ' . (mb_strlen($desc) > 160 ? '⚠️ too long' : '✅') . '</div>
-                                                </div>
-                                            ');
-                                        })
-                                        ->columnSpanFull(),
-                                ]),
 
                             Section::make('📊 SEO Ranking Potential')
                                 ->description('AI-estimated ranking potential based on your product vs. current competitors. Generate content first to see this score.')
@@ -1019,6 +1065,8 @@ class ProductResource extends Resource
         $set('shipping_ar',      $data['shipping_ar']      ?? '');
         $set('meta_title',       $data['meta_title']       ?? '');
         $set('meta_description', $data['meta_description'] ?? '');
+        $set('meta_title_ar',       $data['meta_title_ar']       ?? '');
+        $set('meta_description_ar', $data['meta_description_ar'] ?? '');
         $set('_seo_score',       (string) ($data['seo_score'] ?? 0));
         $set('_seo_notes',       $data['seo_notes']        ?? '');
 

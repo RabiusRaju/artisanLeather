@@ -17,6 +17,12 @@ import { useAuth }      from '../context/AuthContext'
 import { fetchProductReviews, submitReview } from '../services/api'
 import { trackViewContent, trackLead } from '../lib/tracking'
 
+const splitCareInstructions = (care = '') =>
+  String(care)
+    .split(/\r?\n/)
+    .map((item) => item.replace(/^[-•–—]\s*/, '').trim())
+    .filter(Boolean)
+
 // ── Accordion item ─────────────────────────────────────────────────────────
 function AccordionItem({ title, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -321,6 +327,7 @@ export default function ProductPage() {
   const productTagline = isAr && product.tagline_ar ? product.tagline_ar : product.tagline
   const categoryLabel  = product.category?.name || ''
   const categorySlug   = product.category?.slug  || ''
+  const careInstructions = splitCareInstructions(product.care)
 
   const handleAddToCart = () => {
     const color = product.colors?.[activeColor]
@@ -727,7 +734,16 @@ export default function ProductPage() {
               </AccordionItem>
 
               <AccordionItem title={t('product.care')}>
-                <p className="text-white/45 text-sm font-light leading-relaxed">{product.care}</p>
+                {careInstructions.length > 0 && (
+                  <ul className="space-y-2.5">
+                    {careInstructions.map((instruction, index) => (
+                      <li key={index} className="flex items-start gap-3 text-white/45 text-sm font-light leading-relaxed">
+                        <span className="text-gold/60 mt-0.5 flex-shrink-0">—</span>
+                        <span>{instruction}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </AccordionItem>
 
               <AccordionItem title={t('product.delivery')}>

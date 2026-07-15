@@ -278,6 +278,51 @@ class PostResource extends Resource
 
                         ]),
 
+                    Section::make('🔍 SEO (English)')
+                        ->description('Custom English meta title and description for this article.')
+                        ->schema([
+                            TextInput::make('meta_title')
+                                ->label('SEO Title (English)')
+                                ->maxLength(70)
+                                ->placeholder('e.g. How to Care for Leather Wallets — Artisan Leather Oman')
+                                ->helperText(fn($state) => sprintf(
+                                    '%d chars used %s · Max 60 for best display.',
+                                    mb_strlen($state ?? ''),
+                                    mb_strlen($state ?? '') > 60 ? '⚠️' : '✅'
+                                ))
+                                ->live(onBlur: true)
+                                ->columnSpanFull(),
+
+                            Textarea::make('meta_description')
+                                ->label('SEO Description (English)')
+                                ->maxLength(170)
+                                ->rows(3)
+                                ->placeholder('e.g. Learn how to clean, condition and protect your leather wallet to make it last a lifetime. Expert tips from Artisan Leather, Muscat Oman.')
+                                ->helperText(fn($state) => sprintf(
+                                    '%d chars used %s · Max 160 chars.',
+                                    mb_strlen($state ?? ''),
+                                    mb_strlen($state ?? '') > 160 ? '⚠️' : '✅'
+                                ))
+                                ->live(onBlur: true)
+                                ->columnSpanFull(),
+
+                            Placeholder::make('google_preview')
+                                ->label('Google Preview (English)')
+                                ->content(function ($get) {
+                                    $title = $get('meta_title') ?: ($get('title') . ' — Artisan Leather Blog');
+                                    $desc  = $get('meta_description') ?: ($get('excerpt') ?: 'Read this article on the Artisan Leather blog.');
+                                    $slug  = $get('slug') ?: 'article-slug';
+                                    return new HtmlString('
+                                        <div style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+                                            <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com › blog › ' . e($slug) . '</div>
+                                            <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
+                                            <div style="font-size:13px;color:#545454;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
+                                        </div>
+                                    ');
+                                })
+                                ->columnSpanFull(),
+                        ]),
+
                     Section::make('Featured Image')
                         ->schema([
                             FileUpload::make('featured_image')
@@ -333,6 +378,53 @@ class PostResource extends Resource
                                 ->columnSpanFull(),
                         ]),
 
+                    Section::make('🔍 SEO (Arabic)')
+                        ->description('Custom Arabic meta title and description for this article.')
+                        ->schema([
+                            TextInput::make('meta_title_ar')
+                                ->label('SEO Title (Arabic)')
+                                ->maxLength(70)
+                                ->placeholder('e.g. كيفية العناية بالمحافظ الجلدية — آرتيزان ليذر عُمان')
+                                ->helperText(fn($state) => sprintf(
+                                    '%d chars used %s · Max 60 for best display.',
+                                    mb_strlen($state ?? ''),
+                                    mb_strlen($state ?? '') > 60 ? '⚠️' : '✅'
+                                ))
+                                ->extraInputAttributes(['dir' => 'rtl'])
+                                ->live(onBlur: true)
+                                ->columnSpanFull(),
+
+                            Textarea::make('meta_description_ar')
+                                ->label('SEO Description (Arabic)')
+                                ->maxLength(170)
+                                ->rows(3)
+                                ->placeholder('اكتب وصفاً عربياً مختصراً للمقال يظهر في نتائج البحث والمشاركة.')
+                                ->helperText(fn($state) => sprintf(
+                                    '%d chars used %s · Max 160 chars.',
+                                    mb_strlen($state ?? ''),
+                                    mb_strlen($state ?? '') > 160 ? '⚠️' : '✅'
+                                ))
+                                ->extraInputAttributes(['dir' => 'rtl'])
+                                ->live(onBlur: true)
+                                ->columnSpanFull(),
+
+                            Placeholder::make('google_preview_ar')
+                                ->label('Google Preview (Arabic)')
+                                ->content(function ($get) {
+                                    $title = $get('meta_title_ar') ?: ($get('title_ar') ?: '');
+                                    $desc  = $get('meta_description_ar') ?: ($get('excerpt_ar') ?: '');
+                                    $slug  = $get('slug') ?: 'article-slug';
+                                    return new HtmlString('
+                                        <div dir="rtl" style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;text-align:right;">
+                                            <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com › blog › ' . e($slug) . '</div>
+                                            <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
+                                            <div style="font-size:13px;color:#545454;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
+                                        </div>
+                                    ');
+                                })
+                                ->columnSpanFull(),
+                        ]),
+
                 ]),
 
                 // ── Tab 2b: Bangla ───────────────────────────────────────
@@ -365,6 +457,51 @@ class PostResource extends Resource
                                 ->label('Video Preview')
                                 ->content(fn($get) => new HtmlString(VideoEmbedder::extractEmbeds($get('content_bn') ?? '')))
                                 ->visible(fn($get) => VideoEmbedder::hasVideoLinks($get('content_bn') ?? ''))
+                                ->columnSpanFull(),
+                        ]),
+
+                    Section::make('🔍 SEO (Bangla)')
+                        ->description('Custom Bangla meta title and description for this article.')
+                        ->schema([
+                            TextInput::make('meta_title_bn')
+                                ->label('SEO Title (Bangla)')
+                                ->maxLength(70)
+                                ->placeholder('e.g. লেদার ওয়ালেটের যত্ন কীভাবে নেবেন — Artisan Leather')
+                                ->helperText(fn($state) => sprintf(
+                                    '%d chars used %s · Max 60 for best display.',
+                                    mb_strlen($state ?? ''),
+                                    mb_strlen($state ?? '') > 60 ? '⚠️' : '✅'
+                                ))
+                                ->live(onBlur: true)
+                                ->columnSpanFull(),
+
+                            Textarea::make('meta_description_bn')
+                                ->label('SEO Description (Bangla)')
+                                ->maxLength(170)
+                                ->rows(3)
+                                ->placeholder('বাংলায় একটি সংক্ষিপ্ত SEO বিবরণ লিখুন, যা সার্চ ও শেয়ার প্রিভিউতে দেখা যাবে।')
+                                ->helperText(fn($state) => sprintf(
+                                    '%d chars used %s · Max 160 chars.',
+                                    mb_strlen($state ?? ''),
+                                    mb_strlen($state ?? '') > 160 ? '⚠️' : '✅'
+                                ))
+                                ->live(onBlur: true)
+                                ->columnSpanFull(),
+
+                            Placeholder::make('google_preview_bn')
+                                ->label('Google Preview (Bangla)')
+                                ->content(function ($get) {
+                                    $title = $get('meta_title_bn') ?: ($get('title_bn') ?: '');
+                                    $desc  = $get('meta_description_bn') ?: ($get('excerpt_bn') ?: '');
+                                    $slug  = $get('slug') ?: 'article-slug';
+                                    return new HtmlString('
+                                        <div style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+                                            <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com › blog › ' . e($slug) . '</div>
+                                            <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
+                                            <div style="font-size:13px;color:#545454;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
+                                        </div>
+                                    ');
+                                })
                                 ->columnSpanFull(),
                         ]),
 
@@ -431,54 +568,6 @@ class PostResource extends Resource
 
                 // ── Tab 4: SEO ───────────────────────────────────────────
                 Tab::make('SEO')->icon('heroicon-o-magnifying-glass')->schema([
-
-                    Section::make('Search Engine Optimisation')
-                        ->description('Leave blank to use smart defaults from the article title and excerpt.')
-                        ->schema([
-                            TextInput::make('meta_title')
-                                ->label('SEO Title')
-                                ->maxLength(70)
-                                ->placeholder('e.g. How to Care for Leather Wallets — Artisan Leather Oman')
-                                ->helperText(fn($state) => sprintf(
-                                    '%d chars used %s · Max 60 for best display.',
-                                    mb_strlen($state ?? ''),
-                                    mb_strlen($state ?? '') > 60 ? '⚠️' : '✅'
-                                ))
-                                ->live(onBlur: true)
-                                ->columnSpanFull(),
-
-                            Textarea::make('meta_description')
-                                ->label('SEO Description')
-                                ->maxLength(170)
-                                ->rows(3)
-                                ->placeholder('e.g. Learn how to clean, condition and protect your leather wallet to make it last a lifetime. Expert tips from Artisan Leather, Muscat Oman.')
-                                ->helperText(fn($state) => sprintf(
-                                    '%d chars used %s · Max 160 chars.',
-                                    mb_strlen($state ?? ''),
-                                    mb_strlen($state ?? '') > 160 ? '⚠️' : '✅'
-                                ))
-                                ->live(onBlur: true)
-                                ->columnSpanFull(),
-                        ]),
-
-                    Section::make('Google Preview')
-                        ->schema([
-                            Placeholder::make('google_preview')
-                                ->label('')
-                                ->content(function ($get) {
-                                    $title = $get('meta_title') ?: ($get('title') . ' — Artisan Leather Blog');
-                                    $desc  = $get('meta_description') ?: ($get('excerpt') ?: 'Read this article on the Artisan Leather blog.');
-                                    $slug  = $get('slug') ?: 'article-slug';
-                                    return new HtmlString('
-                                        <div style="max-width:600px;font-family:arial,sans-serif;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
-                                            <div style="font-size:12px;color:#006621;margin-bottom:2px;">artisanleatherom.com › blog › ' . e($slug) . '</div>
-                                            <div style="font-size:18px;color:#1a0dab;margin-bottom:4px;">' . e(mb_substr($title, 0, 60)) . (mb_strlen($title) > 60 ? '...' : '') . '</div>
-                                            <div style="font-size:13px;color:#545454;">' . e(mb_substr($desc, 0, 160)) . (mb_strlen($desc) > 160 ? '...' : '') . '</div>
-                                        </div>
-                                    ');
-                                })
-                                ->columnSpanFull(),
-                        ]),
 
                     Section::make('📊 SEO Ranking Potential')
                         ->description('AI-estimated ranking potential based on your content vs. current competitors. Generate content first to see this score.')
@@ -874,6 +963,10 @@ class PostResource extends Resource
         $set('read_time',        $data['read_time']         ?? 4);
         $set('meta_title',       $data['meta_title']        ?? '');
         $set('meta_description', $data['meta_description']  ?? '');
+        $set('meta_title_ar',       $data['meta_title_ar']        ?? '');
+        $set('meta_description_ar', $data['meta_description_ar']  ?? '');
+        $set('meta_title_bn',       $data['meta_title_bn']        ?? '');
+        $set('meta_description_bn', $data['meta_description_bn']  ?? '');
         $set('_seo_score',       (string) ($data['seo_score'] ?? 0));
         $set('_seo_notes',       $data['seo_notes']         ?? '');
         $set('_social_caption',    $data['social_caption']    ?? '');

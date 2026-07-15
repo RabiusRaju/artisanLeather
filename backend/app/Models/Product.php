@@ -41,7 +41,7 @@ class Product extends Model
         'description', 'description_ar', 'material', 'material_ar',
         'origin', 'origin_ar', 'care', 'care_ar', 'shipping', 'shipping_ar',
         'price', 'badge', 'is_active', 'is_featured', 'sort_order',
-        'meta_title', 'meta_description', 'shared_platforms',
+        'meta_title', 'meta_description', 'meta_title_ar', 'meta_description_ar', 'shared_platforms',
         'sku', 'dimensions', 'dimensions_ar', 'bulk_pricing',
     ];
 
