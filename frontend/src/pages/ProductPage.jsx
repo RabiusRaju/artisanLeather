@@ -7,7 +7,7 @@ import ShareButton from '../components/ShareButton'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { FaWhatsapp } from 'react-icons/fa'
-import { HiChevronDown, HiArrowLeft, HiCheckCircle, HiHeart, HiStar } from 'react-icons/hi'
+import { HiChevronDown, HiArrowLeft, HiCheckCircle, HiHeart, HiPlay, HiStar } from 'react-icons/hi'
 import { useProduct }   from '../hooks/useProduct'
 import { useProducts }  from '../hooks/useProducts'
 import { useCart }      from '../context/CartContext'
@@ -22,6 +22,32 @@ const splitCareInstructions = (care = '') =>
     .split(/\r?\n/)
     .map((item) => item.replace(/^[-•–—]\s*/, '').trim())
     .filter(Boolean)
+
+const productCtaDefaults = {
+  add_to_cart: { en: 'Add to Cart', ar: 'أضف إلى السلة' },
+  pre_order: { en: 'Pre Order', ar: 'طلب مسبق' },
+  sold_out: { en: 'Sold Out', ar: 'غير متوفر' },
+  enquire_only: { en: 'Enquire Now', ar: 'استفسر الآن' },
+}
+
+function getYouTubeId(url = '') {
+  const value = String(url).trim()
+  if (!value) return null
+
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([^&]+)/,
+    /(?:youtube\.com\/embed\/)([^?&/]+)/,
+    /(?:youtube\.com\/shorts\/)([^?&/]+)/,
+    /(?:youtu\.be\/)([^?&/]+)/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = value.match(pattern)
+    if (match?.[1]) return match[1]
+  }
+
+  return null
+}
 
 // ── Accordion item ─────────────────────────────────────────────────────────
 function AccordionItem({ title, children, defaultOpen = false }) {
@@ -328,6 +354,24 @@ export default function ProductPage() {
   const categoryLabel  = product.category?.name || ''
   const categorySlug   = product.category?.slug  || ''
   const careInstructions = splitCareInstructions(product.care)
+  const youtubeVideoId = getYouTubeId(product.youtube_video_url)
+  const galleryItems = [
+    ...(product.images || []).map((image) => ({ type: 'image', ...image })),
+    ...(youtubeVideoId ? [{
+      type: 'video',
+      id: youtubeVideoId,
+      url: product.youtube_video_url,
+      thumbnail: `https://img.youtube.com/vi/${youtubeVideoId}/hqdefault.jpg`,
+      alt_text: `${product.name} product video | Artisan Leather Oman`,
+    }] : []),
+  ]
+  const activeItem = galleryItems[activeImage] || galleryItems[0]
+  const ctaType = product.cta_type || 'add_to_cart'
+  const ctaLabel = product.cta_label || productCtaDefaults[ctaType]?.[isAr ? 'ar' : 'en'] || productCtaDefaults.add_to_cart[isAr ? 'ar' : 'en']
+  const ctaNote = product.cta_note
+  const canAddToCart = ctaType === 'pre_order' || (ctaType === 'add_to_cart' && product.in_stock)
+  const isEnquireOnly = ctaType === 'enquire_only'
+  const isSoldOut = ctaType === 'sold_out' || (!product.in_stock && ctaType === 'add_to_cart')
 
   const handleAddToCart = () => {
     const color = product.colors?.[activeColor]
@@ -341,6 +385,8 @@ export default function ProductPage() {
       colorName: color?.name  || '',
       colorHex:  color?.hex   || '#1A1A1A',
       quantity,
+      is_preorder: ctaType === 'pre_order',
+      ctaType,
       image:     product.images?.[0]?.url || null,
       gradient:  `linear-gradient(160deg, #2A1A08, #1A1008, #0A0704)`,
     })
@@ -380,7 +426,9 @@ export default function ProductPage() {
       '@type': 'Offer',
       price: product.price,
       priceCurrency: 'OMR',
-      availability: 'https://schema.org/InStock',
+      availability: ctaType === 'pre_order'
+        ? 'https://schema.org/PreOrder'
+        : (product.in_stock && ctaType !== 'sold_out' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'),
       seller: { '@type': 'Organization', name: 'Artisan Leather' },
     },
     ...(categoryLabel && { category: categoryLabel }),
@@ -479,11 +527,11 @@ export default function ProductPage() {
                 onMouseLeave={() => setIsZooming(false)}
                 onMouseMove={handleImageMouseMove}
               >
-                {/* Product photo */}
-                {product.images?.[activeImage] && (
+                {/* Product photo / video */}
+                {activeItem?.type === 'image' && (
                   <img
-                    src={product.images?.[activeImage]?.url}
-                    alt={product.images?.[activeImage]?.alt_text || `${product.name} - view ${activeImage + 1}`}
+                    src={activeItem.url}
+                    alt={activeItem.alt_text || `${product.name} - view ${activeImage + 1}`}
                     loading={activeImage === 0 ? 'eager' : 'lazy'}
                     decoding="async"
                     fetchPriority={activeImage === 0 ? 'high' : 'auto'}
@@ -491,12 +539,22 @@ export default function ProductPage() {
                   />
                 )}
 
+                {activeItem?.type === 'video' && (
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${activeItem.id}?rel=0&modestbranding=1`}
+                    title={`${product.name} product video`}
+                    className="absolute inset-0 w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                )}
+
                 {/* Zoom layer — follows cursor, desktop only */}
-                {product.images?.[activeImage] && isZooming && (
+                {activeItem?.type === 'image' && isZooming && (
                   <div
                     className="absolute inset-0 hidden lg:block pointer-events-none"
                     style={{
-                      backgroundImage: `url(${product.images[activeImage].url})`,
+                      backgroundImage: `url(${activeItem.url})`,
                       backgroundSize: '220%',
                       backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
                       backgroundRepeat: 'no-repeat',
@@ -519,14 +577,14 @@ export default function ProductPage() {
 
                 {/* View indicator */}
                 <div className="absolute bottom-5 right-5 text-[9px] tracking-[0.3em] uppercase text-white/20">
-                  {['Front', 'Side', 'Open', 'Detail'][activeImage]}
+                  {activeItem?.type === 'video' ? 'Video' : (activeItem?.label || ['Front', 'Side', 'Open', 'Detail'][activeImage])}
                 </div>
               </motion.div>
             </AnimatePresence>
 
             {/* Thumbnails */}
             <div className="grid grid-cols-4 gap-3 mt-3">
-              {(product.images || []).map((img, i) => (
+              {galleryItems.map((item, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImage(i)}
@@ -537,17 +595,30 @@ export default function ProductPage() {
                       : 'opacity-50 hover:opacity-80'
                   }`}
                 >
-                  {product.images?.[i] && (
+                  {item.type === 'image' ? (
                     <img
-                      src={img.url}
-                      alt={img.alt_text || `${product.name} view ${i + 1}`}
+                      src={item.url}
+                      alt={item.alt_text || `${product.name} view ${i + 1}`}
                       loading="lazy"
                       decoding="async"
                       className="absolute inset-0 w-full h-full object-cover"
                     />
+                  ) : (
+                    <>
+                      <img
+                        src={item.thumbnail}
+                        alt={item.alt_text}
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 w-full h-full object-cover opacity-75"
+                      />
+                      <div className="absolute inset-0 bg-dark/35 flex items-center justify-center">
+                        <HiPlay size={20} className="text-gold" />
+                      </div>
+                    </>
                   )}
                   <div className="absolute bottom-1.5 left-0 right-0 text-center text-[7px] tracking-widest uppercase text-white/40 z-10">
-                    {['Front', 'Side', 'Open', 'Detail'][i]}
+                    {item.type === 'video' ? 'Video' : (item.label || ['Front', 'Side', 'Open', 'Detail'][i])}
                   </div>
                 </button>
               ))}
@@ -695,21 +766,43 @@ export default function ProductPage() {
 
             {/* CTA buttons */}
             <div className="flex flex-col gap-3 mb-10">
-              <button
-                onClick={handleAddToCart}
-                className="w-full py-4 bg-gold text-dark text-[10px] tracking-[0.35em] uppercase font-bold hover:bg-gold-300 active:scale-[0.99] transition-all duration-300"
-              >
-                {t('product.addToCart')} — {format(product.price * quantity)}
-              </button>
-              <a
-                href={`https://wa.me/${waNumber}?text=${waMessage}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackLead('whatsapp_product_enquiry')}
-                className="w-full py-4 border border-[#25D366]/60 text-[#25D366] text-[10px] tracking-[0.35em] uppercase flex items-center justify-center gap-2.5 hover:bg-[#25D366] hover:text-white hover:border-[#25D366] active:scale-[0.99] transition-all duration-300"
-              >
-                <FaWhatsapp size={15} /> {t('product.enquireWhatsApp')}
-              </a>
+              {isEnquireOnly ? (
+                <a
+                  href={`https://wa.me/${waNumber}?text=${waMessage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackLead('whatsapp_product_enquiry')}
+                  className="w-full py-4 bg-gold text-dark text-[10px] tracking-[0.35em] uppercase font-bold flex items-center justify-center gap-2.5 hover:bg-gold-300 active:scale-[0.99] transition-all duration-300"
+                >
+                  <FaWhatsapp size={15} /> {ctaLabel}
+                </a>
+              ) : (
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!canAddToCart || isSoldOut}
+                  className="w-full py-4 bg-gold text-dark text-[10px] tracking-[0.35em] uppercase font-bold hover:bg-gold-300 active:scale-[0.99] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-gold"
+                >
+                  {isSoldOut ? ctaLabel : `${ctaLabel} — ${format(product.price * quantity)}`}
+                </button>
+              )}
+
+              {ctaNote && (
+                <p className="text-white/35 text-xs font-light leading-relaxed text-center">
+                  {ctaNote}
+                </p>
+              )}
+
+              {!isEnquireOnly && (
+                <a
+                  href={`https://wa.me/${waNumber}?text=${waMessage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackLead('whatsapp_product_enquiry')}
+                  className="w-full py-4 border border-[#25D366]/60 text-[#25D366] text-[10px] tracking-[0.35em] uppercase flex items-center justify-center gap-2.5 hover:bg-[#25D366] hover:text-white hover:border-[#25D366] active:scale-[0.99] transition-all duration-300"
+                >
+                  <FaWhatsapp size={15} /> {t('product.enquireWhatsApp')}
+                </a>
+              )}
             </div>
 
             {/* Origin */}

@@ -164,6 +164,7 @@ export default function CheckoutPage() {
           color_name:   item.colorName,
           color_hex:    item.colorHex,
           quantity:     item.quantity,
+          is_preorder:  item.is_preorder || item.ctaType === 'pre_order',
           unit_price:   parseFloat(item.price),
         })),
         coupon_code: coupon?.code || null,
