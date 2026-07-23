@@ -27,6 +27,12 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
  * @property string|null $shipping
  * @property string|null $shipping_ar
  * @property float        $price
+ * @property string       $cta_type
+ * @property string|null  $cta_label
+ * @property string|null  $cta_label_ar
+ * @property string|null  $cta_note
+ * @property string|null  $cta_note_ar
+ * @property string|null  $youtube_video_url
  * @property string|null $badge
  * @property bool         $is_active
  * @property bool         $is_featured
@@ -40,7 +46,8 @@ class Product extends Model
         'category_id', 'brand_id', 'name', 'name_ar', 'slug', 'tagline', 'tagline_ar',
         'description', 'description_ar', 'material', 'material_ar',
         'origin', 'origin_ar', 'care', 'care_ar', 'shipping', 'shipping_ar',
-        'price', 'badge', 'is_active', 'is_featured', 'sort_order',
+        'price', 'cta_type', 'cta_label', 'cta_label_ar', 'cta_note', 'cta_note_ar',
+        'youtube_video_url', 'badge', 'is_active', 'is_featured', 'sort_order',
         'meta_title', 'meta_description', 'meta_title_ar', 'meta_description_ar', 'shared_platforms',
         'sku', 'dimensions', 'dimensions_ar', 'bulk_pricing',
     ];
