@@ -369,6 +369,49 @@ class ProductResource extends Resource
                                     ->columnSpan(1),
                             ])->columns(3),
 
+                            Section::make('🛒 Product CTA Button')
+                                ->description('Controls the main button on the product detail page. Leave labels blank to use automatic defaults.')
+                                ->schema([
+                                    Select::make('cta_type')
+                                        ->label('Button Type')
+                                        ->options([
+                                            'add_to_cart' => 'Add to Cart',
+                                            'pre_order' => 'Pre Order',
+                                            'sold_out' => 'Sold Out',
+                                            'enquire_only' => 'Enquire Only',
+                                        ])
+                                        ->default('add_to_cart')
+                                        ->required()
+                                        ->helperText('Pre Order allows checkout even when stock is zero. Enquire Only opens WhatsApp instead of cart.')
+                                        ->columnSpan(1),
+
+                                    TextInput::make('cta_label')
+                                        ->label('Button Label (English)')
+                                        ->placeholder('e.g. Add to Cart, Pre Order, Enquire Now')
+                                        ->maxLength(80)
+                                        ->columnSpan(1),
+
+                                    TextInput::make('cta_label_ar')
+                                        ->label('Button Label (Arabic)')
+                                        ->placeholder('e.g. أضف إلى السلة، طلب مسبق، استفسر الآن')
+                                        ->maxLength(80)
+                                        ->extraInputAttributes(['dir' => 'rtl'])
+                                        ->columnSpan(1),
+
+                                    Textarea::make('cta_note')
+                                        ->label('Button Note (English)')
+                                        ->placeholder('Optional short note shown below the button.')
+                                        ->rows(2)
+                                        ->columnSpan(1),
+
+                                    Textarea::make('cta_note_ar')
+                                        ->label('Button Note (Arabic)')
+                                        ->placeholder('ملاحظة قصيرة اختيارية تظهر أسفل الزر.')
+                                        ->rows(2)
+                                        ->extraInputAttributes(['dir' => 'rtl'])
+                                        ->columnSpan(1),
+                                ])->columns(3),
+
                             Section::make('📋 Specifications')
                                 ->description('Spec-sheet style details shown on the product page and on shared catalogue links.')
                                 ->schema([
@@ -538,6 +581,18 @@ class ProductResource extends Resource
                     Tab::make('Images')
                         ->icon('heroicon-o-photo')
                         ->schema([
+                            Section::make('Product Video')
+                                ->description('Optional: add one YouTube product video. It appears inside the product image gallery on the website.')
+                                ->schema([
+                                    TextInput::make('youtube_video_url')
+                                        ->label('YouTube Video URL')
+                                        ->url()
+                                        ->placeholder('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+                                        ->helperText('Paste a YouTube product video link, for example: https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+                                        ->maxLength(255)
+                                        ->columnSpanFull(),
+                                ]),
+
                             Section::make('Product Images')
                                 ->description('Upload up to 6 images (max 5 MB each · JPG / PNG / WebP). Images are automatically converted to WebP and resized to 1200px. Add a view label and alt text for each image.')
                                 ->schema([

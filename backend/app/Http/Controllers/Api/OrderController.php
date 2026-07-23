@@ -36,6 +36,7 @@ class OrderController extends Controller
             'items.*.color_name'   => 'nullable|string',
             'items.*.color_hex'    => 'nullable|string',
             'items.*.quantity'     => 'required|integer|min:1|max:999',
+            'items.*.is_preorder'  => 'nullable|boolean',
             // unit_price is intentionally NOT validated from client — we use DB price below
             'coupon_code'    => 'nullable|string|max:50',
             'utm_source'     => 'nullable|string|max:255',
@@ -57,9 +58,14 @@ class OrderController extends Controller
 
             // C-6 FIX: Check stock before creating order
             foreach ($validated['items'] as $item) {
+                $product = $products[$item['product_id']];
+                if (($product->cta_type ?? 'add_to_cart') === 'pre_order') {
+                    continue;
+                }
+
                 $stock = ProductStock::where('product_id', $item['product_id'])->first();
                 if (!$stock || $stock->quantity < $item['quantity']) {
-                    abort(422, 'Insufficient stock for: ' . $products[$item['product_id']]->name);
+                    abort(422, 'Insufficient stock for: ' . $product->name);
                 }
             }
 
@@ -116,6 +122,7 @@ class OrderController extends Controller
             foreach ($validated['items'] as $item) {
                 $product  = $products[$item['product_id']];
                 $unitPrice = (float) $product->price; // DB price — not from client
+                $isPreorder = ($product->cta_type ?? 'add_to_cart') === 'pre_order';
 
                 OrderItem::create([
                     'order_id'        => $order->id,
@@ -125,13 +132,14 @@ class OrderController extends Controller
                     'color_name'      => $item['color_name'] ?? null,
                     'color_hex'       => $item['color_hex'] ?? null,
                     'quantity'        => $item['quantity'],
+                    'is_preorder'     => $isPreorder,
                     'unit_price_omr'  => $unitPrice,
                     'total_price_omr' => round($unitPrice * $item['quantity'], 3),
                 ]);
 
                 // C-6 FIX: Decrement stock and record movement
                 $stock = ProductStock::where('product_id', $item['product_id'])->first();
-                if ($stock) {
+                if ($stock && ! $isPreorder) {
                     $before = $stock->quantity;
                     $stock->decrement('quantity', $item['quantity']);
                     StockMovement::create([
