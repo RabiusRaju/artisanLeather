@@ -302,6 +302,19 @@ class ProductResource extends Resource
                                     ->rows(5)
                                     ->placeholder('Detailed product description...')
                                     ->columnSpanFull(),
+
+                                TextInput::make('story_title')
+                                    ->label('Product Story Title')
+                                    ->placeholder('e.g. Designed for everyday refinement')
+                                    ->helperText('Optional section title shown below the main product area.')
+                                    ->columnSpanFull(),
+
+                                Textarea::make('story_body')
+                                    ->label('Product Story')
+                                    ->rows(4)
+                                    ->placeholder('Short premium story about the design, craft, and ideal use case.')
+                                    ->helperText('Keep it concise: 80–120 words is enough.')
+                                    ->columnSpanFull(),
                             ])->columns(3),
 
                             Section::make('🔍 SEO (English)')
@@ -361,6 +374,12 @@ class ProductResource extends Resource
                                 TextInput::make('material')
                                     ->label('Material')
                                     ->placeholder('e.g. Full Grain Vegetable Tanned')
+                                    ->columnSpan(1),
+
+                                TextInput::make('leather_type')
+                                    ->label('Leather Type')
+                                    ->placeholder('e.g. Full-grain vegetable-tanned leather')
+                                    ->helperText('Specific leather quality/type for SEO and buyer confidence.')
                                     ->columnSpan(1),
 
                                 TextInput::make('origin')
@@ -482,9 +501,27 @@ class ProductResource extends Resource
                                     ->rows(5)
                                     ->columnSpanFull(),
 
+                                TextInput::make('story_title_ar')
+                                    ->label('Product Story Title (Arabic)')
+                                    ->placeholder('e.g. صُممت للأناقة اليومية')
+                                    ->extraInputAttributes(['dir' => 'rtl'])
+                                    ->columnSpanFull(),
+
+                                Textarea::make('story_body_ar')
+                                    ->label('Product Story (Arabic)')
+                                    ->rows(4)
+                                    ->extraInputAttributes(['dir' => 'rtl'])
+                                    ->columnSpanFull(),
+
                                 TextInput::make('material_ar')
                                     ->label('Material (Arabic)')
                                     ->placeholder('e.g. جلد كامل الحبوب مدبوغ نباتيًا')
+                                    ->columnSpan(1),
+
+                                TextInput::make('leather_type_ar')
+                                    ->label('Leather Type (Arabic)')
+                                    ->placeholder('e.g. جلد كامل الحبوب مدبوغ نباتياً')
+                                    ->extraInputAttributes(['dir' => 'rtl'])
                                     ->columnSpan(1),
 
                                 TextInput::make('origin_ar')
@@ -803,6 +840,106 @@ class ProductResource extends Resource
                                         ->reorderable()
                                         ->reorderableWithDragAndDrop()
                                         ->maxItems(10),
+                                ]),
+                        ]),
+
+                    Tab::make('Specifications')
+                        ->icon('heroicon-o-clipboard-document-list')
+                        ->schema([
+                            Section::make('Structured Specifications')
+                                ->description('Key/value facts such as card slots, compartments, dimensions, closure, weight, leather type, and capacity.')
+                                ->schema([
+                                    Repeater::make('specifications')
+                                        ->relationship()
+                                        ->label('')
+                                        ->schema([
+                                            TextInput::make('label')
+                                                ->label('Label (English)')
+                                                ->required()
+                                                ->placeholder('e.g. Card slots')
+                                                ->columnSpan(1),
+
+                                            TextInput::make('value')
+                                                ->label('Value (English)')
+                                                ->required()
+                                                ->placeholder('e.g. 6 card slots + 2 hidden pockets')
+                                                ->columnSpan(1),
+
+                                            TextInput::make('label_ar')
+                                                ->label('Label (Arabic)')
+                                                ->placeholder('e.g. فتحات البطاقات')
+                                                ->extraInputAttributes(['dir' => 'rtl'])
+                                                ->columnSpan(1),
+
+                                            TextInput::make('value_ar')
+                                                ->label('Value (Arabic)')
+                                                ->placeholder('e.g. ٦ فتحات بطاقات + جيبان مخفيان')
+                                                ->extraInputAttributes(['dir' => 'rtl'])
+                                                ->columnSpan(1),
+
+                                            TextInput::make('sort_order')
+                                                ->label('Order')
+                                                ->numeric()
+                                                ->default(0)
+                                                ->columnSpan(1),
+                                        ])
+                                        ->columns(5)
+                                        ->reorderable()
+                                        ->reorderableWithDragAndDrop()
+                                        ->maxItems(16)
+                                        ->itemLabel(fn(array $state): ?string => $state['label'] ?? 'Specification'),
+                                ]),
+                        ]),
+
+                    Tab::make('FAQs')
+                        ->icon('heroicon-o-question-mark-circle')
+                        ->schema([
+                            Section::make('Product FAQs')
+                                ->description('Add product-specific questions that appear on the product page and power FAQ schema for Google.')
+                                ->schema([
+                                    Repeater::make('faqs')
+                                        ->relationship()
+                                        ->label('')
+                                        ->schema([
+                                            TextInput::make('question')
+                                                ->label('Question (English)')
+                                                ->required()
+                                                ->placeholder('e.g. Does this wallet fit GCC banknotes?')
+                                                ->columnSpan(2),
+
+                                            Textarea::make('answer')
+                                                ->label('Answer (English)')
+                                                ->required()
+                                                ->rows(3)
+                                                ->columnSpan(2),
+
+                                            TextInput::make('question_ar')
+                                                ->label('Question (Arabic)')
+                                                ->extraInputAttributes(['dir' => 'rtl'])
+                                                ->columnSpan(2),
+
+                                            Textarea::make('answer_ar')
+                                                ->label('Answer (Arabic)')
+                                                ->rows(3)
+                                                ->extraInputAttributes(['dir' => 'rtl'])
+                                                ->columnSpan(2),
+
+                                            Toggle::make('is_active')
+                                                ->label('Active')
+                                                ->default(true)
+                                                ->columnSpan(1),
+
+                                            TextInput::make('sort_order')
+                                                ->label('Order')
+                                                ->numeric()
+                                                ->default(0)
+                                                ->columnSpan(1),
+                                        ])
+                                        ->columns(4)
+                                        ->reorderable()
+                                        ->reorderableWithDragAndDrop()
+                                        ->maxItems(8)
+                                        ->itemLabel(fn(array $state): ?string => $state['question'] ?? 'FAQ'),
                                 ]),
                         ]),
 

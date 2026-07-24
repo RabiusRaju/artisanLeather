@@ -1,5 +1,5 @@
 import { useSetting } from '../hooks/useSettings'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import SEO from '../components/SEO'
@@ -52,10 +52,13 @@ function getYouTubeId(url = '') {
 // ── Accordion item ─────────────────────────────────────────────────────────
 function AccordionItem({ title, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen)
+  const contentId = useId()
   return (
     <div className="border-t border-white/8">
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls={contentId}
         className="w-full flex items-center justify-between py-4 text-left group"
       >
         <span className="text-xs tracking-[0.3em] uppercase text-white/60 group-hover:text-gold transition-colors duration-300">
@@ -75,7 +78,7 @@ function AccordionItem({ title, children, defaultOpen = false }) {
             transition={{ duration: 0.35, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="pb-5 pr-4">{children}</div>
+            <div id={contentId} className="pb-5 pr-4">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -101,6 +104,8 @@ function RelatedCard({ product, index }) {
         <div className="aspect-square relative overflow-hidden bg-dark-100" style={{ background: 'linear-gradient(160deg, #2A1A08, #1A1008)' }}>
           {product.images?.[0]?.url && (
             <img src={product.images[0].url} alt={firstImageAlt}
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 w-full h-full object-cover" />
           )}
           {product.badge && product.badge !== 'null' && (
@@ -130,13 +135,14 @@ function RelatedCard({ product, index }) {
 // ── Star rating display ─────────────────────────────────────────────────────
 function StarRating({ rating, size = 14, onSelect }) {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1" aria-label={`${Math.round(rating)} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((i) => (
         <button
           key={i}
           type="button"
           disabled={!onSelect}
           onClick={() => onSelect && onSelect(i)}
+          aria-label={onSelect ? `Rate ${i} out of 5 stars` : `${i <= Math.round(rating) ? 'Filled' : 'Empty'} star`}
           className={onSelect ? 'cursor-pointer' : 'cursor-default'}
         >
           <HiStar
@@ -146,6 +152,117 @@ function StarRating({ rating, size = 14, onSelect }) {
         </button>
       ))}
     </div>
+  )
+}
+
+function TrustStrip({ isAr }) {
+  const items = isAr
+    ? ['جلد أصلي', 'دفع آمن', 'توصيل عُمان والخليج', 'دعم عبر واتساب']
+    : ['Genuine leather', 'Secure checkout', 'Oman & GCC delivery', 'WhatsApp support']
+
+  return (
+    <div className="grid grid-cols-2 gap-2 mb-8">
+      {items.map((item) => (
+        <div key={item} className="border border-white/8 px-3 py-2.5 flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-gold/70 flex-shrink-0" />
+          <span className="text-[9px] tracking-[0.18em] uppercase text-white/45">{item}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ProductStorySection({ product, isAr }) {
+  if (!product.story_title && !product.story_body && !product.leather_type) return null
+
+  return (
+    <section className="mt-24 pt-16 border-t border-gold/10 grid lg:grid-cols-3 gap-10">
+      <div>
+        <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-3">
+          {isAr ? 'القصة' : 'Product Story'}
+        </p>
+        <h2 className="font-serif text-3xl text-white font-light">
+          {product.story_title || (isAr ? 'صُمم بتفاصيل مدروسة' : 'Designed With Purpose')}
+        </h2>
+      </div>
+      <div className="lg:col-span-2 space-y-6">
+        {product.story_body && (
+          <p className="text-white/50 leading-relaxed font-light text-[15px]">
+            {product.story_body}
+          </p>
+        )}
+        {product.leather_type && (
+          <div className="border border-white/8 p-5">
+            <p className="text-[9px] tracking-[0.35em] uppercase text-gold/60 mb-2">
+              {isAr ? 'نوع الجلد' : 'Leather Type'}
+            </p>
+            <p className="font-serif text-xl text-white/80 mb-2">{product.leather_type}</p>
+            <p className="text-white/40 text-sm leading-relaxed font-light">
+              {isAr
+                ? 'قد تظهر على الجلد الطبيعي اختلافات طفيفة في الملمس واللون، وهي جزء من شخصية القطعة وتزداد جمالاً مع الاستخدام.'
+                : 'Natural leather may show subtle grain and tone variations. These marks are part of the character of each piece and develop a richer patina with use.'}
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function ProductSpecificationsSection({ product, isAr }) {
+  const specs = [
+    product.sku && { label: isAr ? 'رمز المنتج' : 'SKU', value: product.sku },
+    product.dimensions && { label: isAr ? 'الأبعاد' : 'Dimensions', value: product.dimensions },
+    product.material && { label: isAr ? 'الخامة' : 'Material', value: product.material },
+    product.leather_type && { label: isAr ? 'نوع الجلد' : 'Leather Type', value: product.leather_type },
+    ...(product.specifications || []),
+  ].filter(Boolean)
+
+  if (specs.length === 0) return null
+
+  return (
+    <section className="mt-24 pt-16 border-t border-gold/10">
+      <div className="mb-10">
+        <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-3">
+          {isAr ? 'المواصفات' : 'Specifications'}
+        </p>
+        <h2 className="font-serif text-3xl text-white font-light">
+          {isAr ? 'تفاصيل عملية' : 'Practical Details'}
+        </h2>
+      </div>
+      <dl className="grid md:grid-cols-2 gap-px bg-white/8 border border-white/8">
+        {specs.map((spec, index) => (
+          <div key={`${spec.label}-${index}`} className="bg-dark p-5">
+            <dt className="text-[9px] tracking-[0.3em] uppercase text-gold/55 mb-2">{spec.label}</dt>
+            <dd className="text-white/60 text-sm font-light leading-relaxed">{spec.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  )
+}
+
+function ProductFaqSection({ faqs, isAr }) {
+  if (!faqs?.length) return null
+
+  return (
+    <section className="mt-24 pt-16 border-t border-gold/10">
+      <div className="mb-8">
+        <p className="text-gold/60 tracking-[0.5em] uppercase text-[10px] mb-3">
+          {isAr ? 'الأسئلة الشائعة' : 'Product FAQ'}
+        </p>
+        <h2 className="font-serif text-3xl text-white font-light">
+          {isAr ? 'قبل أن تشتري' : 'Before You Buy'}
+        </h2>
+      </div>
+      <div>
+        {faqs.map((faq, index) => (
+          <AccordionItem key={`${faq.question}-${index}`} title={faq.question} defaultOpen={index === 0}>
+            <p className="text-white/45 text-sm font-light leading-relaxed">{faq.answer}</p>
+          </AccordionItem>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -407,6 +524,7 @@ export default function ProductPage() {
   const waMessage = encodeURIComponent(
     `Hello Artisan Leather, I'm interested in purchasing "${product.name}" (OMR ${product.price}). Could you please provide more details?`
   )
+  const waLink = `https://wa.me/${waNumber}?text=${waMessage}`
 
   const productImage = product.images?.[0]?.url || 'https://artisanleatherom.com/og-image.jpg'
   const seoDesc = product.meta_description
@@ -420,10 +538,14 @@ export default function ProductPage() {
     '@type': 'Product',
     name: product.name,
     description: product.tagline || seoDesc,
-    image: productImage,
+    image: (product.images || []).map((image) => image.url).filter(Boolean),
+    sku: product.sku || undefined,
+    material: product.leather_type || product.material || undefined,
+    color: product.colors?.map((color) => color.name).filter(Boolean),
     brand: { '@type': 'Brand', name: product.brand?.name || 'Artisan Leather' },
     offers: {
       '@type': 'Offer',
+      url: `https://artisanleatherom.com/product/${product.slug}`,
       price: product.price,
       priceCurrency: 'OMR',
       availability: ctaType === 'pre_order'
@@ -432,6 +554,51 @@ export default function ProductPage() {
       seller: { '@type': 'Organization', name: 'Artisan Leather' },
     },
     ...(categoryLabel && { category: categoryLabel }),
+    ...(product.review_count > 0 && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: product.average_rating,
+        reviewCount: product.review_count,
+      },
+    }),
+    ...(product.reviews?.length > 0 && {
+      review: product.reviews.map((review) => ({
+        '@type': 'Review',
+        reviewRating: { '@type': 'Rating', ratingValue: review.rating, bestRating: 5 },
+        author: { '@type': 'Person', name: review.user_name || 'Artisan Leather customer' },
+        name: review.title || undefined,
+        reviewBody: review.comment || undefined,
+        datePublished: review.created_at || undefined,
+      })),
+    }),
+  }
+  const faqSchema = product.faqs?.length ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: product.faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  } : null
+  const videoSchema = youtubeVideoId ? {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: `${product.name} product video`,
+    description: product.tagline || seoDesc,
+    thumbnailUrl: [`https://img.youtube.com/vi/${youtubeVideoId}/hqdefault.jpg`],
+    embedUrl: `https://www.youtube-nocookie.com/embed/${youtubeVideoId}`,
+    contentUrl: product.youtube_video_url,
+  } : null
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Artisan Leather',
+    url: 'https://artisanleatherom.com',
+    logo: 'https://artisanleatherom.com/logo.png',
   }
 
   return (
@@ -446,6 +613,9 @@ export default function ProductPage() {
       />
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
+        {faqSchema && <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>}
+        {videoSchema && <script type="application/ld+json">{JSON.stringify(videoSchema)}</script>}
+        <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
         {/* Breadcrumb schema */}
         <script type="application/ld+json">{JSON.stringify({
           '@context': 'https://schema.org',
@@ -588,6 +758,8 @@ export default function ProductPage() {
                 <button
                   key={i}
                   onClick={() => setActiveImage(i)}
+                  aria-label={item.type === 'video' ? `Play ${product.name} product video` : `View ${item.label || `product image ${i + 1}`}`}
+                  aria-pressed={activeImage === i}
                   style={{ background: 'linear-gradient(160deg, #2A1A08, #1A1008)' }}
                   className={`aspect-square relative overflow-hidden transition-all duration-300 ${
                     activeImage === i
@@ -730,6 +902,8 @@ export default function ProductPage() {
                       key={color.name}
                       onClick={() => setActiveColor(i)}
                       title={color.name}
+                      aria-label={`Select ${color.name} color`}
+                      aria-pressed={activeColor === i}
                       className={`w-7 h-7 rounded-full transition-all duration-300 ${
                         activeColor === i
                           ? 'ring-2 ring-gold ring-offset-2 ring-offset-dark scale-110'
@@ -748,6 +922,7 @@ export default function ProductPage() {
               <div className="flex items-center border border-white/10 w-fit">
                 <button
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  aria-label="Decrease quantity"
                   className="px-4 py-3 text-white/50 hover:text-gold transition-colors duration-300 text-lg leading-none"
                 >
                   −
@@ -757,6 +932,7 @@ export default function ProductPage() {
                 </span>
                 <button
                   onClick={() => setQuantity((q) => q + 1)}
+                  aria-label="Increase quantity"
                   className="px-4 py-3 text-white/50 hover:text-gold transition-colors duration-300 text-lg leading-none"
                 >
                   +
@@ -768,7 +944,7 @@ export default function ProductPage() {
             <div className="flex flex-col gap-3 mb-10">
               {isEnquireOnly ? (
                 <a
-                  href={`https://wa.me/${waNumber}?text=${waMessage}`}
+                  href={waLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackLead('whatsapp_product_enquiry')}
@@ -794,7 +970,7 @@ export default function ProductPage() {
 
               {!isEnquireOnly && (
                 <a
-                  href={`https://wa.me/${waNumber}?text=${waMessage}`}
+                  href={waLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackLead('whatsapp_product_enquiry')}
@@ -804,6 +980,8 @@ export default function ProductPage() {
                 </a>
               )}
             </div>
+
+            <TrustStrip isAr={isAr} />
 
             {/* Origin */}
             <div className="flex items-center gap-3 mb-10 pb-10 border-b border-white/8">
@@ -849,6 +1027,10 @@ export default function ProductPage() {
           </motion.div>
         </div>
 
+        <ProductStorySection product={product} isAr={isAr} />
+        <ProductSpecificationsSection product={product} isAr={isAr} />
+        <ProductFaqSection faqs={product.faqs} isAr={isAr} />
+
         {/* ── Reviews ──────────────────────────────────────── */}
         <ReviewsSection product={product} />
 
@@ -890,6 +1072,28 @@ export default function ProductPage() {
             Back to Collections
           </Link>
         </div>
+      </div>
+
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-dark/95 backdrop-blur border-t border-gold/20 px-4 py-3">
+        {isEnquireOnly ? (
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackLead('whatsapp_product_enquiry_sticky')}
+            className="w-full py-3 bg-gold text-dark text-[10px] tracking-[0.3em] uppercase font-bold flex items-center justify-center gap-2"
+          >
+            <FaWhatsapp size={14} /> {ctaLabel}
+          </a>
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            disabled={!canAddToCart || isSoldOut}
+            className="w-full py-3 bg-gold text-dark text-[10px] tracking-[0.3em] uppercase font-bold disabled:opacity-45 disabled:cursor-not-allowed"
+          >
+            {isSoldOut ? ctaLabel : `${ctaLabel} — ${format(product.price * quantity)}`}
+          </button>
+        )}
       </div>
     </div>
   )

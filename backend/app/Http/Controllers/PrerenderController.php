@@ -173,11 +173,27 @@ class PrerenderController extends Controller
             return redirect($url);
         }
 
-        $product   = Product::with(['images', 'brand'])->where('slug', $slug)->where('is_active', true)->firstOrFail();
+        $product   = Product::with([
+            'images',
+            'brand',
+            'category',
+            'colors',
+            'details',
+            'specifications',
+            'faqs',
+            'stock',
+            'approvedReviews.user',
+        ])->where('slug', $slug)->where('is_active', true)->firstOrFail();
         $imagePath = $product->images->first()?->url;
         $image     = $imagePath
             ? (str_starts_with($imagePath, 'http') ? $imagePath : asset('storage/' . $imagePath))
             : null;
+        $images = $product->images
+            ->pluck('url')
+            ->filter()
+            ->map(fn ($path) => str_starts_with($path, 'http') ? $path : asset('storage/' . $path))
+            ->values()
+            ->all();
 
         $title = match (true) {
             $isArabic && filled($product->meta_title_ar) => $product->meta_title_ar,
@@ -191,13 +207,24 @@ class PrerenderController extends Controller
         };
         $bodyDescription = $isArabic && $product->description_ar ? $product->description_ar : ($product->description ?: $description);
         $brandName = $isArabic && $product->brand?->name_ar ? $product->brand->name_ar : ($product->brand?->name ?? 'Artisan Leather');
+        $categoryName = $isArabic && $product->category?->name_ar ? $product->category->name_ar : $product->category?->name;
+        $availability = match (true) {
+            ($product->cta_type ?? 'add_to_cart') === 'pre_order' => 'https://schema.org/PreOrder',
+            ($product->cta_type ?? 'add_to_cart') === 'sold_out' => 'https://schema.org/OutOfStock',
+            $product->in_stock => 'https://schema.org/InStock',
+            default => 'https://schema.org/OutOfStock',
+        };
 
-        $schema = json_encode([
+        $schemaData = [
             '@context'    => 'https://schema.org/',
             '@type'       => 'Product',
             'name'        => $title,
             'description' => strip_tags($bodyDescription),
-            'image'       => $image,
+            'image'       => $images ?: ($image ? [$image] : []),
+            'sku'         => $product->sku ?: null,
+            'material'    => $isArabic && $product->leather_type_ar ? $product->leather_type_ar : ($product->leather_type ?: $product->material),
+            'color'       => $product->colors->map(fn ($color) => $isArabic && $color->name_ar ? $color->name_ar : $color->name)->filter()->values()->all(),
+            'category'    => $categoryName,
             'brand'       => [
                 '@type' => 'Brand',
                 'name'  => $brandName,
@@ -207,12 +234,60 @@ class PrerenderController extends Controller
                 'url'           => $url,
                 'priceCurrency' => 'OMR',
                 'price'         => number_format((float) $product->price, 3, '.', ''),
-                'availability'  => 'https://schema.org/InStock',
+                'availability'  => $availability,
                 'seller'        => ['@type' => 'Organization', 'name' => 'Artisan Leather'],
             ],
-        ]);
+        ];
 
-        $bodyContent = strip_tags($bodyDescription ?: '');
+        if ($product->review_count > 0) {
+            $schemaData['aggregateRating'] = [
+                '@type'       => 'AggregateRating',
+                'ratingValue' => $product->average_rating,
+                'reviewCount' => $product->review_count,
+            ];
+            $schemaData['review'] = $product->approvedReviews->take(5)->map(fn ($review) => [
+                '@type' => 'Review',
+                'reviewRating' => [
+                    '@type' => 'Rating',
+                    'ratingValue' => $review->rating,
+                    'bestRating' => 5,
+                ],
+                'author' => [
+                    '@type' => 'Person',
+                    'name' => $review->user?->name ?: 'Artisan Leather customer',
+                ],
+                'name' => $review->title,
+                'reviewBody' => $review->comment,
+                'datePublished' => $review->created_at?->toDateString(),
+            ])->values()->all();
+        }
+
+        $schema = json_encode($schemaData);
+
+        $faqSchema = null;
+        $faqs = $product->faqs->where('is_active', true)->values();
+        if ($faqs->isNotEmpty()) {
+            $faqSchema = json_encode([
+                '@context' => 'https://schema.org',
+                '@type' => 'FAQPage',
+                'mainEntity' => $faqs->map(fn ($faq) => [
+                    '@type' => 'Question',
+                    'name' => $isArabic && $faq->question_ar ? $faq->question_ar : $faq->question,
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => strip_tags($isArabic && $faq->answer_ar ? $faq->answer_ar : $faq->answer),
+                    ],
+                ])->values()->all(),
+            ]);
+        }
+
+        $bodyContent = collect([
+            $bodyDescription,
+            $isArabic && $product->story_body_ar ? $product->story_body_ar : $product->story_body,
+            $product->details->map(fn ($detail) => $isArabic && $detail->detail_ar ? $detail->detail_ar : $detail->detail)->join(' '),
+            $product->specifications->map(fn ($spec) => ($isArabic && $spec->label_ar ? $spec->label_ar : $spec->label) . ': ' . ($isArabic && $spec->value_ar ? $spec->value_ar : $spec->value))->join(' '),
+            $faqs->map(fn ($faq) => ($isArabic && $faq->question_ar ? $faq->question_ar : $faq->question) . ' ' . ($isArabic && $faq->answer_ar ? $faq->answer_ar : $faq->answer))->join(' '),
+        ])->filter()->map(fn ($content) => strip_tags($content))->join(' ');
 
         return view('prerender.meta', [
             'title'       => $title,
@@ -221,6 +296,7 @@ class PrerenderController extends Controller
             'url'         => $url,
             'type'        => 'product',
             'schema'      => $schema,
+            'extraSchema' => $faqSchema,
             'bodyContent' => $bodyContent,
         ]);
     }

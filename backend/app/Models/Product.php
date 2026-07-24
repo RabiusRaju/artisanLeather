@@ -18,8 +18,14 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
  * @property string|null $tagline_ar
  * @property string|null $description
  * @property string|null $description_ar
+ * @property string|null $story_title
+ * @property string|null $story_title_ar
+ * @property string|null $story_body
+ * @property string|null $story_body_ar
  * @property string|null $material
  * @property string|null $material_ar
+ * @property string|null $leather_type
+ * @property string|null $leather_type_ar
  * @property string|null $origin
  * @property string|null $origin_ar
  * @property string|null $care
@@ -44,7 +50,8 @@ class Product extends Model
 
     protected $fillable = [
         'category_id', 'brand_id', 'name', 'name_ar', 'slug', 'tagline', 'tagline_ar',
-        'description', 'description_ar', 'material', 'material_ar',
+        'description', 'description_ar', 'story_title', 'story_title_ar', 'story_body', 'story_body_ar',
+        'material', 'material_ar', 'leather_type', 'leather_type_ar',
         'origin', 'origin_ar', 'care', 'care_ar', 'shipping', 'shipping_ar',
         'price', 'cta_type', 'cta_label', 'cta_label_ar', 'cta_note', 'cta_note_ar',
         'youtube_video_url', 'badge', 'is_active', 'is_featured', 'sort_order',
@@ -93,6 +100,16 @@ class Product extends Model
     public function details(): HasMany
     {
         return $this->hasMany(ProductDetail::class)->orderBy('sort_order');
+    }
+
+    public function specifications(): HasMany
+    {
+        return $this->hasMany(ProductSpecification::class)->orderBy('sort_order');
+    }
+
+    public function faqs(): HasMany
+    {
+        return $this->hasMany(ProductFaq::class)->orderBy('sort_order');
     }
 
     public function reviews(): HasMany
