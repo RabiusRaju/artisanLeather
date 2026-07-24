@@ -22,8 +22,14 @@ class ProductResource extends JsonResource
             'tagline_ar'  => $this->tagline_ar,
             'description'    => $locale === 'ar' && $this->description_ar ? $this->description_ar : $this->description,
             'description_ar' => $this->description_ar,
+            'story_title'    => $locale === 'ar' && $this->story_title_ar ? $this->story_title_ar : $this->story_title,
+            'story_title_ar' => $this->story_title_ar,
+            'story_body'     => $locale === 'ar' && $this->story_body_ar ? $this->story_body_ar : $this->story_body,
+            'story_body_ar'  => $this->story_body_ar,
             'material'       => $locale === 'ar' && $this->material_ar ? $this->material_ar : $this->material,
             'material_ar'    => $this->material_ar,
+            'leather_type'   => $locale === 'ar' && $this->leather_type_ar ? $this->leather_type_ar : $this->leather_type,
+            'leather_type_ar' => $this->leather_type_ar,
             'origin'         => $locale === 'ar' && $this->origin_ar ? $this->origin_ar : $this->origin,
             'origin_ar'      => $this->origin_ar,
             'care'           => $locale === 'ar' && $this->care_ar ? $this->care_ar : $this->care,
@@ -95,6 +101,28 @@ class ProductResource extends JsonResource
                 'detail'    => $locale === 'ar' && $d->detail_ar ? $d->detail_ar : $d->detail,
                 'detail_ar' => $d->detail_ar,
             ]),
+            'specifications' => $this->specifications->map(fn($s) => [
+                'label'    => $locale === 'ar' && $s->label_ar ? $s->label_ar : $s->label,
+                'label_ar' => $s->label_ar,
+                'value'    => $locale === 'ar' && $s->value_ar ? $s->value_ar : $s->value,
+                'value_ar' => $s->value_ar,
+            ]),
+            'faqs' => $this->faqs
+                ->where('is_active', true)
+                ->values()
+                ->map(fn($f) => [
+                    'question'    => $locale === 'ar' && $f->question_ar ? $f->question_ar : $f->question,
+                    'question_ar' => $f->question_ar,
+                    'answer'      => $locale === 'ar' && $f->answer_ar ? $f->answer_ar : $f->answer,
+                    'answer_ar'   => $f->answer_ar,
+                ]),
+            'reviews' => $this->whenLoaded('approvedReviews', fn() => $this->approvedReviews->take(5)->map(fn($r) => [
+                'rating'     => $r->rating,
+                'title'      => $r->title,
+                'comment'    => $r->comment,
+                'user_name'  => $r->user?->name,
+                'created_at' => $r->created_at?->toDateString(),
+            ])->values(), []),
         ];
     }
 }

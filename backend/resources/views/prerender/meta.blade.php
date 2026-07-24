@@ -9,6 +9,9 @@
     @if (!empty($schema))
     <script type="application/ld+json">{!! $schema !!}</script>
     @endif
+    @if (!empty($extraSchema))
+    <script type="application/ld+json">{!! $extraSchema !!}</script>
+    @endif
 
     <meta property="og:type" content="{{ $type }}" />
     <meta property="og:site_name" content="Artisan Leather" />
