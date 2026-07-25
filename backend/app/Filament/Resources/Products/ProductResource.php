@@ -447,25 +447,6 @@ class ProductResource extends Resource
                                         ->columnSpan(1),
                                 ])->columns(3),
 
-                            Section::make('📋 Specifications')
-                                ->description('Spec-sheet style details shown on the product page and on shared catalogue links.')
-                                ->schema([
-                                    TextInput::make('sku')
-                                        ->label('Product Code / SKU')
-                                        ->placeholder('e.g. AL-WAL-014')
-                                        ->columnSpan(1),
-
-                                    TextInput::make('dimensions')
-                                        ->label('Size / Dimensions')
-                                        ->placeholder('e.g. 11 x 9 x 2 cm')
-                                        ->columnSpan(1),
-
-                                    TextInput::make('dimensions_ar')
-                                        ->label('Size / Dimensions (Arabic)')
-                                        ->placeholder('e.g. ١١ × ٩ × ٢ سم')
-                                        ->columnSpan(1),
-                                ])->columns(3),
-
                             Section::make('📦 Bulk Pricing Tiers')
                                 ->description('Optional volume-discount tiers for wholesale buyers, e.g. "10–49 pcs" → price. Leave empty to hide this from the product page and catalogue links.')
                                 ->schema([
@@ -879,6 +860,26 @@ class ProductResource extends Resource
                     Tab::make('Specifications')
                         ->icon('heroicon-o-clipboard-document-list')
                         ->schema([
+                            Section::make('Product Identifiers')
+                                ->description('Core spec-sheet fields used for product schema, catalogue links, and customer reference.')
+                                ->schema([
+                                    TextInput::make('sku')
+                                        ->label('Product Code / SKU')
+                                        ->placeholder('e.g. AL-WAL-014')
+                                        ->columnSpan(1),
+
+                                    TextInput::make('dimensions')
+                                        ->label('Size / Dimensions')
+                                        ->placeholder('e.g. 11 x 9 x 2 cm')
+                                        ->columnSpan(1),
+
+                                    TextInput::make('dimensions_ar')
+                                        ->label('Size / Dimensions (Arabic)')
+                                        ->placeholder('e.g. ١١ × ٩ × ٢ سم')
+                                        ->columnSpan(1),
+                                ])
+                                ->columns(3),
+
                             Section::make('Structured Specifications')
                                 ->description('Key/value facts such as card slots, compartments, dimensions, closure, weight, leather type, and capacity.')
                                 ->schema([
