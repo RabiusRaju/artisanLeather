@@ -16,6 +16,8 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
  * @property string      $slug
  * @property string|null $tagline
  * @property string|null $tagline_ar
+ * @property array|null  $tags
+ * @property array|null  $tags_ar
  * @property string|null $description
  * @property string|null $description_ar
  * @property string|null $story_title
@@ -49,7 +51,7 @@ class Product extends Model
     use LogsActivity;
 
     protected $fillable = [
-        'category_id', 'brand_id', 'name', 'name_ar', 'slug', 'tagline', 'tagline_ar',
+        'category_id', 'brand_id', 'name', 'name_ar', 'slug', 'tagline', 'tagline_ar', 'tags', 'tags_ar',
         'description', 'description_ar', 'story_title', 'story_title_ar', 'story_body', 'story_body_ar',
         'material', 'material_ar', 'leather_type', 'leather_type_ar',
         'origin', 'origin_ar', 'care', 'care_ar', 'shipping', 'shipping_ar',
@@ -65,6 +67,8 @@ class Product extends Model
         'is_featured'      => 'boolean',
         'shared_platforms' => 'array',
         'bulk_pricing'     => 'array',
+        'tags'             => 'array',
+        'tags_ar'          => 'array',
     ];
 
     public function brand(): BelongsTo

@@ -208,6 +208,7 @@ class PrerenderController extends Controller
         $bodyDescription = $isArabic && $product->description_ar ? $product->description_ar : ($product->description ?: $description);
         $brandName = $isArabic && $product->brand?->name_ar ? $product->brand->name_ar : ($product->brand?->name ?? 'Artisan Leather');
         $categoryName = $isArabic && $product->category?->name_ar ? $product->category->name_ar : $product->category?->name;
+        $tags = $isArabic && !empty($product->tags_ar) ? $product->tags_ar : ($product->tags ?? []);
         $availability = match (true) {
             ($product->cta_type ?? 'add_to_cart') === 'pre_order' => 'https://schema.org/PreOrder',
             ($product->cta_type ?? 'add_to_cart') === 'sold_out' => 'https://schema.org/OutOfStock',
@@ -225,6 +226,7 @@ class PrerenderController extends Controller
             'material'    => $isArabic && $product->leather_type_ar ? $product->leather_type_ar : ($product->leather_type ?: $product->material),
             'color'       => $product->colors->map(fn ($color) => $isArabic && $color->name_ar ? $color->name_ar : $color->name)->filter()->values()->all(),
             'category'    => $categoryName,
+            'keywords'    => $tags ? implode(', ', $tags) : null,
             'brand'       => [
                 '@type' => 'Brand',
                 'name'  => $brandName,
@@ -283,6 +285,7 @@ class PrerenderController extends Controller
 
         $bodyContent = collect([
             $bodyDescription,
+            implode(' ', $tags),
             $isArabic && $product->story_body_ar ? $product->story_body_ar : $product->story_body,
             $product->details->map(fn ($detail) => $isArabic && $detail->detail_ar ? $detail->detail_ar : $detail->detail)->join(' '),
             $product->specifications->map(fn ($spec) => ($isArabic && $spec->label_ar ? $spec->label_ar : $spec->label) . ': ' . ($isArabic && $spec->value_ar ? $spec->value_ar : $spec->value))->join(' '),

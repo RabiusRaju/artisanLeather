@@ -13,6 +13,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
@@ -297,6 +298,21 @@ class ProductResource extends Resource
                                     ->helperText('Short one-liner shown under the product name.')
                                     ->columnSpanFull(),
 
+                                TagsInput::make('tags')
+                                    ->label('Product Tags (English)')
+                                    ->placeholder('Add tag')
+                                    ->helperText('Use 3–5 discovery tags, e.g. Everyday Carry, Gift Ready, Slim Profile.')
+                                    ->suggestions([
+                                        'Everyday Carry',
+                                        'Gift Ready',
+                                        'Slim Profile',
+                                        'Travel Essential',
+                                        'Handcrafted',
+                                        'Premium Leather',
+                                        'Minimal Design',
+                                    ])
+                                    ->columnSpanFull(),
+
                                 Textarea::make('description')
                                     ->label('Full Description')
                                     ->rows(5)
@@ -496,6 +512,21 @@ class ProductResource extends Resource
                                     ->placeholder('e.g. الكلاسيكية تلتقي بالأناقة')
                                     ->columnSpanFull(),
 
+                                TagsInput::make('tags_ar')
+                                    ->label('Product Tags (Arabic)')
+                                    ->placeholder('أضف وسم')
+                                    ->helperText('Arabic versions of the product discovery tags.')
+                                    ->suggestions([
+                                        'استخدام يومي',
+                                        'هدية فاخرة',
+                                        'تصميم نحيف',
+                                        'أساسي للسفر',
+                                        'مصنوع يدوياً',
+                                        'جلد فاخر',
+                                        'تصميم بسيط',
+                                    ])
+                                    ->columnSpanFull(),
+
                                 Textarea::make('description_ar')
                                     ->label('Description (Arabic)')
                                     ->rows(5)
@@ -527,19 +558,6 @@ class ProductResource extends Resource
                                 TextInput::make('origin_ar')
                                     ->label('Origin (Arabic)')
                                     ->placeholder('e.g. مخيط يدويًا في مسقط، عُمان')
-                                    ->columnSpan(1),
-                            ])->columns(2),
-
-                            Section::make('Care & Shipping (Arabic)')->schema([
-                                Textarea::make('care_ar')
-                                    ->label('Care Instructions (Arabic)')
-                                    ->helperText('Enter one care instruction per line. Each line will show as a bullet point on the product page.')
-                                    ->rows(3)
-                                    ->columnSpan(1),
-
-                                Textarea::make('shipping_ar')
-                                    ->label('Shipping Info (Arabic)')
-                                    ->rows(3)
                                     ->columnSpan(1),
                             ])->columns(2),
 
@@ -610,6 +628,21 @@ class ProductResource extends Resource
                                     ->label('Shipping Information (English)')
                                     ->rows(4)
                                     ->placeholder('e.g. Complimentary delivery across Oman & GCC...')
+                                    ->columnSpan(1),
+                            ])->columns(2),
+
+                            Section::make('Care & Shipping (Arabic)')->schema([
+                                Textarea::make('care_ar')
+                                    ->label('Care Instructions (Arabic)')
+                                    ->helperText('Enter one care instruction per line. Each line will show as a bullet point on the product page.')
+                                    ->rows(4)
+                                    ->extraInputAttributes(['dir' => 'rtl'])
+                                    ->columnSpan(1),
+
+                                Textarea::make('shipping_ar')
+                                    ->label('Shipping Information (Arabic)')
+                                    ->rows(4)
+                                    ->extraInputAttributes(['dir' => 'rtl'])
                                     ->columnSpan(1),
                             ])->columns(2),
                         ]),
@@ -1245,6 +1278,8 @@ class ProductResource extends Resource
         $set('slug',             Str::slug($data['name']   ?? ''));
         $set('tagline',          $data['tagline']          ?? '');
         $set('tagline_ar',       $data['tagline_ar']       ?? '');
+        $set('tags',             $data['tags']             ?? []);
+        $set('tags_ar',          $data['tags_ar']          ?? []);
         $set('description',      $data['description']      ?? '');
         $set('description_ar',   $data['description_ar']   ?? '');
         $set('material',         $data['material']         ?? '');
