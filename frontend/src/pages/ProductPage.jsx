@@ -531,6 +531,7 @@ export default function ProductPage() {
     || `${product.name} — ${product.tagline || 'Premium handcrafted leather from Artisan Leather, Muscat Oman'}. Price: OMR ${product.price}. Free delivery across Oman and GCC.`
   const seoTitle = product.meta_title
     || `${product.name} — Handcrafted Leather`
+  const productTags = (product.tags || []).filter(Boolean).slice(0, 5)
 
   // JSON-LD Product Schema
   const productSchema = {
@@ -540,6 +541,7 @@ export default function ProductPage() {
     description: product.tagline || seoDesc,
     image: (product.images || []).map((image) => image.url).filter(Boolean),
     sku: product.sku || undefined,
+    keywords: productTags.length ? productTags.join(', ') : undefined,
     material: product.leather_type || product.material || undefined,
     color: product.colors?.map((color) => color.name).filter(Boolean),
     brand: { '@type': 'Brand', name: product.brand?.name || 'Artisan Leather' },
@@ -881,6 +883,26 @@ export default function ProductPage() {
             <p className="text-white/55 leading-relaxed font-light mb-8 text-[15px]">
               {product.description}
             </p>
+
+            {/* Product tags */}
+            {productTags.length > 0 && (
+              <div
+                className="flex flex-wrap items-center gap-2 mb-8"
+                aria-label={isAr ? 'وسوم المنتج' : 'Product tags'}
+              >
+                <span className="text-[9px] tracking-[0.35em] uppercase text-white/30">
+                  {isAr ? 'مناسب لـ' : 'Best for'}
+                </span>
+                {productTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="border border-gold/15 bg-gold/5 px-3 py-1 text-[9px] tracking-[0.18em] uppercase text-gold/70"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Material */}
             <div className="flex items-center gap-3 mb-8">
