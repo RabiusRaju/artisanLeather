@@ -181,6 +181,14 @@ class ProductResource extends Resource
                                         ))
                                         ->columnSpanFull(),
 
+                                    Placeholder::make('_product_json_export_current')
+                                        ->label('Export Current Product')
+                                        ->content(fn ($get) => new HtmlString(
+                                            '<a href="data:application/json;charset=utf-8,' . rawurlencode(json_encode(self::currentProductJson($get), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '" download="' . e((Str::slug($get('slug') ?: $get('name') ?: 'artisan-leather-product')) . '-export.json') . '" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;background:#111827;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;">Download Current Product JSON</a>'
+                                        ))
+                                        ->helperText('Use this when editing an existing product: export, send to ChatGPT, then import back in partial mode.')
+                                        ->columnSpanFull(),
+
                                     FileUpload::make('_product_json_file')
                                         ->label('Upload Completed Product JSON')
                                         ->helperText('Upload the JSON file returned by ChatGPT. Images are not imported here — upload images manually in the Images tab.')
@@ -1520,6 +1528,56 @@ class ProductResource extends Resource
                     'Elegant semi long leather wallet front view | Artisan Leather Oman',
                     'Elegant semi long leather wallet interior compartments | Artisan Leather Oman',
                 ],
+            ],
+        ];
+    }
+
+    private static function currentProductJson($get): array
+    {
+        return [
+            'name' => $get('name'),
+            'name_ar' => $get('name_ar'),
+            'slug' => $get('slug'),
+            'sku' => $get('sku'),
+            'tagline' => $get('tagline'),
+            'tagline_ar' => $get('tagline_ar'),
+            'tags' => array_values($get('tags') ?? []),
+            'tags_ar' => array_values($get('tags_ar') ?? []),
+            'description' => $get('description'),
+            'description_ar' => $get('description_ar'),
+            'story_title' => $get('story_title'),
+            'story_title_ar' => $get('story_title_ar'),
+            'story_body' => $get('story_body'),
+            'story_body_ar' => $get('story_body_ar'),
+            'material' => $get('material'),
+            'material_ar' => $get('material_ar'),
+            'leather_type' => $get('leather_type'),
+            'leather_type_ar' => $get('leather_type_ar'),
+            'origin' => $get('origin'),
+            'origin_ar' => $get('origin_ar'),
+            'price' => $get('price'),
+            'cta_type' => $get('cta_type'),
+            'cta_label' => $get('cta_label'),
+            'cta_label_ar' => $get('cta_label_ar'),
+            'cta_note' => $get('cta_note'),
+            'cta_note_ar' => $get('cta_note_ar'),
+            'youtube_video_url' => $get('youtube_video_url'),
+            'dimensions' => $get('dimensions'),
+            'dimensions_ar' => $get('dimensions_ar'),
+            'care' => $get('care'),
+            'care_ar' => $get('care_ar'),
+            'shipping' => $get('shipping'),
+            'shipping_ar' => $get('shipping_ar'),
+            'meta_title' => $get('meta_title'),
+            'meta_description' => $get('meta_description'),
+            'meta_title_ar' => $get('meta_title_ar'),
+            'meta_description_ar' => $get('meta_description_ar'),
+            'details' => array_values($get('details') ?? []),
+            'colors' => array_values($get('colors') ?? []),
+            'specifications' => array_values($get('specifications') ?? []),
+            'faqs' => array_values($get('faqs') ?? []),
+            'image_notes' => [
+                'upload_images_manually' => true,
             ],
         ];
     }
