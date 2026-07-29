@@ -168,6 +168,113 @@ class ProductResource extends Resource
             Tabs::make('Product')
                 ->tabs([
 
+                    Tab::make('JSON Import')
+                        ->icon('heroicon-o-document-arrow-up')
+                        ->schema([
+                            Section::make('📄 Product JSON Import / Export')
+                                ->description('Download the template, ask ChatGPT to fill the same structure, upload the JSON, then review all tabs before saving. Product images stay manual.')
+                                ->schema([
+                                    Placeholder::make('_product_json_template')
+                                        ->label('Download Template')
+                                        ->content(fn () => new HtmlString(
+                                            '<a href="data:application/json;charset=utf-8,' . rawurlencode(json_encode(self::productJsonTemplate(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '" download="artisan-leather-product-template.json" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;background:#d97706;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;">Download JSON Template</a>'
+                                        ))
+                                        ->columnSpanFull(),
+
+                                    FileUpload::make('_product_json_file')
+                                        ->label('Upload Completed Product JSON')
+                                        ->helperText('Upload the JSON file returned by ChatGPT. Images are not imported here — upload images manually in the Images tab.')
+                                        ->disk('local')
+                                        ->storeFiles(false)
+                                        ->dehydrated(false)
+                                        ->acceptedFileTypes(['application/json', 'text/plain', 'application/octet-stream'])
+                                        ->maxSize(512)
+                                        ->columnSpanFull(),
+
+                                    Textarea::make('_product_json_errors')
+                                        ->dehydrated(false)
+                                        ->hidden(),
+
+                                    Placeholder::make('_product_json_error_preview')
+                                        ->label('Validation Messages')
+                                        ->content(function ($get) {
+                                            $errors = trim((string) ($get('_product_json_errors') ?? ''));
+
+                                            if ($errors === '') {
+                                                return new HtmlString('<p style="color:#6b7280;font-size:13px;">No JSON validation errors yet.</p>');
+                                            }
+
+                                            return new HtmlString('<div style="padding:12px 14px;border:1px solid #fecaca;background:#fef2f2;color:#991b1b;border-radius:8px;white-space:pre-line;font-size:13px;">' . e($errors) . '</div>');
+                                        })
+                                        ->columnSpanFull(),
+
+                                    \Filament\Schemas\Components\Actions::make([
+                                        Action::make('import_product_json')
+                                            ->label('Import JSON Into Form')
+                                            ->icon('heroicon-o-arrow-down-tray')
+                                            ->color('warning')
+                                            ->requiresConfirmation()
+                                            ->modalHeading('Import product JSON?')
+                                            ->modalDescription('This will fill product form fields from the uploaded JSON. Please review all tabs before saving.')
+                                            ->modalSubmitActionLabel('Yes, import JSON')
+                                            ->action(function ($get, $set) {
+                                                $set('_product_json_errors', '');
+
+                                                $file = $get('_product_json_file');
+                                                if (blank($file)) {
+                                                    $message = 'Please upload a completed product JSON file first.';
+                                                    $set('_product_json_errors', $message);
+                                                    \Filament\Notifications\Notification::make()->title($message)->warning()->send();
+                                                    return;
+                                                }
+
+                                                try {
+                                                    $path = self::resolveUploadedJsonPath($file);
+                                                    if (! $path || ! file_exists($path)) {
+                                                        throw new \RuntimeException('Could not read the uploaded JSON file.');
+                                                    }
+
+                                                    $payload = json_decode(file_get_contents($path), true);
+                                                    if (json_last_error() !== JSON_ERROR_NONE || ! is_array($payload)) {
+                                                        throw new \InvalidArgumentException('Invalid JSON: ' . json_last_error_msg());
+                                                    }
+
+                                                    $data = self::normalizeProductJsonPayload($payload);
+                                                    $errors = self::validateProductJsonPayload($data);
+
+                                                    if (! empty($errors)) {
+                                                        $message = implode("\n", $errors);
+                                                        $set('_product_json_errors', $message);
+                                                        \Filament\Notifications\Notification::make()
+                                                            ->title('JSON validation failed')
+                                                            ->body($message)
+                                                            ->danger()
+                                                            ->send();
+                                                        return;
+                                                    }
+
+                                                    self::fillAiFields($set, $get, $data, []);
+                                                    $set('_product_json_file', null);
+
+                                                    \Filament\Notifications\Notification::make()
+                                                        ->title('✅ Product JSON imported')
+                                                        ->body('Review all tabs, upload product images manually, then save.')
+                                                        ->success()
+                                                        ->send();
+                                                } catch (\Throwable $e) {
+                                                    $message = $e->getMessage();
+                                                    $set('_product_json_errors', $message);
+                                                    \Filament\Notifications\Notification::make()
+                                                        ->title('JSON import failed')
+                                                        ->body($message)
+                                                        ->danger()
+                                                        ->send();
+                                                }
+                                            }),
+                                    ])->columnSpanFull(),
+                                ]),
+                        ]),
+
                     // ── Tab 1: Basic Info ────────────────────────────────
                     Tab::make('Basic Info')
                         ->icon('heroicon-o-information-circle')
@@ -1331,25 +1438,209 @@ class ProductResource extends Resource
         return sprintf('%s-%04d', $prefix, ((int) $lastNumber) + 1);
     }
 
+    private static function productJsonTemplate(): array
+    {
+        return [
+            'name' => 'Elegant Semi Long Wallet',
+            'name_ar' => 'محفظة أنيقة شبه طويلة',
+            'slug' => 'elegant-semi-long-wallet',
+            'sku' => 'AL-WAL-HRB-0001',
+            'tagline' => 'A refined leather wallet for elegant everyday carry.',
+            'tagline_ar' => 'محفظة جلدية راقية للاستخدام اليومي الأنيق.',
+            'tags' => ['Everyday Carry', 'Gift Ready', 'Premium Leather'],
+            'tags_ar' => ['استخدام يومي', 'هدية فاخرة', 'جلد فاخر'],
+            'description' => 'Write a premium 80–120 word English product description here.',
+            'description_ar' => 'اكتب وصفاً عربياً فاخراً للمنتج من ٨٠ إلى ١٢٠ كلمة هنا.',
+            'story_title' => 'Designed for everyday refinement',
+            'story_title_ar' => 'صُممت للأناقة اليومية',
+            'story_body' => 'Write a concise product story about design, craftsmanship, and use case.',
+            'story_body_ar' => 'اكتب قصة قصيرة عن التصميم والحِرفة والاستخدام.',
+            'material' => 'Full-grain leather',
+            'material_ar' => 'جلد كامل الحبوب',
+            'leather_type' => 'Vegetable-tanned full-grain leather',
+            'leather_type_ar' => 'جلد كامل الحبوب مدبوغ نباتياً',
+            'origin' => 'Muscat, Oman',
+            'origin_ar' => 'مسقط، عُمان',
+            'price' => '0.000',
+            'cta_type' => 'add_to_cart',
+            'cta_label' => 'Add to Cart',
+            'cta_label_ar' => 'أضف إلى السلة',
+            'cta_note' => '',
+            'cta_note_ar' => '',
+            'youtube_video_url' => '',
+            'dimensions' => '11 x 9 x 2 cm',
+            'dimensions_ar' => '١١ × ٩ × ٢ سم',
+            'care' => "Wipe gently with a soft dry cloth.\nKeep away from prolonged moisture.",
+            'care_ar' => "امسح بلطف بقطعة قماش ناعمة وجافة.\nتجنب التعرض الطويل للرطوبة.",
+            'shipping' => 'Delivery available across Oman and selected GCC destinations.',
+            'shipping_ar' => 'التوصيل متاح داخل عُمان وبعض وجهات الخليج.',
+            'meta_title' => 'Elegant Semi Long Wallet | Artisan Leather Oman',
+            'meta_description' => 'Shop an elegant genuine leather semi long wallet from Artisan Leather Oman, crafted for refined everyday carry.',
+            'meta_title_ar' => 'محفظة جلدية أنيقة شبه طويلة | Artisan Leather',
+            'meta_description_ar' => 'تسوق محفظة جلدية فاخرة شبه طويلة من Artisan Leather، مصممة للأناقة اليومية.',
+            'details' => [
+                ['detail' => '6 card slots + 2 hidden compartments', 'detail_ar' => '٦ فتحات بطاقات + جيبان مخفيان', 'sort_order' => 0],
+                ['detail' => 'Hand-stitched edges for durability', 'detail_ar' => 'حواف مخيطة يدوياً للمتانة', 'sort_order' => 1],
+            ],
+            'colors' => [
+                ['name' => 'Cognac', 'name_ar' => 'كونياك', 'hex' => '#8B4513', 'sort_order' => 0],
+            ],
+            'specifications' => [
+                ['label' => 'Card slots', 'value' => '6', 'label_ar' => 'فتحات البطاقات', 'value_ar' => '٦', 'sort_order' => 0],
+                ['label' => 'Leather type', 'value' => 'Full-grain leather', 'label_ar' => 'نوع الجلد', 'value_ar' => 'جلد كامل الحبوب', 'sort_order' => 1],
+            ],
+            'faqs' => [
+                [
+                    'question' => 'Is this wallet made from genuine leather?',
+                    'answer' => 'Yes, it is crafted from genuine premium leather selected for durability and character.',
+                    'question_ar' => 'هل هذه المحفظة مصنوعة من جلد طبيعي؟',
+                    'answer_ar' => 'نعم، مصنوعة من جلد طبيعي فاخر مختار للمتانة والطابع المميز.',
+                    'is_active' => true,
+                    'sort_order' => 0,
+                ],
+            ],
+            'image_notes' => [
+                'upload_images_manually' => true,
+                'recommended_alt_texts' => [
+                    'Elegant semi long leather wallet front view | Artisan Leather Oman',
+                    'Elegant semi long leather wallet interior compartments | Artisan Leather Oman',
+                ],
+            ],
+        ];
+    }
+
+    private static function resolveUploadedJsonPath(mixed $file): ?string
+    {
+        if (is_array($file)) {
+            $file = collect($file)->first();
+        }
+
+        if ($file instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+            return $file->getRealPath();
+        }
+
+        if (is_string($file)) {
+            $path = Storage::disk('local')->path($file);
+
+            return file_exists($path) ? $path : null;
+        }
+
+        return null;
+    }
+
+    private static function normalizeProductJsonPayload(array $payload): array
+    {
+        $data = is_array($payload['product'] ?? null) ? $payload['product'] : $payload;
+
+        if (is_array($data['seo'] ?? null)) {
+            $data['meta_title'] ??= $data['seo']['meta_title'] ?? $data['seo']['title'] ?? null;
+            $data['meta_description'] ??= $data['seo']['meta_description'] ?? $data['seo']['description'] ?? null;
+            $data['meta_title_ar'] ??= $data['seo']['meta_title_ar'] ?? $data['seo']['title_ar'] ?? null;
+            $data['meta_description_ar'] ??= $data['seo']['meta_description_ar'] ?? $data['seo']['description_ar'] ?? null;
+        }
+
+        if (! isset($data['details']) && isset($data['bullet_points'])) {
+            $data['details'] = $data['bullet_points'];
+        }
+
+        return $data;
+    }
+
+    private static function validateProductJsonPayload(array $data): array
+    {
+        $errors = [];
+
+        foreach (['name', 'description'] as $field) {
+            if (blank($data[$field] ?? null)) {
+                $errors[] = "{$field} is required.";
+            }
+        }
+
+        if (isset($data['price']) && ! is_numeric($data['price'])) {
+            $errors[] = 'price must be a number, e.g. 24.000.';
+        }
+
+        if (isset($data['cta_type']) && ! in_array($data['cta_type'], ['add_to_cart', 'pre_order', 'enquire_only', 'sold_out'], true)) {
+            $errors[] = 'cta_type must be one of: add_to_cart, pre_order, enquire_only, sold_out.';
+        }
+
+        foreach (['tags', 'tags_ar', 'details', 'colors', 'specifications', 'faqs'] as $field) {
+            if (isset($data[$field]) && ! is_array($data[$field])) {
+                $errors[] = "{$field} must be an array.";
+            }
+        }
+
+        foreach (($data['colors'] ?? []) as $index => $color) {
+            if (! is_array($color)) {
+                $errors[] = "colors[$index] must be an object.";
+                continue;
+            }
+
+            if (blank($color['name'] ?? null)) {
+                $errors[] = "colors[$index].name is required.";
+            }
+
+            if (blank($color['hex'] ?? null) || ! preg_match('/^#[0-9A-Fa-f]{6}$/', (string) $color['hex'])) {
+                $errors[] = "colors[$index].hex must be a valid HEX color, e.g. #8B4513.";
+            }
+        }
+
+        foreach (($data['details'] ?? []) as $index => $detail) {
+            if (! is_array($detail) || blank($detail['detail'] ?? null)) {
+                $errors[] = "details[$index].detail is required.";
+            }
+        }
+
+        foreach (($data['specifications'] ?? []) as $index => $specification) {
+            if (! is_array($specification) || blank($specification['label'] ?? null) || blank($specification['value'] ?? null)) {
+                $errors[] = "specifications[$index] requires label and value.";
+            }
+        }
+
+        foreach (($data['faqs'] ?? []) as $index => $faq) {
+            if (! is_array($faq) || blank($faq['question'] ?? null) || blank($faq['answer'] ?? null)) {
+                $errors[] = "faqs[$index] requires question and answer.";
+            }
+        }
+
+        return $errors;
+    }
+
     private static function fillAiFields($set, $get, array $data, array $rawAiAttachments = []): void
     {
         $set('name',             $data['name']             ?? '');
         $set('name_ar',          $data['name_ar']          ?? '');
-        $set('slug',             Str::slug($data['name']   ?? ''));
+        $set('slug',             $data['slug']             ?? Str::slug($data['name'] ?? ''));
+        $set('sku',              $data['sku']              ?? ($get('sku') ?: self::nextProductSku()));
         $set('tagline',          $data['tagline']          ?? '');
         $set('tagline_ar',       $data['tagline_ar']       ?? '');
         $set('tags',             $data['tags']             ?? []);
         $set('tags_ar',          $data['tags_ar']          ?? []);
         $set('description',      $data['description']      ?? '');
         $set('description_ar',   $data['description_ar']   ?? '');
+        $set('story_title',      $data['story_title']      ?? '');
+        $set('story_title_ar',   $data['story_title_ar']   ?? '');
+        $set('story_body',       $data['story_body']       ?? '');
+        $set('story_body_ar',    $data['story_body_ar']    ?? '');
         $set('material',         $data['material']         ?? '');
         $set('material_ar',      $data['material_ar']      ?? '');
+        $set('leather_type',     $data['leather_type']     ?? '');
+        $set('leather_type_ar',  $data['leather_type_ar']  ?? '');
         $set('origin',           $data['origin']           ?? '');
         $set('origin_ar',        $data['origin_ar']        ?? '');
         $set('care',             $data['care']             ?? '');
         $set('care_ar',          $data['care_ar']          ?? '');
         $set('shipping',         $data['shipping']         ?? '');
         $set('shipping_ar',      $data['shipping_ar']      ?? '');
+        $set('price',            $data['price']            ?? ($get('price') ?: '0.000'));
+        $set('cta_type',         $data['cta_type']         ?? ($get('cta_type') ?: 'add_to_cart'));
+        $set('cta_label',        $data['cta_label']        ?? '');
+        $set('cta_label_ar',     $data['cta_label_ar']     ?? '');
+        $set('cta_note',         $data['cta_note']         ?? '');
+        $set('cta_note_ar',      $data['cta_note_ar']      ?? '');
+        $set('youtube_video_url', $data['youtube_video_url'] ?? '');
+        $set('dimensions',       $data['dimensions']       ?? '');
+        $set('dimensions_ar',    $data['dimensions_ar']    ?? '');
         $set('meta_title',       $data['meta_title']       ?? '');
         $set('meta_description', $data['meta_description'] ?? '');
         $set('meta_title_ar',       $data['meta_title_ar']       ?? '');
@@ -1362,7 +1653,7 @@ class ProductResource extends Resource
             $set('details', array_values(array_map(fn ($d, $i) => [
                 'detail'     => $d['detail']    ?? '',
                 'detail_ar'  => $d['detail_ar'] ?? '',
-                'sort_order' => $i,
+                'sort_order' => is_numeric($d['sort_order'] ?? null) ? (int) $d['sort_order'] : $i,
             ], $data['details'], array_keys($data['details']))));
         }
 
@@ -1372,8 +1663,29 @@ class ProductResource extends Resource
                 'name'       => $c['name']    ?? '',
                 'name_ar'    => $c['name_ar'] ?? '',
                 'hex'        => $c['hex']     ?? '#8B4513',
-                'sort_order' => $i,
+                'sort_order' => is_numeric($c['sort_order'] ?? null) ? (int) $c['sort_order'] : $i,
             ], $data['colors'], array_keys($data['colors']))));
+        }
+
+        if (!empty($data['specifications']) && is_array($data['specifications'])) {
+            $set('specifications', array_values(array_map(fn ($s, $i) => [
+                'label'      => $s['label']    ?? '',
+                'value'      => $s['value']    ?? '',
+                'label_ar'   => $s['label_ar'] ?? '',
+                'value_ar'   => $s['value_ar'] ?? '',
+                'sort_order' => is_numeric($s['sort_order'] ?? null) ? (int) $s['sort_order'] : $i,
+            ], $data['specifications'], array_keys($data['specifications']))));
+        }
+
+        if (!empty($data['faqs']) && is_array($data['faqs'])) {
+            $set('faqs', array_values(array_map(fn ($f, $i) => [
+                'question'   => $f['question']    ?? '',
+                'answer'     => $f['answer']      ?? '',
+                'question_ar'=> $f['question_ar'] ?? '',
+                'answer_ar'  => $f['answer_ar']   ?? '',
+                'is_active'  => array_key_exists('is_active', $f) ? (bool) $f['is_active'] : true,
+                'sort_order' => is_numeric($f['sort_order'] ?? null) ? (int) $f['sort_order'] : $i,
+            ], $data['faqs'], array_keys($data['faqs']))));
         }
 
         // ── Auto-populate Images tab from reference images ──────────────────────
