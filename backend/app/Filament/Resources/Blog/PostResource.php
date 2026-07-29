@@ -237,6 +237,14 @@ class PostResource extends Resource
                                 ))
                                 ->columnSpanFull(),
 
+                            Placeholder::make('_post_json_export_current')
+                                ->label('Export Current Post')
+                                ->content(fn ($get) => new HtmlString(
+                                    '<a href="data:application/json;charset=utf-8,' . rawurlencode(json_encode(self::currentPostJson($get), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '" download="' . e((Str::slug($get('slug') ?: $get('title') ?: 'artisan-leather-post')) . '-export.json') . '" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;background:#111827;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;">Download Current Post JSON</a>'
+                                ))
+                                ->helperText('Use this when editing an existing post: export, send to ChatGPT, then import back in partial mode.')
+                                ->columnSpanFull(),
+
                             FileUpload::make('_post_json_file')
                                 ->label('Upload Completed Post JSON')
                                 ->helperText('Upload the JSON file returned by ChatGPT. Featured image is not imported here — upload it manually in the Content tab.')
@@ -1096,6 +1104,39 @@ class PostResource extends Resource
             'image_notes' => [
                 'upload_featured_image_manually' => true,
                 'recommended_featured_image_alt' => 'Premium leather wallet care guide | Artisan Leather Oman',
+            ],
+        ];
+    }
+
+    private static function currentPostJson($get): array
+    {
+        return [
+            'title' => $get('title'),
+            'slug' => $get('slug'),
+            'excerpt' => $get('excerpt'),
+            'content' => $get('content'),
+            'title_ar' => $get('title_ar'),
+            'excerpt_ar' => $get('excerpt_ar'),
+            'content_ar' => $get('content_ar'),
+            'title_bn' => $get('title_bn'),
+            'excerpt_bn' => $get('excerpt_bn'),
+            'content_bn' => $get('content_bn'),
+            'category' => $get('category'),
+            'author' => $get('author'),
+            'read_time' => $get('read_time'),
+            'tags' => array_values($get('tags') ?? []),
+            'is_published' => (bool) $get('is_published'),
+            'featured_image_alt' => $get('featured_image_alt'),
+            'meta_title' => $get('meta_title'),
+            'meta_description' => $get('meta_description'),
+            'meta_title_ar' => $get('meta_title_ar'),
+            'meta_description_ar' => $get('meta_description_ar'),
+            'meta_title_bn' => $get('meta_title_bn'),
+            'meta_description_bn' => $get('meta_description_bn'),
+            'social_caption' => $get('_social_caption'),
+            'social_caption_ar' => $get('_social_caption_ar'),
+            'image_notes' => [
+                'upload_featured_image_manually' => true,
             ],
         ];
     }
