@@ -226,6 +226,111 @@ class PostResource extends Resource
 
             Tabs::make()->tabs([
 
+                Tab::make('JSON Import')->icon('heroicon-o-document-arrow-up')->schema([
+                    Section::make('📄 Post JSON Import / Export')
+                        ->description('Download the template, ask ChatGPT to fill the same structure, upload the JSON, then review all tabs before saving. Featured image stays manual.')
+                        ->schema([
+                            Placeholder::make('_post_json_template')
+                                ->label('Download Template')
+                                ->content(fn () => new HtmlString(
+                                    '<a href="data:application/json;charset=utf-8,' . rawurlencode(json_encode(self::postJsonTemplate(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '" download="artisan-leather-post-template.json" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;background:#d97706;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;">Download JSON Template</a>'
+                                ))
+                                ->columnSpanFull(),
+
+                            FileUpload::make('_post_json_file')
+                                ->label('Upload Completed Post JSON')
+                                ->helperText('Upload the JSON file returned by ChatGPT. Featured image is not imported here — upload it manually in the Content tab.')
+                                ->disk('local')
+                                ->storeFiles(false)
+                                ->dehydrated(false)
+                                ->acceptedFileTypes(['application/json', 'text/plain', 'application/octet-stream'])
+                                ->maxSize(512)
+                                ->columnSpanFull(),
+
+                            Textarea::make('_post_json_errors')
+                                ->dehydrated(false)
+                                ->hidden(),
+
+                            Placeholder::make('_post_json_error_preview')
+                                ->label('Validation Messages')
+                                ->content(function ($get) {
+                                    $errors = trim((string) ($get('_post_json_errors') ?? ''));
+
+                                    if ($errors === '') {
+                                        return new HtmlString('<p style="color:#6b7280;font-size:13px;">No JSON validation errors yet.</p>');
+                                    }
+
+                                    return new HtmlString('<div style="padding:12px 14px;border:1px solid #fecaca;background:#fef2f2;color:#991b1b;border-radius:8px;white-space:pre-line;font-size:13px;">' . e($errors) . '</div>');
+                                })
+                                ->columnSpanFull(),
+
+                            \Filament\Schemas\Components\Actions::make([
+                                Action::make('import_post_json')
+                                    ->label('Import JSON Into Form')
+                                    ->icon('heroicon-o-arrow-down-tray')
+                                    ->color('warning')
+                                    ->requiresConfirmation()
+                                    ->modalHeading('Import post JSON?')
+                                    ->modalDescription('This will fill post form fields from the uploaded JSON. Please review all tabs before saving.')
+                                    ->modalSubmitActionLabel('Yes, import JSON')
+                                    ->action(function ($get, $set) {
+                                        $set('_post_json_errors', '');
+
+                                        $file = $get('_post_json_file');
+                                        if (blank($file)) {
+                                            $message = 'Please upload a completed post JSON file first.';
+                                            $set('_post_json_errors', $message);
+                                            \Filament\Notifications\Notification::make()->title($message)->warning()->send();
+                                            return;
+                                        }
+
+                                        try {
+                                            $path = self::resolveUploadedJsonPath($file);
+                                            if (! $path || ! file_exists($path)) {
+                                                throw new \RuntimeException('Could not read the uploaded JSON file.');
+                                            }
+
+                                            $payload = json_decode(file_get_contents($path), true);
+                                            if (json_last_error() !== JSON_ERROR_NONE || ! is_array($payload)) {
+                                                throw new \InvalidArgumentException('Invalid JSON: ' . json_last_error_msg());
+                                            }
+
+                                            $data = self::normalizePostJsonPayload($payload);
+                                            $errors = self::validatePostJsonPayload($data);
+
+                                            if (! empty($errors)) {
+                                                $message = implode("\n", $errors);
+                                                $set('_post_json_errors', $message);
+                                                \Filament\Notifications\Notification::make()
+                                                    ->title('JSON validation failed')
+                                                    ->body($message)
+                                                    ->danger()
+                                                    ->send();
+                                                return;
+                                            }
+
+                                            self::fillAiFields($set, $data);
+                                            $set('_post_json_file', null);
+
+                                            \Filament\Notifications\Notification::make()
+                                                ->title('✅ Post JSON imported')
+                                                ->body('Review all tabs, upload the featured image manually, then save.')
+                                                ->success()
+                                                ->send();
+                                        } catch (\Throwable $e) {
+                                            $message = $e->getMessage();
+                                            $set('_post_json_errors', $message);
+                                            \Filament\Notifications\Notification::make()
+                                                ->title('JSON import failed')
+                                                ->body($message)
+                                                ->danger()
+                                                ->send();
+                                        }
+                                    }),
+                            ])->columnSpanFull(),
+                        ]),
+                ]),
+
                 // ── Tab 1: Content ───────────────────────────────────────
                 Tab::make('Content')->icon('heroicon-o-document-text')->schema([
 
@@ -946,10 +1051,116 @@ class PostResource extends Resource
         return $paths;
     }
 
+    private static function postJsonTemplate(): array
+    {
+        return [
+            'title' => 'How to Care for Your Leather Wallet',
+            'slug' => 'how-to-care-for-your-leather-wallet',
+            'excerpt' => 'Learn simple leather wallet care steps to keep your premium wallet clean, conditioned, and beautiful for years.',
+            'content' => '<h2>Why leather care matters</h2><p>Write the full English article content here using H2/H3 headings, short paragraphs, and helpful details.</p>',
+            'title_ar' => 'كيفية العناية بمحفظتك الجلدية',
+            'excerpt_ar' => 'تعرف على خطوات بسيطة للعناية بمحفظتك الجلدية والحفاظ على جمالها لسنوات.',
+            'content_ar' => '<h2>لماذا العناية بالجلد مهمة</h2><p>اكتب محتوى المقال العربي الكامل هنا.</p>',
+            'title_bn' => 'আপনার চামড়ার ওয়ালেটের যত্ন কীভাবে নেবেন',
+            'excerpt_bn' => 'আপনার প্রিমিয়াম লেদার ওয়ালেট বহু বছর সুন্দর রাখতে সহজ যত্নের ধাপ জানুন।',
+            'content_bn' => '<h2>লেদার যত্ন কেন গুরুত্বপূর্ণ</h2><p>এখানে বাংলা আর্টিকেলের পূর্ণ কনটেন্ট লিখুন।</p>',
+            'category' => 'care-guide',
+            'author' => 'Artisan Leather',
+            'read_time' => 4,
+            'tags' => ['leather care', 'wallet', 'Oman'],
+            'is_published' => false,
+            'featured_image_alt' => 'Premium leather wallet care guide | Artisan Leather Oman',
+            'meta_title' => 'How to Care for Leather Wallets | Artisan Leather Oman',
+            'meta_description' => 'Learn how to clean, condition, store, and protect your leather wallet with expert tips from Artisan Leather Oman.',
+            'meta_title_ar' => 'كيفية العناية بالمحافظ الجلدية | Artisan Leather',
+            'meta_description_ar' => 'تعرف على كيفية تنظيف وترطيب وحفظ محفظتك الجلدية مع نصائح من Artisan Leather.',
+            'meta_title_bn' => 'লেদার ওয়ালেটের যত্ন কীভাবে নেবেন | Artisan Leather',
+            'meta_description_bn' => 'লেদার ওয়ালেট পরিষ্কার, কন্ডিশন ও সংরক্ষণের সহজ উপায় জানুন।',
+            'social_caption' => 'A premium leather wallet can last for years with the right care. Read our simple guide.',
+            'social_caption_ar' => 'يمكن أن تدوم المحفظة الجلدية الفاخرة لسنوات مع العناية الصحيحة. اقرأ دليلنا البسيط.',
+            'image_notes' => [
+                'upload_featured_image_manually' => true,
+                'recommended_featured_image_alt' => 'Premium leather wallet care guide | Artisan Leather Oman',
+            ],
+        ];
+    }
+
+    private static function resolveUploadedJsonPath(mixed $file): ?string
+    {
+        if (is_array($file)) {
+            $file = collect($file)->first();
+        }
+
+        if ($file instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+            return $file->getRealPath();
+        }
+
+        if (is_string($file)) {
+            $path = Storage::disk('local')->path($file);
+
+            return file_exists($path) ? $path : null;
+        }
+
+        return null;
+    }
+
+    private static function normalizePostJsonPayload(array $payload): array
+    {
+        $data = is_array($payload['post'] ?? null) ? $payload['post'] : $payload;
+
+        if (is_array($data['seo'] ?? null)) {
+            $data['meta_title'] ??= $data['seo']['meta_title'] ?? $data['seo']['title'] ?? null;
+            $data['meta_description'] ??= $data['seo']['meta_description'] ?? $data['seo']['description'] ?? null;
+            $data['meta_title_ar'] ??= $data['seo']['meta_title_ar'] ?? $data['seo']['title_ar'] ?? null;
+            $data['meta_description_ar'] ??= $data['seo']['meta_description_ar'] ?? $data['seo']['description_ar'] ?? null;
+            $data['meta_title_bn'] ??= $data['seo']['meta_title_bn'] ?? $data['seo']['title_bn'] ?? null;
+            $data['meta_description_bn'] ??= $data['seo']['meta_description_bn'] ?? $data['seo']['description_bn'] ?? null;
+        }
+
+        return $data;
+    }
+
+    private static function validatePostJsonPayload(array $data): array
+    {
+        $errors = [];
+
+        foreach (['title', 'excerpt', 'content'] as $field) {
+            if (blank($data[$field] ?? null)) {
+                $errors[] = "{$field} is required.";
+            }
+        }
+
+        if (isset($data['category']) && ! in_array($data['category'], ['care-guide', 'style-tips', 'leather-knowledge', 'news', 'general'], true)) {
+            $errors[] = 'category must be one of: care-guide, style-tips, leather-knowledge, news, general.';
+        }
+
+        if (isset($data['read_time']) && (! is_numeric($data['read_time']) || (int) $data['read_time'] < 1)) {
+            $errors[] = 'read_time must be a positive number.';
+        }
+
+        if (isset($data['tags']) && ! is_array($data['tags'])) {
+            $errors[] = 'tags must be an array.';
+        }
+
+        foreach (['meta_title', 'meta_title_ar', 'meta_title_bn'] as $field) {
+            if (isset($data[$field]) && mb_strlen((string) $data[$field]) > 70) {
+                $errors[] = "{$field} should be 70 characters or less.";
+            }
+        }
+
+        foreach (['meta_description', 'meta_description_ar', 'meta_description_bn'] as $field) {
+            if (isset($data[$field]) && mb_strlen((string) $data[$field]) > 170) {
+                $errors[] = "{$field} should be 170 characters or less.";
+            }
+        }
+
+        return $errors;
+    }
+
     private static function fillAiFields($set, array $data): void
     {
         $set('title',            $data['title']            ?? '');
-        $set('slug',             Str::slug($data['title']  ?? ''));
+        $set('slug',             $data['slug']             ?? Str::slug($data['title'] ?? ''));
         $set('excerpt',          $data['excerpt']           ?? '');
         $set('content',          $data['content']           ?? '');
         $set('title_ar',         $data['title_ar']          ?? '');
@@ -960,7 +1171,10 @@ class PostResource extends Resource
         $set('content_bn',       $data['content_bn']        ?? '');
         $set('tags',             $data['tags']              ?? []);
         $set('category',         $data['category']          ?? 'general');
+        $set('author',           $data['author']            ?? 'Artisan Leather');
         $set('read_time',        $data['read_time']         ?? 4);
+        $set('is_published',     (bool) ($data['is_published'] ?? false));
+        $set('featured_image_alt', $data['featured_image_alt'] ?? '');
         $set('meta_title',       $data['meta_title']        ?? '');
         $set('meta_description', $data['meta_description']  ?? '');
         $set('meta_title_ar',       $data['meta_title_ar']        ?? '');
