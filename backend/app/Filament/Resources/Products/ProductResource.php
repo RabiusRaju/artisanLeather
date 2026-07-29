@@ -812,7 +812,11 @@ class ProductResource extends Resource
                                             TextInput::make('sort_order')
                                                 ->label('Order')
                                                 ->numeric()
-                                                ->default(0)
+                                                ->default(fn ($get) => self::nextRepeaterSortOrder($get('../../colors')))
+                                                ->distinct()
+                                                ->validationMessages([
+                                                    'distinct' => 'Order number must be unique for each color.',
+                                                ])
                                                 ->columnSpan(1),
                                         ])
                                         ->columns(4)
@@ -865,7 +869,10 @@ class ProductResource extends Resource
                                 ->schema([
                                     TextInput::make('sku')
                                         ->label('Product Code / SKU')
-                                        ->placeholder('e.g. AL-WAL-014')
+                                        ->placeholder('e.g. AL-WAL-HRB-0001')
+                                        ->default(fn (?Product $record) => $record?->sku ?: self::nextProductSku())
+                                        ->unique(ignoreRecord: true)
+                                        ->helperText('Auto-generated with a 4-digit sequence. You can edit it if this product needs a different code.')
                                         ->columnSpan(1),
 
                                     TextInput::make('dimensions')
@@ -914,7 +921,11 @@ class ProductResource extends Resource
                                             TextInput::make('sort_order')
                                                 ->label('Order')
                                                 ->numeric()
-                                                ->default(0)
+                                                ->default(fn ($get) => self::nextRepeaterSortOrder($get('../../specifications')))
+                                                ->distinct()
+                                                ->validationMessages([
+                                                    'distinct' => 'Order number must be unique for each specification.',
+                                                ])
                                                 ->columnSpan(1),
                                         ])
                                         ->columns(5)
@@ -966,7 +977,11 @@ class ProductResource extends Resource
                                             TextInput::make('sort_order')
                                                 ->label('Order')
                                                 ->numeric()
-                                                ->default(0)
+                                                ->default(fn ($get) => self::nextRepeaterSortOrder($get('../../faqs')))
+                                                ->distinct()
+                                                ->validationMessages([
+                                                    'distinct' => 'Order number must be unique for each FAQ.',
+                                                ])
                                                 ->columnSpan(1),
                                         ])
                                         ->columns(4)
@@ -1270,6 +1285,34 @@ class ProductResource extends Resource
             }
         }
         return $paths;
+    }
+
+    private static function nextRepeaterSortOrder(mixed $items): int
+    {
+        $orders = collect(is_array($items) ? $items : [])
+            ->pluck('sort_order')
+            ->filter(fn ($order) => is_numeric($order))
+            ->map(fn ($order) => (int) $order);
+
+        return $orders->isEmpty() ? 0 : $orders->max() + 1;
+    }
+
+    private static function nextProductSku(string $prefix = 'AL-WAL-HRB'): string
+    {
+        $lastNumber = Product::query()
+            ->where('sku', 'like', "{$prefix}-%")
+            ->pluck('sku')
+            ->map(function (?string $sku) use ($prefix): ?int {
+                if (! $sku || ! preg_match('/^' . preg_quote($prefix, '/') . '-(\d+)$/', $sku, $matches)) {
+                    return null;
+                }
+
+                return (int) $matches[1];
+            })
+            ->filter()
+            ->max();
+
+        return sprintf('%s-%04d', $prefix, ((int) $lastNumber) + 1);
     }
 
     private static function fillAiFields($set, $get, array $data, array $rawAiAttachments = []): void
