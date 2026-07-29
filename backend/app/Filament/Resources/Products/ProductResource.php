@@ -811,11 +811,14 @@ class ProductResource extends Resource
 
                                             TextInput::make('sort_order')
                                                 ->label('Order')
-                                                ->numeric()
                                                 ->default(fn ($get) => self::nextRepeaterSortOrder($get('../../colors')))
+                                                ->rules(['integer', 'min:0'])
+                                                ->inputMode('numeric')
                                                 ->distinct()
                                                 ->validationMessages([
                                                     'distinct' => 'Order number must be unique for each color.',
+                                                    'integer' => 'Order must be a whole number.',
+                                                    'min' => 'Order cannot be negative.',
                                                 ])
                                                 ->columnSpan(1),
                                         ])
@@ -850,8 +853,15 @@ class ProductResource extends Resource
 
                                             TextInput::make('sort_order')
                                                 ->label('Order')
-                                                ->numeric()
-                                                ->default(0)
+                                                ->default(fn ($get) => self::nextRepeaterSortOrder($get('../../details')))
+                                                ->rules(['integer', 'min:0'])
+                                                ->inputMode('numeric')
+                                                ->distinct()
+                                                ->validationMessages([
+                                                    'distinct' => 'Order number must be unique for each bullet point.',
+                                                    'integer' => 'Order must be a whole number.',
+                                                    'min' => 'Order cannot be negative.',
+                                                ])
                                                 ->columnSpan(1),
                                         ])
                                         ->columns(5)
@@ -920,11 +930,14 @@ class ProductResource extends Resource
 
                                             TextInput::make('sort_order')
                                                 ->label('Order')
-                                                ->numeric()
                                                 ->default(fn ($get) => self::nextRepeaterSortOrder($get('../../specifications')))
+                                                ->rules(['integer', 'min:0'])
+                                                ->inputMode('numeric')
                                                 ->distinct()
                                                 ->validationMessages([
                                                     'distinct' => 'Order number must be unique for each specification.',
+                                                    'integer' => 'Order must be a whole number.',
+                                                    'min' => 'Order cannot be negative.',
                                                 ])
                                                 ->columnSpan(1),
                                         ])
@@ -976,11 +989,14 @@ class ProductResource extends Resource
 
                                             TextInput::make('sort_order')
                                                 ->label('Order')
-                                                ->numeric()
                                                 ->default(fn ($get) => self::nextRepeaterSortOrder($get('../../faqs')))
+                                                ->rules(['integer', 'min:0'])
+                                                ->inputMode('numeric')
                                                 ->distinct()
                                                 ->validationMessages([
                                                     'distinct' => 'Order number must be unique for each FAQ.',
+                                                    'integer' => 'Order must be a whole number.',
+                                                    'min' => 'Order cannot be negative.',
                                                 ])
                                                 ->columnSpan(1),
                                         ])
