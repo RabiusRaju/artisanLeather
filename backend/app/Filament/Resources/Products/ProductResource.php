@@ -191,6 +191,17 @@ class ProductResource extends Resource
                                         ->maxSize(512)
                                         ->columnSpanFull(),
 
+                                    Select::make('_product_json_import_mode')
+                                        ->label('Import Mode')
+                                        ->dehydrated(false)
+                                        ->default('partial')
+                                        ->options([
+                                            'partial' => 'Only update fields present in JSON',
+                                            'replace' => 'Replace supported fields with JSON/default blanks',
+                                        ])
+                                        ->helperText('Use partial mode when importing one tab only, e.g. Arabic SEO or FAQs.')
+                                        ->columnSpanFull(),
+
                                     Textarea::make('_product_json_errors')
                                         ->dehydrated(false)
                                         ->hidden(),
@@ -253,7 +264,11 @@ class ProductResource extends Resource
                                                         return;
                                                     }
 
-                                                    self::fillAiFields($set, $get, $data, []);
+                                                    if (($get('_product_json_import_mode') ?? 'partial') === 'replace') {
+                                                        self::fillAiFields($set, $get, $data, []);
+                                                    } else {
+                                                        self::fillProductJsonFields($set, $get, $data);
+                                                    }
                                                     $set('_product_json_file', null);
 
                                                     \Filament\Notifications\Notification::make()
@@ -1604,6 +1619,69 @@ class ProductResource extends Resource
         }
 
         return $errors;
+    }
+
+    private static function fillProductJsonFields($set, $get, array $data): void
+    {
+        foreach ([
+            'name', 'name_ar', 'slug', 'sku', 'tagline', 'tagline_ar', 'tags', 'tags_ar',
+            'description', 'description_ar', 'story_title', 'story_title_ar', 'story_body', 'story_body_ar',
+            'material', 'material_ar', 'leather_type', 'leather_type_ar', 'origin', 'origin_ar',
+            'care', 'care_ar', 'shipping', 'shipping_ar', 'price', 'cta_type', 'cta_label', 'cta_label_ar',
+            'cta_note', 'cta_note_ar', 'youtube_video_url', 'dimensions', 'dimensions_ar',
+            'meta_title', 'meta_description', 'meta_title_ar', 'meta_description_ar',
+            '_seo_score', '_seo_notes',
+        ] as $field) {
+            if (array_key_exists($field, $data)) {
+                $set($field, $data[$field]);
+            }
+        }
+
+        if (! array_key_exists('slug', $data) && array_key_exists('name', $data)) {
+            $set('slug', Str::slug($data['name'] ?? ''));
+        }
+
+        if (! array_key_exists('sku', $data) && blank($get('sku'))) {
+            $set('sku', self::nextProductSku());
+        }
+
+        if (array_key_exists('details', $data) && is_array($data['details'])) {
+            $set('details', array_values(array_map(fn ($d, $i) => [
+                'detail'     => $d['detail']    ?? '',
+                'detail_ar'  => $d['detail_ar'] ?? '',
+                'sort_order' => is_numeric($d['sort_order'] ?? null) ? (int) $d['sort_order'] : $i,
+            ], $data['details'], array_keys($data['details']))));
+        }
+
+        if (array_key_exists('colors', $data) && is_array($data['colors'])) {
+            $set('colors', array_values(array_map(fn ($c, $i) => [
+                'name'       => $c['name']    ?? '',
+                'name_ar'    => $c['name_ar'] ?? '',
+                'hex'        => $c['hex']     ?? '#8B4513',
+                'sort_order' => is_numeric($c['sort_order'] ?? null) ? (int) $c['sort_order'] : $i,
+            ], $data['colors'], array_keys($data['colors']))));
+        }
+
+        if (array_key_exists('specifications', $data) && is_array($data['specifications'])) {
+            $set('specifications', array_values(array_map(fn ($s, $i) => [
+                'label'      => $s['label']    ?? '',
+                'value'      => $s['value']    ?? '',
+                'label_ar'   => $s['label_ar'] ?? '',
+                'value_ar'   => $s['value_ar'] ?? '',
+                'sort_order' => is_numeric($s['sort_order'] ?? null) ? (int) $s['sort_order'] : $i,
+            ], $data['specifications'], array_keys($data['specifications']))));
+        }
+
+        if (array_key_exists('faqs', $data) && is_array($data['faqs'])) {
+            $set('faqs', array_values(array_map(fn ($f, $i) => [
+                'question'   => $f['question']    ?? '',
+                'answer'     => $f['answer']      ?? '',
+                'question_ar'=> $f['question_ar'] ?? '',
+                'answer_ar'  => $f['answer_ar']   ?? '',
+                'is_active'  => array_key_exists('is_active', $f) ? (bool) $f['is_active'] : true,
+                'sort_order' => is_numeric($f['sort_order'] ?? null) ? (int) $f['sort_order'] : $i,
+            ], $data['faqs'], array_keys($data['faqs']))));
+        }
     }
 
     private static function fillAiFields($set, $get, array $data, array $rawAiAttachments = []): void

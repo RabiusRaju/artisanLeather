@@ -247,6 +247,17 @@ class PostResource extends Resource
                                 ->maxSize(512)
                                 ->columnSpanFull(),
 
+                            Select::make('_post_json_import_mode')
+                                ->label('Import Mode')
+                                ->dehydrated(false)
+                                ->default('partial')
+                                ->options([
+                                    'partial' => 'Only update fields present in JSON',
+                                    'replace' => 'Replace supported fields with JSON/default blanks',
+                                ])
+                                ->helperText('Use partial mode when importing one tab only, e.g. Arabic content or SEO.')
+                                ->columnSpanFull(),
+
                             Textarea::make('_post_json_errors')
                                 ->dehydrated(false)
                                 ->hidden(),
@@ -309,7 +320,11 @@ class PostResource extends Resource
                                                 return;
                                             }
 
-                                            self::fillAiFields($set, $data);
+                                            if (($get('_post_json_import_mode') ?? 'partial') === 'replace') {
+                                                self::fillAiFields($set, $data);
+                                            } else {
+                                                self::fillPostJsonFields($set, $data);
+                                            }
                                             $set('_post_json_file', null);
 
                                             \Filament\Notifications\Notification::make()
@@ -1155,6 +1170,28 @@ class PostResource extends Resource
         }
 
         return $errors;
+    }
+
+    private static function fillPostJsonFields($set, array $data): void
+    {
+        foreach ([
+            'title', 'slug', 'excerpt', 'content',
+            'title_ar', 'excerpt_ar', 'content_ar',
+            'title_bn', 'excerpt_bn', 'content_bn',
+            'tags', 'category', 'author', 'read_time', 'is_published', 'featured_image_alt',
+            'meta_title', 'meta_description',
+            'meta_title_ar', 'meta_description_ar',
+            'meta_title_bn', 'meta_description_bn',
+            '_seo_score', '_seo_notes', '_social_caption', '_social_caption_ar',
+        ] as $field) {
+            if (array_key_exists($field, $data)) {
+                $set($field, $field === 'is_published' ? (bool) $data[$field] : $data[$field]);
+            }
+        }
+
+        if (! array_key_exists('slug', $data) && array_key_exists('title', $data)) {
+            $set('slug', Str::slug($data['title'] ?? ''));
+        }
     }
 
     private static function fillAiFields($set, array $data): void
