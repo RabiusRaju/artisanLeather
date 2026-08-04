@@ -871,8 +871,15 @@ class ProductResource extends Resource
 
                                             TextInput::make('sort_order')
                                                 ->label('Order')
-                                                ->numeric()
-                                                ->default(0)
+                                                ->default(fn ($get) => self::nextRepeaterSortOrder($get('../../images')))
+                                                ->rules(['integer', 'min:0'])
+                                                ->inputMode('numeric')
+                                                ->distinct()
+                                                ->validationMessages([
+                                                    'distinct' => 'Order number must be unique for each image.',
+                                                    'integer' => 'Order must be a whole number.',
+                                                    'min' => 'Order cannot be negative.',
+                                                ])
                                                 ->helperText('1 = main image')
                                                 ->columnSpan(1),
 
