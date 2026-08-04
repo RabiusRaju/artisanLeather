@@ -328,8 +328,13 @@ class ProductResource extends Resource
 
                                 TextInput::make('sort_order')
                                     ->label('Display Order')
-                                    ->numeric()
-                                    ->default(0)
+                                    ->default(fn (?Product $record) => $record?->sort_order ?? self::nextProductSortOrder())
+                                    ->rules(['integer', 'min:0'])
+                                    ->inputMode('numeric')
+                                    ->validationMessages([
+                                        'integer' => 'Display order must be a whole number.',
+                                        'min' => 'Display order cannot be negative.',
+                                    ])
                                     ->helperText('Lower number = appears first')
                                     ->columnSpan(1),
 
@@ -1448,6 +1453,11 @@ class ProductResource extends Resource
             ->map(fn ($order) => (int) $order);
 
         return $orders->isEmpty() ? 0 : $orders->max() + 1;
+    }
+
+    private static function nextProductSortOrder(): int
+    {
+        return ((int) Product::query()->max('sort_order')) + 1;
     }
 
     private static function nextProductSku(string $prefix = 'AL-WAL-HRB'): string
