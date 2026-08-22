@@ -780,7 +780,7 @@ class ProductResource extends Resource
                                 ]),
 
                             Section::make('Product Images')
-                                ->description('Upload up to 6 images (max 5 MB each · JPG / PNG / WebP). Images are automatically converted to WebP and resized to 1200px. Add a view label and alt text for each image.')
+                                ->description('Upload up to 12 images (max 5 MB each · JPG / PNG / WebP). Images are automatically converted to WebP and resized to 1200px. Add a view label and alt text for each image.')
                                 ->schema([
                                     Repeater::make('images')
                                         ->relationship()
@@ -896,7 +896,7 @@ class ProductResource extends Resource
                                                 ->columnSpanFull(),
                                         ])
                                         ->columns(2)
-                                        ->maxItems(6)
+                                        ->maxItems(12)
                                         ->reorderable()
                                         ->reorderableWithDragAndDrop()
                                         ->collapsible()
