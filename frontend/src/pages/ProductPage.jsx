@@ -693,7 +693,7 @@ export default function ProductPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.35 }}
-                className="aspect-square relative overflow-hidden lg:cursor-zoom-in"
+                className="aspect-square relative overflow-hidden rounded-md lg:cursor-zoom-in"
                 style={{ background: 'linear-gradient(160deg, #2A1A08, #1A1008)' }}
                 onMouseEnter={() => setIsZooming(true)}
                 onMouseLeave={() => setIsZooming(false)}
@@ -707,7 +707,7 @@ export default function ProductPage() {
                     loading={activeImage === 0 ? 'eager' : 'lazy'}
                     decoding="async"
                     fetchPriority={activeImage === 0 ? 'high' : 'auto'}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-contain"
                   />
                 )}
 
@@ -763,7 +763,7 @@ export default function ProductPage() {
                   aria-label={item.type === 'video' ? `Play ${product.name} product video` : `View ${item.label || `product image ${i + 1}`}`}
                   aria-pressed={activeImage === i}
                   style={{ background: 'linear-gradient(160deg, #2A1A08, #1A1008)' }}
-                  className={`aspect-square relative overflow-hidden transition-all duration-300 ${
+                  className={`aspect-square relative overflow-hidden rounded-sm transition-all duration-300 ${
                     activeImage === i
                       ? 'ring-1 ring-gold ring-offset-1 ring-offset-dark'
                       : 'opacity-50 hover:opacity-80'
@@ -775,7 +775,7 @@ export default function ProductPage() {
                       alt={item.alt_text || `${product.name} view ${i + 1}`}
                       loading="lazy"
                       decoding="async"
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-contain"
                     />
                   ) : (
                     <>
@@ -784,7 +784,7 @@ export default function ProductPage() {
                         alt={item.alt_text}
                         loading="lazy"
                         decoding="async"
-                        className="absolute inset-0 w-full h-full object-cover opacity-75"
+                        className="absolute inset-0 w-full h-full object-contain opacity-75"
                       />
                       <div className="absolute inset-0 bg-dark/35 flex items-center justify-center">
                         <HiPlay size={20} className="text-gold" />
