@@ -62,7 +62,7 @@ function ProductCard({ product, index }) {
       <Link to={`/product/${product.slug}`}>
         {/* Image */}
         <div
-          className="relative overflow-hidden bg-dark-100"
+          className="relative overflow-hidden rounded-md bg-dark-100"
           style={{ aspectRatio: '3/4' }}
         >
           {firstImage && (
