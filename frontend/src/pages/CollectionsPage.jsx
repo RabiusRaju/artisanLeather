@@ -328,7 +328,7 @@ export default function CollectionsPage() {
 
         {/* Product grid */}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-14">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-x-6 gap-y-14">
             {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : products.length === 0 ? (
@@ -338,7 +338,7 @@ export default function CollectionsPage() {
         ) : (
           <motion.div key={category + sortBy} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-14">
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-x-6 gap-y-14">
             {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
           </motion.div>
         )}
